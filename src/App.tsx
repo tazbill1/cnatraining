@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Scenarios from "./pages/Scenarios";
 import Training from "./pages/Training";
+import VoiceTraining from "./pages/VoiceTraining";
 import Results from "./pages/Results";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/scenarios" element={<Scenarios />} />
             <Route path="/training/:scenarioId" element={<Training />} />
+            <Route path="/voice-training" element={<VoiceTraining />} />
             <Route path="/results" element={<Results />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/settings" element={<Settings />} />

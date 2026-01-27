@@ -1,1 +1,13 @@
 project_id = "irraxbjzwyetwicidqdv"
+
+[functions.training-chat]
+verify_jwt = false
+
+[functions.evaluate-session]
+verify_jwt = false
+
+[functions.transcribe]
+verify_jwt = false
+
+[functions.speak]
+verify_jwt = false

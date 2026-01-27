@@ -41,8 +41,11 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     speakText,
     stopSpeaking,
   } = useVoiceChat({
-    onTranscription: (text) => {
-      setInputValue(text);
+    onTranscription: async (text) => {
+      // Auto-send the transcribed message
+      if (text.trim()) {
+        await sendMessage(text.trim());
+      }
     },
   });
 

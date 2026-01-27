@@ -187,6 +187,20 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         {/* Messages */}
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-2xl mx-auto space-y-4">
+            {sessionState.messages.length === 0 && (
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                  <Mic className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">Your turn to greet the customer!</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  A customer just walked onto the lot. Use the mic button or type your opening greeting to begin the conversation.
+                </p>
+                <p className="text-sm text-muted-foreground mt-4 italic">
+                  Scenario: {sessionState.scenario?.name}
+                </p>
+              </div>
+            )}
             {sessionState.messages.map((message) => (
               <ChatBubble
                 key={message.id}

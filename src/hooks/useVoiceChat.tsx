@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,12 +11,56 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [micPermission, setMicPermission] = useState<"granted" | "denied" | "prompt" | "unavailable">("prompt");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Check microphone permission on mount
+  useEffect(() => {
+    const checkMicPermission = async () => {
+      try {
+        // Check if mediaDevices is available (not in all contexts like iframes)
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setMicPermission("unavailable");
+          return;
+        }
+
+        // Try to query permission status
+        if (navigator.permissions) {
+          try {
+            const result = await navigator.permissions.query({ name: "microphone" as PermissionName });
+            setMicPermission(result.state as "granted" | "denied" | "prompt");
+            
+            result.onchange = () => {
+              setMicPermission(result.state as "granted" | "denied" | "prompt");
+            };
+          } catch {
+            // Some browsers don't support microphone permission query
+            setMicPermission("prompt");
+          }
+        }
+      } catch {
+        setMicPermission("unavailable");
+      }
+    };
+
+    checkMicPermission();
+  }, []);
+
   const startRecording = useCallback(async () => {
     try {
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMicPermission("unavailable");
+        toast({
+          variant: "destructive",
+          title: "Microphone Unavailable",
+          description: "Voice recording is not available in this browser context. Please open the app in a new tab or use text input.",
+        });
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -24,6 +68,8 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
           autoGainControl: true,
         },
       });
+
+      setMicPermission("granted");
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported("audio/webm")
@@ -54,13 +100,31 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error starting recording:", error);
-      toast({
-        variant: "destructive",
-        title: "Microphone Error",
-        description: "Could not access your microphone. Please check permissions.",
-      });
+      
+      // Check if it's a permission error
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        setMicPermission("denied");
+        toast({
+          variant: "destructive",
+          title: "Microphone Access Denied",
+          description: "Please allow microphone access in your browser settings, or use text input instead.",
+        });
+      } else if (error.name === "NotFoundError") {
+        setMicPermission("unavailable");
+        toast({
+          variant: "destructive",
+          title: "No Microphone Found",
+          description: "No microphone was detected. Please connect one or use text input.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Microphone Error",
+          description: "Could not access your microphone. Please check permissions or use text input.",
+        });
+      }
     }
   }, [toast]);
 
@@ -188,6 +252,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     isRecording,
     isProcessing,
     isSpeaking,
+    micPermission,
     startRecording,
     stopRecording,
     speakText,

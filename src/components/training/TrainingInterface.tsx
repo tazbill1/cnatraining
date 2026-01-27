@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Mic, MicOff, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw } from "lucide-react";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { ChatBubble, TypingIndicator } from "@/components/training/ChatBubble";
@@ -133,13 +133,32 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
-          <div>
-            <h1 className="font-semibold text-foreground">Training Session</h1>
-            <p className="text-sm text-muted-foreground">
-              Practice with: {sessionState.scenario.name}
-            </p>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/scenarios")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="font-semibold text-foreground">Training Session</h1>
+              <p className="text-sm text-muted-foreground">
+                Practice with: {sessionState.scenario.name}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => startSession(scenario)}
+              title="Start over with fresh conversation"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Restart</span>
+            </Button>
             <Button
               variant={autoSpeak ? "default" : "outline"}
               size="sm"

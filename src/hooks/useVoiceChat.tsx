@@ -61,6 +61,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         return;
       }
 
+      console.log("Requesting microphone access...");
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -69,36 +70,60 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         },
       });
 
+      console.log("Microphone access granted, setting up MediaRecorder...");
       setMicPermission("granted");
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : "audio/mp4",
-      });
+      // Check supported mime types
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+
+      console.log("Using mime type:", mimeType || "default");
+
+      const mediaRecorder = mimeType 
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
 
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log("Data available, size:", event.data.size);
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
+        console.log("Recording stopped, chunks:", audioChunksRef.current.length);
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: mediaRecorder.mimeType,
+          type: mediaRecorder.mimeType || "audio/webm",
         });
+        console.log("Audio blob size:", audioBlob.size);
 
         // Stop all tracks
         stream.getTracks().forEach((track) => track.stop());
 
-        // Transcribe
-        await transcribeAudio(audioBlob);
+        // Only transcribe if we have audio data
+        if (audioBlob.size > 0) {
+          await transcribeAudio(audioBlob);
+        } else {
+          console.error("No audio data captured");
+          toast({
+            variant: "destructive",
+            title: "Recording Failed",
+            description: "No audio was captured. Please try again and speak clearly.",
+          });
+        }
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
+      // Request data every 250ms to ensure we capture everything
+      mediaRecorder.start(250);
+      console.log("Recording started");
       setIsRecording(true);
     } catch (error: any) {
       console.error("Error starting recording:", error);

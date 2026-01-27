@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Mic, MicOff } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { ChatBubble, TypingIndicator } from "@/components/training/ChatBubble";
 import { ChecklistPanel } from "@/components/training/ChecklistPanel";
 import { Scenario } from "@/lib/scenarios";
@@ -16,9 +17,10 @@ interface TrainingInterfaceProps {
 export function TrainingInterface({ scenario, onComplete }: TrainingInterfaceProps) {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastMessageCountRef = useRef(0);
 
   const {
     sessionState,
@@ -30,6 +32,20 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     formatTime,
   } = useTrainingSession();
 
+  const {
+    isRecording,
+    isProcessing,
+    isSpeaking,
+    startRecording,
+    stopRecording,
+    speakText,
+    stopSpeaking,
+  } = useVoiceChat({
+    onTranscription: (text) => {
+      setInputValue(text);
+    },
+  });
+
   // Start session on mount
   useEffect(() => {
     startSession(scenario);
@@ -39,6 +55,22 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sessionState.messages, isTyping]);
+
+  // Auto-speak new assistant messages
+  useEffect(() => {
+    if (!autoSpeak) return;
+    
+    const messages = sessionState.messages;
+    if (messages.length > lastMessageCountRef.current) {
+      const newMessages = messages.slice(lastMessageCountRef.current);
+      const lastAssistantMessage = newMessages.filter((m) => m.role === "assistant").pop();
+      
+      if (lastAssistantMessage) {
+        speakText(lastAssistantMessage.content, "nova");
+      }
+    }
+    lastMessageCountRef.current = messages.length;
+  }, [sessionState.messages, autoSpeak, speakText]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
@@ -57,6 +89,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
   };
 
   const handleEndSession = async () => {
+    stopSpeaking();
     const results = await endSession();
     if (results) {
       onComplete(results);
@@ -64,8 +97,24 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
   };
 
   const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    // Voice recording would be implemented here
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const handleSpeakLastMessage = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+    } else {
+      const lastAssistantMessage = sessionState.messages
+        .filter((m) => m.role === "assistant")
+        .pop();
+      if (lastAssistantMessage) {
+        speakText(lastAssistantMessage.content, "nova");
+      }
+    }
   };
 
   if (isLoading || !sessionState.scenario) {
@@ -83,12 +132,29 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 border-b border-border px-6 flex items-center bg-card">
+        <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
           <div>
             <h1 className="font-semibold text-foreground">Training Session</h1>
             <p className="text-sm text-muted-foreground">
               Practice with: {sessionState.scenario.name}
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={autoSpeak ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAutoSpeak(!autoSpeak)}
+              title={autoSpeak ? "Auto-speak enabled" : "Auto-speak disabled"}
+            >
+              {autoSpeak ? (
+                <Volume2 className="w-4 h-4" />
+              ) : (
+                <VolumeX className="w-4 h-4" />
+              )}
+              <span className="ml-2 hidden sm:inline">
+                {autoSpeak ? "Voice On" : "Voice Off"}
+              </span>
+            </Button>
           </div>
         </header>
 
@@ -113,16 +179,37 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <button
               onClick={toggleRecording}
+              disabled={isProcessing}
               className={`p-3 rounded-full transition-colors ${
                 isRecording
                   ? "bg-destructive text-destructive-foreground recording-pulse"
+                  : isProcessing
+                  ? "bg-muted text-muted-foreground"
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
               }`}
+              title={isRecording ? "Stop recording" : "Start recording"}
             >
-              {isRecording ? (
+              {isProcessing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isRecording ? (
                 <MicOff className="w-5 h-5" />
               ) : (
                 <Mic className="w-5 h-5" />
+              )}
+            </button>
+            <button
+              onClick={handleSpeakLastMessage}
+              className={`p-3 rounded-full transition-colors ${
+                isSpeaking
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80 text-muted-foreground"
+              }`}
+              title={isSpeaking ? "Stop speaking" : "Replay last message"}
+            >
+              {isSpeaking ? (
+                <VolumeX className="w-5 h-5" />
+              ) : (
+                <Volume2 className="w-5 h-5" />
               )}
             </button>
             <Input
@@ -130,8 +217,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your response..."
-              disabled={isTyping}
+              placeholder="Type your response or use the mic..."
+              disabled={isTyping || isRecording}
               className="flex-1"
             />
             <Button

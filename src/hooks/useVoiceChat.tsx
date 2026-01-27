@@ -164,35 +164,59 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     async (audioBlob: Blob) => {
       setIsProcessing(true);
       try {
-        const formData = new FormData();
-        formData.append("audio", audioBlob, "recording.webm");
+        // Check if browser supports Web Speech API for recognition
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+          // Fallback: try the edge function (requires OpenAI credits)
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "recording.webm");
 
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`,
-          {
-            method: "POST",
-            headers: {
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: formData,
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`,
+            {
+              method: "POST",
+              headers: {
+                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: formData,
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            if (response.status === 402) {
+              throw new Error("Voice transcription requires API credits. Please use text input instead.");
+            }
+            throw new Error(errorData.error || "Transcription failed");
           }
-        );
 
-        if (!response.ok) {
-          throw new Error("Transcription failed");
-        }
-
-        const data = await response.json();
-        if (data.text && options.onTranscription) {
-          options.onTranscription(data.text);
+          const data = await response.json();
+          if (data.text && options.onTranscription) {
+            options.onTranscription(data.text);
+          }
+        } else {
+          // Use browser's built-in speech recognition (free)
+          toast({
+            title: "Voice Input",
+            description: "Using browser speech recognition. Please speak clearly.",
+          });
+          
+          // For now, show a message that browser recognition doesn't work with recorded audio
+          // The user should use the browser's live speech recognition instead
+          toast({
+            variant: "destructive",
+            title: "Recording Not Supported",
+            description: "Please use text input. Voice recording requires API credits.",
+          });
         }
       } catch (error) {
         console.error("Transcription error:", error);
         toast({
           variant: "destructive",
           title: "Transcription Error",
-          description: "Failed to transcribe your audio. Please try again.",
+          description: error instanceof Error ? error.message : "Failed to transcribe your audio. Please use text input.",
         });
       } finally {
         setIsProcessing(false);
@@ -202,9 +226,10 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   );
 
   const speakText = useCallback(
-    async (text: string, voice: string = "alloy") => {
+    async (text: string, _voice: string = "alloy") => {
       if (isSpeaking) {
         // Stop current playback
+        window.speechSynthesis.cancel();
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current = null;
@@ -213,52 +238,45 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         return;
       }
 
-      try {
-        setIsSpeaking(true);
-
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speak`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({ text, voice }),
+      // Use browser's Web Speech API (free, works offline)
+      if ('speechSynthesis' in window) {
+        try {
+          setIsSpeaking(true);
+          
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          
+          // Try to use a female voice for the customer persona
+          const voices = window.speechSynthesis.getVoices();
+          const femaleVoice = voices.find(v => 
+            v.name.toLowerCase().includes('female') || 
+            v.name.toLowerCase().includes('samantha') ||
+            v.name.toLowerCase().includes('victoria') ||
+            v.name.toLowerCase().includes('karen')
+          );
+          if (femaleVoice) {
+            utterance.voice = femaleVoice;
           }
-        );
 
-        if (!response.ok) {
-          throw new Error("Speech generation failed");
+          utterance.onend = () => {
+            setIsSpeaking(false);
+          };
+
+          utterance.onerror = () => {
+            setIsSpeaking(false);
+          };
+
+          window.speechSynthesis.speak(utterance);
+        } catch (error) {
+          console.error("Speech error:", error);
+          setIsSpeaking(false);
         }
-
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-
-        audioRef.current = audio;
-
-        audio.onended = () => {
-          setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
-        };
-
-        audio.onerror = () => {
-          setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-          audioRef.current = null;
-        };
-
-        await audio.play();
-      } catch (error) {
-        console.error("Speech error:", error);
-        setIsSpeaking(false);
+      } else {
         toast({
           variant: "destructive",
-          title: "Speech Error",
-          description: "Failed to generate speech. Please try again.",
+          title: "Speech Unavailable",
+          description: "Your browser doesn't support text-to-speech.",
         });
       }
     },
@@ -266,6 +284,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   );
 
   const stopSpeaking = useCallback(() => {
+    window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;

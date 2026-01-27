@@ -38,6 +38,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     isProcessing,
     isSpeaking,
     micPermission,
+    interimTranscript,
     startRecording,
     stopRecording,
     speakText,
@@ -243,6 +244,14 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
 
         {/* Input Area */}
         <div className="border-t border-border p-4 bg-card">
+          {/* Live transcript display */}
+          {isRecording && interimTranscript && (
+            <div className="max-w-2xl mx-auto mb-3 p-3 bg-muted/50 rounded-lg border border-primary/20">
+              <p className="text-sm text-muted-foreground mb-1">Listening...</p>
+              <p className="text-foreground">{interimTranscript}</p>
+            </div>
+          )}
+          
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <button
               onClick={toggleRecording}
@@ -292,7 +301,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isMicUnavailable ? "Type your response..." : "Type your response or use the mic..."}
+              placeholder={isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or use the mic..."}
               disabled={isTyping || isRecording}
               className="flex-1"
             />

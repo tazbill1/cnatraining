@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw, AlertCircle, ExternalLink } from "lucide-react";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { ChatBubble, TypingIndicator } from "@/components/training/ChatBubble";
@@ -8,6 +8,7 @@ import { ChecklistPanel } from "@/components/training/ChecklistPanel";
 import { Scenario } from "@/lib/scenarios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TrainingInterfaceProps {
   scenario: Scenario;
@@ -36,6 +37,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     isRecording,
     isProcessing,
     isSpeaking,
+    micPermission,
     startRecording,
     stopRecording,
     speakText,
@@ -48,6 +50,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
       }
     },
   });
+
+  const isMicUnavailable = micPermission === "denied" || micPermission === "unavailable";
 
   // Start session on mount
   useEffect(() => {
@@ -196,20 +200,55 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
           </div>
         </div>
 
+        {/* Mic Permission Warning */}
+        {isMicUnavailable && (
+          <div className="border-t border-border px-4 py-3 bg-muted/50">
+            <Alert variant="default" className="max-w-2xl mx-auto border-amber-500/50 bg-amber-500/10">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-sm">
+                <span className="font-medium">Microphone unavailable.</span>{" "}
+                {micPermission === "denied" 
+                  ? "Please allow microphone access in your browser settings."
+                  : "Voice recording isn't available in this view."}{" "}
+                <span className="text-muted-foreground">
+                  You can still type your responses below, or{" "}
+                  <a 
+                    href={window.location.href} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                  >
+                    open in a new tab <ExternalLink className="w-3 h-3" />
+                  </a>{" "}
+                  for voice features.
+                </span>
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         {/* Input Area */}
         <div className="border-t border-border p-4 bg-card">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             <button
               onClick={toggleRecording}
-              disabled={isProcessing}
+              disabled={isProcessing || isMicUnavailable}
               className={`p-3 rounded-full transition-colors ${
                 isRecording
                   ? "bg-destructive text-destructive-foreground recording-pulse"
                   : isProcessing
                   ? "bg-muted text-muted-foreground"
+                  : isMicUnavailable
+                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
               }`}
-              title={isRecording ? "Stop recording" : "Start recording"}
+              title={
+                isMicUnavailable 
+                  ? "Microphone unavailable - use text input" 
+                  : isRecording 
+                  ? "Stop recording" 
+                  : "Start recording"
+              }
             >
               {isProcessing ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -239,7 +278,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your response or use the mic..."
+              placeholder={isMicUnavailable ? "Type your response..." : "Type your response or use the mic..."}
               disabled={isTyping || isRecording}
               className="flex-1"
             />

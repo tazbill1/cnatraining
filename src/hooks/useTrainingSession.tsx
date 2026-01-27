@@ -79,31 +79,16 @@ export function useTrainingSession() {
 
         if (error) throw error;
 
-        // Set initial message from customer
-        const initialMessage: Message = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: scenario.openingLine,
-          timestamp: new Date(),
-        };
-
+        // Start with empty messages - salesperson greets first
         setSessionState({
           id: data.id,
           scenario,
-          messages: [initialMessage],
+          messages: [],
           checklistState: {},
           isActive: true,
           startTime: new Date(),
           elapsedSeconds: 0,
         });
-
-        // Save initial message
-        await supabase
-          .from("training_sessions")
-          .update({ 
-            conversation: [{ ...initialMessage, timestamp: initialMessage.timestamp.toISOString() }] 
-          })
-          .eq("id", data.id);
       } catch (error) {
         console.error("Error starting session:", error);
         toast({

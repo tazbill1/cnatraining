@@ -177,10 +177,10 @@ serve(async (req) => {
 
   try {
     const { messages, persona } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not configured");
     }
 
     // Get the persona system prompt
@@ -192,34 +192,32 @@ serve(async (req) => {
       );
     }
 
-    // Convert messages format
-    const apiMessages = [
-      { role: "system", content: personaData.systemPrompt },
-      ...messages.map((msg: { role: string; content: string }) => ({
-        role: msg.role === "assistant" ? "assistant" : "user",
-        content: msg.content,
-      })),
-    ];
+    // Convert messages to Anthropic format
+    const anthropicMessages = messages.map((msg: { role: string; content: string }) => ({
+      role: msg.role === "assistant" ? "assistant" : "user",
+      content: msg.content,
+    }));
 
-    console.log("Calling Lovable AI with persona:", persona);
+    console.log("Calling Anthropic API with persona:", persona);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: apiMessages,
+        model: "claude-sonnet-4-20250514",
         max_tokens: 500,
-        temperature: 0.8,
+        system: personaData.systemPrompt,
+        messages: anthropicMessages,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Lovable AI error:", response.status, errorText);
+      console.error("Anthropic API error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -227,20 +225,22 @@ serve(async (req) => {
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Please add credits to continue using AI features." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (response.status === 402 || response.status === 400) {
+        if (errorText.includes("credit") || errorText.includes("billing")) {
+          return new Response(
+            JSON.stringify({ error: "Please add credits to your Anthropic account." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
       
-      throw new Error(`AI Gateway error: ${response.status}`);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const text = data.choices?.[0]?.message?.content || "";
+    const text = data.content?.[0]?.text || "";
 
-    console.log("Lovable AI response received for persona:", personaData.name);
+    console.log("Anthropic response received for persona:", personaData.name);
 
     return new Response(
       JSON.stringify({

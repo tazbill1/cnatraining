@@ -159,6 +159,12 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
             title: "Microphone Access Denied",
             description: "Please allow microphone access in your browser settings.",
           });
+        } else if (event.error === "no-speech") {
+          // No speech detected - not an error, just inform the user
+          toast({
+            title: "No Speech Detected",
+            description: "Please speak clearly into your microphone and try again.",
+          });
         } else if (event.error !== "aborted") {
           toast({
             variant: "destructive",

@@ -7,68 +7,25 @@ const corsHeaders = {
 
 const EVALUATION_PROMPT = `You are an expert automotive sales trainer evaluating a Customer Needs Analysis (CNA) conversation.
 
-Analyze this conversation based on the CNA training methodology:
+Analyze this conversation and score the salesperson's performance.
 
-CHECKLIST ITEMS (mark complete or incomplete):
-1. Got customer name and referral source
-2. Asked "What made today the day?" (urgency/pain points)
-3. Identified primary driver
-4. Discussed Goals for Today (product info, demo, purchase info, appraisal)
-5. Uncovered Use & Utility (day-to-day AND fun/adventure)
-6. Got current vehicle details (year/make/model/mileage)
-7. Discovered what they LOVED about current vehicle
-8. Found what doesn't work anymore (pain points)
-9. Identified new vehicle criteria (researched vehicle, flexibility on new/used/certified)
-10. Distinguished "must-haves" vs "nice-to-haves"
-11. Found top 3 priorities (safety, performance, appearance, comfort, economy, reliability)
+SCORING (0-100 for each category):
+1. RAPPORT BUILDING - Conversational tone, built trust, listened actively
+2. INFORMATION GATHERING - Asked good questions, dug deeper on answers
+3. NEEDS IDENTIFICATION - Found emotional "why", identified true priorities
+4. CNA COMPLETION - Covered key areas, set expectations properly
 
-SCORING CRITERIA (0-100 for each):
-
-1. RAPPORT BUILDING (0-25 points):
-- Conversational vs interrogational tone
-- Built trust and comfort
-- Listened actively, didn't rush
-- Normalized questions with examples
-
-2. INFORMATION GATHERING (0-25 points):
-- Asked all critical CNA questions
-- Took notes (indicated by writing things down)
-- Dug deeper on vague answers
-- Followed proper CNA structure
-
-3. NEEDS IDENTIFICATION (0-25 points):
-- Found emotional "why" behind purchase
-- Identified true priorities (not just stated preferences)
-- Distinguished must-haves from nice-to-haves
-- Created flexibility (vehicle type, new/used, color)
-
-4. CNA COMPLETION (0-25 points):
-- Covered all 11 checklist items
-- Set proper expectations via Goals for Today
-- Positioned for successful vehicle selection
-- Avoided common mistakes (asking permission, rushing, skipping sections)
-
-FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
-
-OVERALL SCORE: [0-100]
-
-CATEGORY SCORES:
-- Rapport Building: [0-25]/25
-- Information Gathering: [0-25]/25
-- Needs Identification: [0-25]/25
-- CNA Completion: [0-25]/25
-
-CHECKLIST STATUS:
-[List each item as ✓ Complete or ✗ Incomplete]
-
-WHAT WAS DONE WELL:
-[Specific examples from conversation]
-
-WHAT NEEDS IMPROVEMENT:
-[Specific examples and suggestions]
-
-COACHING TIPS:
-[Actionable advice for next session]
+Provide your evaluation in this exact JSON format:
+{
+  "overallScore": 75,
+  "rapportScore": 80,
+  "infoGatheringScore": 70,
+  "needsIdentificationScore": 72,
+  "cnaCompletionScore": 78,
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "improvements": ["area 1", "area 2", "area 3"],
+  "coachingTips": ["tip 1", "tip 2"]
+}
 
 Be specific and reference actual parts of the conversation.`;
 
@@ -79,10 +36,10 @@ serve(async (req) => {
 
   try {
     const { messages, scenario, checklistState, durationSeconds } = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error("ANTHROPIC_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     // Format conversation for evaluation
@@ -96,84 +53,81 @@ serve(async (req) => {
     const contextInfo = `
 Scenario: ${scenario?.name || "Unknown"}
 Duration: ${Math.floor((durationSeconds || 0) / 60)} minutes
-Checklist items checked by user: ${Object.values(checklistState || {}).filter(Boolean).length}/11
+Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).length}/11
 `;
 
-    console.log("Calling Anthropic API for evaluation");
+    console.log("Calling Lovable AI for evaluation");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2048,
-        system: EVALUATION_PROMPT,
+        model: "google/gemini-3-flash-preview",
         messages: [
-          {
-            role: "user",
-            content: `${contextInfo}\n\nEvaluate this CNA conversation:\n\n${conversationText}`,
-          },
+          { role: "system", content: EVALUATION_PROMPT },
+          { role: "user", content: `${contextInfo}\n\nEvaluate this CNA conversation:\n\n${conversationText}` },
         ],
+        max_tokens: 1000,
+        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Anthropic API error:", response.status, errorText);
-      throw new Error(`Anthropic API error: ${response.status}`);
+      console.error("Lovable AI error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const evaluation = data.content
-      ?.filter((block: any) => block.type === "text")
-      .map((block: any) => block.text)
-      .join("\n") || "";
+    const content = data.choices?.[0]?.message?.content || "{}";
 
     console.log("Evaluation received successfully");
 
-    // Parse scores from the formatted response
-    const overallMatch = evaluation.match(/OVERALL SCORE:\s*(\d+)/i);
-    const rapportMatch = evaluation.match(/Rapport Building:\s*(\d+)/i);
-    const gatheringMatch = evaluation.match(/Information Gathering:\s*(\d+)/i);
-    const needsMatch = evaluation.match(/Needs Identification:\s*(\d+)/i);
-    const completionMatch = evaluation.match(/CNA Completion:\s*(\d+)/i);
+    // Parse JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    let evaluation;
+    
+    try {
+      evaluation = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch {
+      evaluation = null;
+    }
 
-    // Parse strengths and improvements
-    const strengthsSection = evaluation.match(/WHAT WAS DONE WELL:([\s\S]*?)(?=WHAT NEEDS IMPROVEMENT:|$)/i);
-    const improvementsSection = evaluation.match(/WHAT NEEDS IMPROVEMENT:([\s\S]*?)(?=COACHING TIPS:|$)/i);
-    const coachingSection = evaluation.match(/COACHING TIPS:([\s\S]*?)$/i);
-
-    const parseList = (section: string | null): string[] => {
-      if (!section) return [];
-      return section
-        .split(/\n[-•*]|\n\d+\./)
-        .map(s => s.trim())
-        .filter(s => s.length > 10 && s.length < 500)
-        .slice(0, 5);
-    };
-
-    const overallScore = overallMatch ? parseInt(overallMatch[1]) : 65;
-    const rapportScore = rapportMatch ? parseInt(rapportMatch[1]) * 4 : 60; // Scale 0-25 to 0-100
-    const infoGatheringScore = gatheringMatch ? parseInt(gatheringMatch[1]) * 4 : 60;
-    const needsIdentificationScore = needsMatch ? parseInt(needsMatch[1]) * 4 : 60;
-    const cnaCompletionScore = completionMatch ? parseInt(completionMatch[1]) * 4 : 50;
+    if (!evaluation) {
+      evaluation = {
+        overallScore: 65,
+        rapportScore: 65,
+        infoGatheringScore: 65,
+        needsIdentificationScore: 65,
+        cnaCompletionScore: 50,
+        strengths: ["Completed the session", "Engaged in conversation"],
+        improvements: ["Ask more open-ended questions", "Dig deeper on priorities"],
+        coachingTips: ["Review CNA checklist before sessions"],
+      };
+    }
 
     return new Response(
       JSON.stringify({
-        overallScore,
-        rapportScore,
-        infoGatheringScore,
-        needsIdentificationScore,
-        cnaCompletionScore,
-        evaluation,
+        overallScore: evaluation.overallScore || 65,
+        rapportScore: evaluation.rapportScore || 65,
+        infoGatheringScore: evaluation.infoGatheringScore || 65,
+        needsIdentificationScore: evaluation.needsIdentificationScore || 65,
+        cnaCompletionScore: evaluation.cnaCompletionScore || 50,
         feedback: {
-          strengths: parseList(strengthsSection?.[1] || null),
-          improvements: parseList(improvementsSection?.[1] || null),
-          coachingTips: parseList(coachingSection?.[1] || null),
+          strengths: evaluation.strengths || [],
+          improvements: evaluation.improvements || [],
+          coachingTips: evaluation.coachingTips || [],
           examples: [],
         },
       }),
@@ -189,9 +143,9 @@ Checklist items checked by user: ${Object.values(checklistState || {}).filter(Bo
         needsIdentificationScore: 65,
         cnaCompletionScore: 50,
         feedback: {
-          strengths: ["Completed the session", "Engaged in conversation"],
-          improvements: ["Practice more scenarios", "Focus on open-ended questions"],
-          coachingTips: ["Review CNA checklist before next session"],
+          strengths: ["Completed the session"],
+          improvements: ["Practice more scenarios"],
+          coachingTips: ["Focus on open-ended questions"],
           examples: [],
         },
       }),

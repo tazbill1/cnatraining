@@ -233,20 +233,67 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         try {
           setIsSpeaking(true);
           
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
+          // Cancel any ongoing speech first
+          window.speechSynthesis.cancel();
           
-          // Try to use a female voice for the customer persona
-          const voices = window.speechSynthesis.getVoices();
-          const femaleVoice = voices.find(v => 
-            v.name.toLowerCase().includes('female') || 
-            v.name.toLowerCase().includes('samantha') ||
-            v.name.toLowerCase().includes('victoria') ||
-            v.name.toLowerCase().includes('karen')
-          );
-          if (femaleVoice) {
-            utterance.voice = femaleVoice;
+          const utterance = new SpeechSynthesisUtterance(text);
+          
+          // Slower, more natural speaking rate
+          utterance.rate = 0.9;
+          utterance.pitch = 1.05;
+          utterance.volume = 1.0;
+          
+          // Get voices - may need to wait for them to load
+          let voices = window.speechSynthesis.getVoices();
+          
+          // If no voices yet, wait for them to load
+          if (voices.length === 0) {
+            await new Promise<void>((resolve) => {
+              window.speechSynthesis.onvoiceschanged = () => {
+                voices = window.speechSynthesis.getVoices();
+                resolve();
+              };
+              // Timeout fallback
+              setTimeout(resolve, 100);
+            });
+          }
+          
+          // Priority order for natural-sounding female voices
+          const preferredVoices = [
+            'google us english female',
+            'google uk english female', 
+            'samantha',
+            'victoria',
+            'karen',
+            'moira',
+            'fiona',
+            'tessa',
+            'veena',
+            'female',
+            'woman',
+            'zira',
+            'hazel'
+          ];
+          
+          // Find the best available voice
+          let selectedVoice = null;
+          for (const preferred of preferredVoices) {
+            selectedVoice = voices.find(v => 
+              v.name.toLowerCase().includes(preferred)
+            );
+            if (selectedVoice) break;
+          }
+          
+          // Fallback: prefer any English voice that's not the default robotic one
+          if (!selectedVoice) {
+            selectedVoice = voices.find(v => 
+              v.lang.startsWith('en') && !v.name.toLowerCase().includes('microsoft')
+            ) || voices.find(v => v.lang.startsWith('en'));
+          }
+          
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            console.log("Using voice:", selectedVoice.name);
           }
 
           utterance.onend = () => {

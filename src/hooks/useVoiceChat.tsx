@@ -54,6 +54,7 @@ declare global {
 export type VoiceStatus = "idle" | "listening" | "countdown" | "sending";
 
 const SILENCE_COUNTDOWN_SECONDS = 2;
+const MAX_RETRY_ATTEMPTS = 2;
 
 export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const { toast } = useToast();
@@ -77,6 +78,8 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpeechTimeRef = useRef<number>(Date.now());
+  const retryCountRef = useRef(0);
+  const isRetryingRef = useRef(false);
 
   // Check for Speech Recognition support
   const getSpeechRecognition = useCallback(() => {
@@ -263,6 +266,8 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       setVoiceStatus("listening");
       setSilenceCountdown(SILENCE_COUNTDOWN_SECONDS);
       lastSpeechTimeRef.current = Date.now();
+      retryCountRef.current = 0;
+      isRetryingRef.current = false;
 
       recognition.onstart = () => {
         console.log("Speech recognition started");
@@ -300,10 +305,67 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
       recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
+        
+        // Handle recoverable errors with retry
+        if ((event.error === "audio-capture" || event.error === "network") && retryCountRef.current < MAX_RETRY_ATTEMPTS && !isRetryingRef.current) {
+          console.log(`Retrying speech recognition (attempt ${retryCountRef.current + 1}/${MAX_RETRY_ATTEMPTS})`);
+          retryCountRef.current++;
+          isRetryingRef.current = true;
+          
+          // Brief delay before retry
+          setTimeout(() => {
+            isRetryingRef.current = false;
+            if (recognitionRef.current) {
+              try {
+                recognitionRef.current.start();
+              } catch (e) {
+                console.error("Retry failed:", e);
+                cleanupAfterError();
+                showErrorToast(event.error);
+              }
+            }
+          }, 300);
+          return;
+        }
+        
+        cleanupAfterError();
+        
+        if (event.error === "not-allowed") {
+          setMicPermission("denied");
+          toast({
+            variant: "destructive",
+            title: "Microphone Access Denied",
+            description: "Please allow microphone access in your browser settings.",
+          });
+        } else if (event.error === "no-speech") {
+          // Only show if we don't have any transcript yet
+          if (!finalTranscriptRef.current.trim()) {
+            toast({
+              title: "No Speech Detected",
+              description: "Please speak clearly into your microphone.",
+            });
+          }
+        } else if (event.error === "audio-capture") {
+          toast({
+            variant: "destructive",
+            title: "Microphone Lost",
+            description: "Microphone connection interrupted. Please try again.",
+          });
+        } else if (event.error !== "aborted") {
+          toast({
+            variant: "destructive",
+            title: "Speech Recognition Error",
+            description: "Something went wrong. Please try again.",
+          });
+        }
+      };
+      
+      const cleanupAfterError = () => {
         setIsRecording(false);
         setIsProcessing(false);
         setVoiceStatus("idle");
         stopAudioLevelMonitoring();
+        retryCountRef.current = 0;
         
         // Clear timers
         if (silenceTimerRef.current) {
@@ -314,20 +376,10 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
           clearInterval(countdownIntervalRef.current);
           countdownIntervalRef.current = null;
         }
-        
-        if (event.error === "not-allowed") {
-          setMicPermission("denied");
-          toast({
-            variant: "destructive",
-            title: "Microphone Access Denied",
-            description: "Please allow microphone access in your browser settings.",
-          });
-        } else if (event.error === "no-speech") {
-          toast({
-            title: "No Speech Detected",
-            description: "Please speak clearly into your microphone and try again.",
-          });
-        } else if (event.error !== "aborted") {
+      };
+      
+      const showErrorToast = (error: string) => {
+        if (error !== "aborted") {
           toast({
             variant: "destructive",
             title: "Speech Recognition Error",

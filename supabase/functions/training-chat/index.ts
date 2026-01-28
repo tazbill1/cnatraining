@@ -11,8 +11,8 @@ const MAX_MESSAGES = 50;
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_SYSTEM_PROMPT_LENGTH = 5000;
 
-// Lovable AI endpoint
-const LOVABLE_AI_URL = "https://ai.lovable.dev/api/chat";
+// Lovable AI Gateway endpoint
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

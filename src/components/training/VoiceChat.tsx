@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Send, Volume2 } from "lucide-react";
+import { Mic, MicOff, Send, Volume2, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
@@ -213,13 +213,30 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     recognition.start();
   }, [initSpeechRecognition, sendMessageFromVoice, toast]);
 
-  // Stop recording manually
+  // Stop recording manually (will auto-send)
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
   }, []);
+
+  // Cancel recording without sending
+  const cancelRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort(); // Use abort instead of stop to prevent onend from sending
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+    setInterimTranscript("");
+    setInput("");
+    setVoiceStatus("idle");
+    finalTranscriptRef.current = "";
+    toast({
+      title: "Recording cancelled",
+      description: "Your message was not sent.",
+    });
+  }, [toast]);
 
   // Send message (for text input, not voice)
   const sendMessage = async (text?: string) => {
@@ -410,12 +427,26 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
           <div className="mt-3 p-3 rounded-lg bg-muted/50 space-y-2">
             {voiceStatus === "listening" && (
               <>
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="relative">
-                    <div className="w-4 h-4 bg-destructive rounded-full animate-pulse" />
-                    <div className="absolute inset-0 w-4 h-4 bg-destructive rounded-full animate-ping opacity-50" />
+                <div className="flex items-center justify-between">
+                  <div className="flex-1" /> {/* Spacer */}
+                  <div className="flex items-center space-x-2">
+                    <div className="relative">
+                      <div className="w-4 h-4 bg-destructive rounded-full animate-pulse" />
+                      <div className="absolute inset-0 w-4 h-4 bg-destructive rounded-full animate-ping opacity-50" />
+                    </div>
+                    <span className="text-sm font-medium text-destructive">Listening...</span>
                   </div>
-                  <span className="text-sm font-medium text-destructive">Listening...</span>
+                  <div className="flex-1 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={cancelRecording}
+                      className="h-7 px-2 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-center text-xs text-muted-foreground">
                   Speak naturally, then pause to send automatically

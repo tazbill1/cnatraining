@@ -13,6 +13,7 @@ import VoiceTraining from "./pages/VoiceTraining";
 import Results from "./pages/Results";
 import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
+import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/results" element={<Results />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/team" element={<Team />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

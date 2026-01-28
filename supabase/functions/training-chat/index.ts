@@ -12,42 +12,43 @@ serve(async (req) => {
 
   try {
     const { messages, scenario } = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error("ANTHROPIC_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const systemPrompt = `${scenario.systemPrompt}
 
 IMPORTANT: Stay in character as the customer. Respond naturally based on the salesperson's questions. Keep responses concise (1-3 sentences typically). Show emotional reactions appropriate to your character. Speak conversationally like a real person would - use contractions, filler words occasionally, and natural speech patterns.`;
 
-    // Convert messages to Anthropic format
-    const anthropicMessages = messages.map((msg: { role: string; content: string }) => ({
+    // Convert messages to API format
+    const apiMessages = messages.map((msg: { role: string; content: string }) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
       content: msg.content,
     }));
 
-    console.log("Calling Anthropic Claude with", messages.length, "messages");
+    console.log("Calling Lovable AI with", messages.length, "messages");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "google/gemini-3-flash-preview",
         max_tokens: 300,
-        system: systemPrompt,
-        messages: anthropicMessages,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...apiMessages,
+        ],
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Anthropic API error:", response.status, errorText);
+      console.error("Lovable AI error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -55,20 +56,20 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402 || response.status === 400) {
+      if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "API error. Please check your Anthropic credits." }),
+          JSON.stringify({ error: "Please add credits to your Lovable workspace." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
-      throw new Error(`Anthropic API error: ${response.status}`);
+      throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || "I'm not sure what to say...";
+    const content = data.choices?.[0]?.message?.content || "I'm not sure what to say...";
 
-    console.log("Anthropic Claude response received successfully");
+    console.log("Lovable AI response received successfully");
 
     return new Response(JSON.stringify({ content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

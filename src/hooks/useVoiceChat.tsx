@@ -320,15 +320,39 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
                 recognitionRef.current.start();
               } catch (e) {
                 console.error("Retry failed:", e);
-                cleanupAfterError();
-                showErrorToast(event.error);
+                // Cleanup on retry failure
+                setIsRecording(false);
+                setIsProcessing(false);
+                setVoiceStatus("idle");
+                stopAudioLevelMonitoring();
+                retryCountRef.current = 0;
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                toast({
+                  variant: "destructive",
+                  title: "Speech Recognition Error",
+                  description: "Could not restart microphone. Please try again.",
+                });
               }
             }
           }, 300);
           return;
         }
         
-        cleanupAfterError();
+        // Cleanup after non-recoverable error
+        setIsRecording(false);
+        setIsProcessing(false);
+        setVoiceStatus("idle");
+        stopAudioLevelMonitoring();
+        retryCountRef.current = 0;
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
         
         if (event.error === "not-allowed") {
           setMicPermission("denied");
@@ -352,34 +376,6 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
             description: "Microphone connection interrupted. Please try again.",
           });
         } else if (event.error !== "aborted") {
-          toast({
-            variant: "destructive",
-            title: "Speech Recognition Error",
-            description: "Something went wrong. Please try again.",
-          });
-        }
-      };
-      
-      const cleanupAfterError = () => {
-        setIsRecording(false);
-        setIsProcessing(false);
-        setVoiceStatus("idle");
-        stopAudioLevelMonitoring();
-        retryCountRef.current = 0;
-        
-        // Clear timers
-        if (silenceTimerRef.current) {
-          clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = null;
-        }
-        if (countdownIntervalRef.current) {
-          clearInterval(countdownIntervalRef.current);
-          countdownIntervalRef.current = null;
-        }
-      };
-      
-      const showErrorToast = (error: string) => {
-        if (error !== "aborted") {
           toast({
             variant: "destructive",
             title: "Speech Recognition Error",

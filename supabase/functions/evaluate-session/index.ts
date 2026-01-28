@@ -36,10 +36,10 @@ serve(async (req) => {
 
   try {
     const { messages, scenario, checklistState, durationSeconds } = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error("ANTHROPIC_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     // Format conversation for evaluation
@@ -56,20 +56,19 @@ Duration: ${Math.floor((durationSeconds || 0) / 60)} minutes
 Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).length}/11
 `;
 
-    console.log("Calling Anthropic Claude for evaluation");
+    console.log("Calling Lovable AI for evaluation");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "google/gemini-3-flash-preview",
         max_tokens: 1000,
-        system: EVALUATION_PROMPT,
         messages: [
+          { role: "system", content: EVALUATION_PROMPT },
           { role: "user", content: `${contextInfo}\n\nEvaluate this CNA conversation:\n\n${conversationText}` },
         ],
       }),
@@ -77,7 +76,7 @@ Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).l
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Anthropic API error:", response.status, errorText);
+      console.error("Lovable AI error:", response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -86,11 +85,11 @@ Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).l
         );
       }
       
-      throw new Error(`Anthropic API error: ${response.status}`);
+      throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text || "{}";
+    const content = data.choices?.[0]?.message?.content || "{}";
 
     console.log("Evaluation received successfully");
 

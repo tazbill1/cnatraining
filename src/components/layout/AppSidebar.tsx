@@ -11,7 +11,7 @@ const navItems = [
 ];
 
 const managerItems = [
-  { icon: Users, label: "Team", path: "/manager" },
+  { icon: Users, label: "Team", path: "/team" },
 ];
 
 export function AppSidebar() {

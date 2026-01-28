@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Send, Volume2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,17 +14,41 @@ interface VoiceChatProps {
   onMessagesChange?: (messages: Message[]) => void;
 }
 
+// Extend window for SpeechRecognition
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
 export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const finalTranscriptRef = useRef("");
 
   const { toast } = useToast();
 
@@ -40,82 +64,103 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     }
   }, [messages, onMessagesChange]);
 
-  // Start voice recording
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await transcribeAudio(audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
+  // Initialize speech recognition
+  const initSpeechRecognition = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
       toast({
-        title: "Microphone Error",
-        description: "Could not access microphone. Please check permissions.",
+        title: "Not Supported",
+        description: "Speech recognition is not supported in this browser. Please use Chrome.",
         variant: "destructive",
       });
+      return null;
     }
-  };
 
-  // Stop recording
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
 
-  // Transcribe audio using Whisper
-  const transcribeAudio = async (audioBlob: Blob) => {
-    setIsProcessing(true);
-    try {
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "recording.webm");
+    return recognition;
+  }, [toast]);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`,
-        {
-          method: "POST",
-          headers: {
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: formData,
+  // Start voice recording with Web Speech API
+  const startRecording = useCallback(() => {
+    const recognition = initSpeechRecognition();
+    if (!recognition) return;
+
+    finalTranscriptRef.current = "";
+    setInterimTranscript("");
+
+    recognition.onstart = () => {
+      console.log("Speech recognition started");
+      setIsRecording(true);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = "";
+      let final = "";
+
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          final += result[0].transcript + " ";
+        } else {
+          interim += result[0].transcript;
         }
-      );
-
-      if (!response.ok) {
-        throw new Error("Transcription failed");
       }
 
-      const data = await response.json();
-      setInput(data.text);
+      if (final) {
+        finalTranscriptRef.current += final;
+        setInput(finalTranscriptRef.current.trim());
+      }
+      setInterimTranscript(interim);
+    };
 
-      // Auto-send after transcription
-      await sendMessage(data.text);
-    } catch (error) {
-      console.error("Transcription error:", error);
-      toast({
-        title: "Transcription Error",
-        description: "Could not transcribe audio. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
+    recognition.onend = () => {
+      console.log("Speech recognition ended, final:", finalTranscriptRef.current.trim());
+      setIsRecording(false);
+      setInterimTranscript("");
+      
+      const transcript = finalTranscriptRef.current.trim();
+      if (transcript) {
+        // Auto-send after speech ends
+        sendMessageFromVoice(transcript);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+      setInterimTranscript("");
+      
+      if (event.error !== "aborted") {
+        toast({
+          title: "Voice Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, [initSpeechRecognition, toast]);
+
+  // Stop recording manually
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
+  }, []);
+
+  // Send message from voice input (bypasses input state)
+  const sendMessageFromVoice = async (transcript: string) => {
+    if (!transcript || isProcessing) return;
+    setInput(""); // Clear any interim text
+    await sendMessage(transcript);
   };
 
   // Send message to Claude
@@ -304,9 +349,16 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
         </div>
 
         {isRecording && (
-          <div className="mt-2 flex items-center justify-center space-x-2 text-sm text-destructive">
-            <div className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
-            <span>Recording... Click mic to stop</span>
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-center space-x-2 text-sm text-destructive">
+              <div className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
+              <span>Listening... pause to send automatically</span>
+            </div>
+            {interimTranscript && (
+              <p className="text-center text-sm text-muted-foreground italic">
+                "{interimTranscript}"
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -44,6 +44,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState<"idle" | "listening" | "processing" | "sending">("idle");
 
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -85,6 +86,65 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     return recognition;
   }, [toast]);
 
+  // Send message from voice input (bypasses input state)
+  const sendMessageFromVoice = useCallback(async (transcript: string) => {
+    if (!transcript || isProcessing) return;
+    setInput(""); // Clear any interim text
+    setVoiceStatus("sending");
+    
+    const userMessage: Message = { role: "user", content: transcript };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setIsProcessing(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: newMessages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            persona: persona,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to get response");
+      }
+
+      const data = await response.json();
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: data.message,
+      };
+
+      setMessages([...newMessages, assistantMessage]);
+      setVoiceStatus("idle");
+
+      // Convert response to speech
+      await speakText(data.message, data.voice);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setVoiceStatus("idle");
+      toast({
+        title: "Error",
+        description: "Failed to get response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [messages, isProcessing, persona, toast]);
+
   // Start voice recording with Web Speech API
   const startRecording = useCallback(() => {
     const recognition = initSpeechRecognition();
@@ -92,6 +152,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
 
     finalTranscriptRef.current = "";
     setInterimTranscript("");
+    setVoiceStatus("listening");
 
     recognition.onstart = () => {
       console.log("Speech recognition started");
@@ -125,8 +186,11 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       
       const transcript = finalTranscriptRef.current.trim();
       if (transcript) {
+        setVoiceStatus("sending");
         // Auto-send after speech ends
         sendMessageFromVoice(transcript);
+      } else {
+        setVoiceStatus("idle");
       }
     };
 
@@ -134,6 +198,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       console.error("Speech recognition error:", event.error);
       setIsRecording(false);
       setInterimTranscript("");
+      setVoiceStatus("idle");
       
       if (event.error !== "aborted") {
         toast({
@@ -146,7 +211,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
 
     recognitionRef.current = recognition;
     recognition.start();
-  }, [initSpeechRecognition, toast]);
+  }, [initSpeechRecognition, sendMessageFromVoice, toast]);
 
   // Stop recording manually
   const stopRecording = useCallback(() => {
@@ -156,14 +221,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     }
   }, []);
 
-  // Send message from voice input (bypasses input state)
-  const sendMessageFromVoice = async (transcript: string) => {
-    if (!transcript || isProcessing) return;
-    setInput(""); // Clear any interim text
-    await sendMessage(transcript);
-  };
-
-  // Send message to Claude
+  // Send message (for text input, not voice)
   const sendMessage = async (text?: string) => {
     const messageText = text || input.trim();
     if (!messageText || isProcessing) return;
@@ -175,7 +233,6 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     setIsProcessing(true);
 
     try {
-      // Get response from Claude
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
         {
@@ -348,16 +405,36 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
           </div>
         </div>
 
-        {isRecording && (
-          <div className="mt-2 space-y-1">
-            <div className="flex items-center justify-center space-x-2 text-sm text-destructive">
-              <div className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
-              <span>Listening... pause to send automatically</span>
-            </div>
-            {interimTranscript && (
-              <p className="text-center text-sm text-muted-foreground italic">
-                "{interimTranscript}"
-              </p>
+        {/* Voice Status Indicator */}
+        {voiceStatus !== "idle" && (
+          <div className="mt-3 p-3 rounded-lg bg-muted/50 space-y-2">
+            {voiceStatus === "listening" && (
+              <>
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="relative">
+                    <div className="w-4 h-4 bg-destructive rounded-full animate-pulse" />
+                    <div className="absolute inset-0 w-4 h-4 bg-destructive rounded-full animate-ping opacity-50" />
+                  </div>
+                  <span className="text-sm font-medium text-destructive">Listening...</span>
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Speak naturally, then pause to send automatically
+                </p>
+                {(interimTranscript || input) && (
+                  <div className="p-2 bg-background rounded border">
+                    <p className="text-sm text-foreground">
+                      {input}{interimTranscript && <span className="text-muted-foreground">{interimTranscript}</span>}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {voiceStatus === "sending" && (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm font-medium text-primary">Sending your message...</span>
+              </div>
             )}
           </div>
         )}

@@ -4,7 +4,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { scenarios } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ResultsState {
   results: {
@@ -29,12 +29,29 @@ export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showTranscript, setShowTranscript] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   const state = location.state as ResultsState | undefined;
   
+  // Handle missing results with useEffect to avoid render-time navigation
+  useEffect(() => {
+    if (!state?.results) {
+      setShouldRedirect(true);
+    }
+  }, [state]);
+
+  useEffect(() => {
+    if (shouldRedirect) {
+      navigate("/dashboard");
+    }
+  }, [shouldRedirect, navigate]);
+
   if (!state?.results) {
-    navigate("/dashboard");
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Redirecting...</p>
+      </div>
+    );
   }
 
   const { results } = state;

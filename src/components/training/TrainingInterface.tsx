@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw, AlertCircle, ExternalLink } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw, AlertCircle, ExternalLink, X, Keyboard } from "lucide-react";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { ChatBubble, TypingIndicator } from "@/components/training/ChatBubble";
@@ -9,10 +9,38 @@ import { Scenario } from "@/lib/scenarios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TrainingInterfaceProps {
   scenario: Scenario;
   onComplete: (results: any) => void;
+}
+
+// Audio Level Indicator Component
+function AudioLevelIndicator({ level }: { level: number }) {
+  const bars = 5;
+  return (
+    <div className="flex items-center gap-0.5 h-4">
+      {Array.from({ length: bars }).map((_, i) => {
+        const threshold = (i + 1) / bars;
+        const isActive = level >= threshold * 0.8;
+        return (
+          <div
+            key={i}
+            className={`w-1 rounded-full transition-all duration-75 ${
+              isActive ? "bg-primary" : "bg-muted-foreground/30"
+            }`}
+            style={{
+              height: `${((i + 1) / bars) * 100}%`,
+              minHeight: "4px",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 export function TrainingInterface({ scenario, onComplete }: TrainingInterfaceProps) {
@@ -39,13 +67,28 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     isSpeaking,
     micPermission,
     interimTranscript,
+    voiceStatus,
+    audioLevel,
+    silenceCountdown,
+    handsFreeModeEnabled,
+    setHandsFreeModeEnabled,
     startRecording,
     stopRecording,
+    cancelRecording,
     speakText,
     stopSpeaking,
+    resetVoiceStatus,
+    SILENCE_COUNTDOWN_SECONDS,
   } = useVoiceChat({
+    autoSend: true,
+    onAutoSend: async (text) => {
+      if (text.trim()) {
+        await sendMessage(text.trim());
+        resetVoiceStatus();
+      }
+    },
     onTranscription: (text) => {
-      // Put transcription in input field so user can review and hit Send
+      // Fallback: put transcription in input field
       if (text.trim()) {
         setInputValue(text.trim());
         inputRef.current?.focus();
@@ -54,6 +97,38 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
   });
 
   const isMicUnavailable = micPermission === "denied" || micPermission === "unavailable";
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        // Only handle Escape in input
+        if (e.key === "Escape" && isRecording) {
+          e.preventDefault();
+          cancelRecording();
+        }
+        return;
+      }
+
+      if (e.code === "Space" && !isProcessing && !isTyping) {
+        e.preventDefault();
+        if (isRecording) {
+          stopRecording();
+        } else if (voiceStatus === "idle") {
+          startRecording();
+        }
+      }
+
+      if (e.key === "Escape" && (isRecording || voiceStatus === "countdown")) {
+        e.preventDefault();
+        cancelRecording();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isRecording, isProcessing, isTyping, voiceStatus, startRecording, stopRecording, cancelRecording]);
 
   // Start session on mount
   useEffect(() => {
@@ -159,6 +234,26 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Hands-free mode toggle */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
+                  <Switch
+                    id="hands-free"
+                    checked={handsFreeModeEnabled}
+                    onCheckedChange={setHandsFreeModeEnabled}
+                    className="scale-90"
+                  />
+                  <Label htmlFor="hands-free" className="text-xs cursor-pointer">
+                    Hands-free
+                  </Label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Auto-restart listening after AI speaks</p>
+              </TooltipContent>
+            </Tooltip>
+
             <Button
               variant="outline"
               size="sm"
@@ -201,6 +296,17 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 <p className="text-sm text-muted-foreground mt-4 italic">
                   Scenario: {sessionState.scenario?.name}
                 </p>
+                {/* Keyboard shortcuts hint */}
+                <div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-2 py-1 bg-muted rounded text-[10px] font-mono">Space</kbd>
+                    <span>to talk</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-2 py-1 bg-muted rounded text-[10px] font-mono">Esc</kbd>
+                    <span>to cancel</span>
+                  </div>
+                </div>
               </div>
             )}
             {sessionState.messages.map((message) => (
@@ -243,45 +349,96 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="border-t border-border p-4 bg-card">
-          {/* Live transcript display */}
-          {isRecording && interimTranscript && (
-            <div className="max-w-2xl mx-auto mb-3 p-3 bg-muted/50 rounded-lg border border-primary/20">
-              <p className="text-sm text-muted-foreground mb-1">Listening...</p>
+        {/* Voice Status Indicator */}
+        {(voiceStatus === "listening" || voiceStatus === "countdown" || voiceStatus === "sending") && (
+          <div className="border-t border-border px-4 py-3 bg-primary/5">
+            <div className="max-w-2xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {voiceStatus === "countdown" ? (
+                  <>
+                    <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <span className="text-lg font-bold text-amber-600">{silenceCountdown}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-amber-600">Sending in {silenceCountdown}s...</p>
+                      <p className="text-xs text-muted-foreground">Keep talking to continue</p>
+                    </div>
+                  </>
+                ) : voiceStatus === "sending" ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <p className="text-sm font-medium">Sending your message...</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                      <AudioLevelIndicator level={audioLevel} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Listening...</p>
+                      <p className="text-xs text-muted-foreground">Speak clearly into your microphone</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {voiceStatus !== "sending" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={cancelRecording}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Live transcript display */}
+        {isRecording && interimTranscript && (
+          <div className="border-t border-primary/20 px-4 py-3 bg-muted/30">
+            <div className="max-w-2xl mx-auto">
               <p className="text-foreground">{interimTranscript}</p>
             </div>
-          )}
-          
+          </div>
+        )}
+
+        {/* Input Area */}
+        <div className="border-t border-border p-4 bg-card">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
-            <button
-              onClick={toggleRecording}
-              disabled={isProcessing || isMicUnavailable}
-              className={`p-3 rounded-full transition-colors ${
-                isRecording
-                  ? "bg-destructive text-destructive-foreground recording-pulse"
-                  : isProcessing
-                  ? "bg-muted text-muted-foreground"
-                  : isMicUnavailable
-                  ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
-                  : "bg-muted hover:bg-muted/80 text-muted-foreground"
-              }`}
-              title={
-                isMicUnavailable 
-                  ? "Microphone unavailable - use text input" 
-                  : isRecording 
-                  ? "Stop recording" 
-                  : "Start recording"
-              }
-            >
-              {isProcessing ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : isRecording ? (
-                <MicOff className="w-5 h-5" />
-              ) : (
-                <Mic className="w-5 h-5" />
-              )}
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleRecording}
+                  disabled={isProcessing || isMicUnavailable || voiceStatus === "sending"}
+                  className={`p-3 rounded-full transition-colors ${
+                    isRecording
+                      ? "bg-destructive text-destructive-foreground recording-pulse"
+                      : isProcessing || voiceStatus === "sending"
+                      ? "bg-muted text-muted-foreground"
+                      : isMicUnavailable
+                      ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                  }`}
+                >
+                  {isProcessing || voiceStatus === "sending" ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : isRecording ? (
+                    <MicOff className="w-5 h-5" />
+                  ) : (
+                    <Mic className="w-5 h-5" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isRecording ? "Stop recording (Space)" : "Start recording (Space)"}</p>
+              </TooltipContent>
+            </Tooltip>
+            
             <button
               onClick={handleSpeakLastMessage}
               className={`p-3 rounded-full transition-colors ${
@@ -302,13 +459,13 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or use the mic..."}
-              disabled={isTyping || isRecording}
+              placeholder={isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or press Space to talk..."}
+              disabled={isTyping || isRecording || voiceStatus === "sending"}
               className="flex-1"
             />
             <Button
               onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping}
+              disabled={!inputValue.trim() || isTyping || voiceStatus === "sending"}
               className="btn-gradient px-6"
             >
               <Send className="w-4 h-4 mr-2" />

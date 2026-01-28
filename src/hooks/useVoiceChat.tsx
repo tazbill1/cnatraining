@@ -3,6 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface UseVoiceChatOptions {
   onTranscription?: (text: string) => void;
+  autoSend?: boolean; // If true, auto-sends after silence detection
+  onAutoSend?: (text: string) => void; // Called when auto-sending
 }
 
 // Type definitions for Web Speech API
@@ -49,6 +51,10 @@ declare global {
   }
 }
 
+export type VoiceStatus = "idle" | "listening" | "countdown" | "sending";
+
+const SILENCE_COUNTDOWN_SECONDS = 2;
+
 export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
@@ -56,13 +62,46 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [micPermission, setMicPermission] = useState<"granted" | "denied" | "prompt" | "unavailable">("prompt");
   const [interimTranscript, setInterimTranscript] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [silenceCountdown, setSilenceCountdown] = useState(SILENCE_COUNTDOWN_SECONDS);
+  const [handsFreeModeEnabled, setHandsFreeModeEnabled] = useState(false);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const finalTranscriptRef = useRef("");
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSpeechTimeRef = useRef<number>(Date.now());
 
   // Check for Speech Recognition support
   const getSpeechRecognition = useCallback(() => {
     return window.SpeechRecognition || window.webkitSpeechRecognition;
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
   }, []);
 
   // Check microphone permission on mount
@@ -100,6 +139,99 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     checkMicPermission();
   }, [getSpeechRecognition]);
 
+  // Start audio level monitoring
+  const startAudioLevelMonitoring = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const updateLevel = () => {
+        if (!analyserRef.current) return;
+        
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        const normalizedLevel = Math.min(average / 128, 1);
+        setAudioLevel(normalizedLevel);
+
+        // Detect speech activity for silence detection
+        if (normalizedLevel > 0.1) {
+          lastSpeechTimeRef.current = Date.now();
+        }
+
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
+      };
+
+      updateLevel();
+    } catch (error) {
+      console.error("Error starting audio monitoring:", error);
+    }
+  }, []);
+
+  // Stop audio level monitoring
+  const stopAudioLevelMonitoring = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setAudioLevel(0);
+  }, []);
+
+  // Start silence countdown
+  const startSilenceCountdown = useCallback(() => {
+    setVoiceStatus("countdown");
+    setSilenceCountdown(SILENCE_COUNTDOWN_SECONDS);
+
+    countdownIntervalRef.current = setInterval(() => {
+      setSilenceCountdown(prev => {
+        if (prev <= 1) {
+          // Time to send
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+          // Stop recognition which will trigger send
+          if (recognitionRef.current) {
+            recognitionRef.current.stop();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Reset countdown when speech detected
+  const resetCountdown = useCallback(() => {
+    if (voiceStatus === "countdown") {
+      setVoiceStatus("listening");
+      setSilenceCountdown(SILENCE_COUNTDOWN_SECONDS);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+    }
+  }, [voiceStatus]);
+
   const startRecording = useCallback(async () => {
     const SpeechRecognitionAPI = getSpeechRecognition();
     
@@ -118,18 +250,23 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       setMicPermission("granted");
 
+      // Start audio level monitoring
+      startAudioLevelMonitoring();
+
       const recognition = new SpeechRecognitionAPI();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = "en-US";
 
-      let finalTranscript = "";
+      finalTranscriptRef.current = "";
+      setInterimTranscript("");
+      setVoiceStatus("listening");
+      setSilenceCountdown(SILENCE_COUNTDOWN_SECONDS);
+      lastSpeechTimeRef.current = Date.now();
 
       recognition.onstart = () => {
         console.log("Speech recognition started");
         setIsRecording(true);
-        setInterimTranscript("");
-        finalTranscript = "";
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -138,19 +275,45 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
-            finalTranscript += result[0].transcript + " ";
+            finalTranscriptRef.current += result[0].transcript + " ";
+            lastSpeechTimeRef.current = Date.now();
+            resetCountdown();
           } else {
             interim += result[0].transcript;
           }
         }
         
-        setInterimTranscript(finalTranscript + interim);
+        setInterimTranscript(finalTranscriptRef.current + interim);
+
+        // Start silence detection after getting some text (only if autoSend is enabled)
+        if (options.autoSend && finalTranscriptRef.current.trim()) {
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          silenceTimerRef.current = setTimeout(() => {
+            if (finalTranscriptRef.current.trim() && voiceStatus === "listening") {
+              startSilenceCountdown();
+            }
+          }, 1500);
+        }
       };
 
       recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
         setIsRecording(false);
         setIsProcessing(false);
+        setVoiceStatus("idle");
+        stopAudioLevelMonitoring();
+        
+        // Clear timers
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
         
         if (event.error === "not-allowed") {
           setMicPermission("denied");
@@ -160,7 +323,6 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
             description: "Please allow microphone access in your browser settings.",
           });
         } else if (event.error === "no-speech") {
-          // No speech detected - not an error, just inform the user
           toast({
             title: "No Speech Detected",
             description: "Please speak clearly into your microphone and try again.",
@@ -175,15 +337,35 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       };
 
       recognition.onend = () => {
-        console.log("Speech recognition ended, final:", finalTranscript.trim());
+        console.log("Speech recognition ended, final:", finalTranscriptRef.current.trim());
         setIsRecording(false);
+        stopAudioLevelMonitoring();
         
-        if (finalTranscript.trim() && options.onTranscription) {
-          setIsProcessing(true);
-          options.onTranscription(finalTranscript.trim());
-          setIsProcessing(false);
+        // Clear timers
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
         }
         
+        const transcript = finalTranscriptRef.current.trim();
+        if (transcript) {
+          if (options.autoSend && options.onAutoSend) {
+            setVoiceStatus("sending");
+            options.onAutoSend(transcript);
+          } else if (options.onTranscription) {
+            setIsProcessing(true);
+            options.onTranscription(transcript);
+            setIsProcessing(false);
+          }
+        }
+        
+        if (!options.autoSend) {
+          setVoiceStatus("idle");
+        }
         setInterimTranscript("");
         recognitionRef.current = null;
       };
@@ -209,12 +391,50 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         });
       }
     }
-  }, [getSpeechRecognition, options, toast]);
+  }, [getSpeechRecognition, options, toast, startAudioLevelMonitoring, stopAudioLevelMonitoring, startSilenceCountdown, resetCountdown, voiceStatus]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
+
+  // Cancel recording without sending
+  const cancelRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setIsRecording(false);
+    setInterimTranscript("");
+    setVoiceStatus("idle");
+    finalTranscriptRef.current = "";
+    stopAudioLevelMonitoring();
+    toast({
+      title: "Recording cancelled",
+      description: "Your message was not sent.",
+    });
+  }, [stopAudioLevelMonitoring, toast]);
+
+  // Reset voice status (for external control)
+  const resetVoiceStatus = useCallback(() => {
+    setVoiceStatus("idle");
   }, []);
 
   const speakText = useCallback(
@@ -298,6 +518,12 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
           utterance.onend = () => {
             setIsSpeaking(false);
+            // Auto-restart recording if hands-free mode is enabled
+            if (handsFreeModeEnabled) {
+              setTimeout(() => {
+                startRecording();
+              }, 300);
+            }
           };
 
           utterance.onerror = () => {
@@ -317,7 +543,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         });
       }
     },
-    [isSpeaking, toast]
+    [isSpeaking, toast, handsFreeModeEnabled, startRecording]
   );
 
   const stopSpeaking = useCallback(() => {
@@ -330,14 +556,29 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   }, []);
 
   return {
+    // Recording state
     isRecording,
     isProcessing,
     isSpeaking,
     micPermission,
     interimTranscript,
+    
+    // New voice features
+    voiceStatus,
+    audioLevel,
+    silenceCountdown,
+    handsFreeModeEnabled,
+    setHandsFreeModeEnabled,
+    
+    // Actions
     startRecording,
     stopRecording,
+    cancelRecording,
     speakText,
     stopSpeaking,
+    resetVoiceStatus,
+    
+    // Constants
+    SILENCE_COUNTDOWN_SECONDS,
   };
 }

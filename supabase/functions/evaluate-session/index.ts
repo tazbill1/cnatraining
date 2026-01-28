@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// Input validation constants
+const MAX_MESSAGES = 100;
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_DURATION_SECONDS = 7200; // 2 hours max
 
 const EVALUATION_PROMPT = `You are an expert automotive sales trainer evaluating a Customer Needs Analysis (CNA) conversation.
 
@@ -35,7 +41,71 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, scenario, checklistState, durationSeconds } = await req.json();
+    // Authentication check
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse and validate input
+    const body = await req.json();
+    const { messages, scenario, checklistState, durationSeconds } = body;
+
+    // Validate messages array
+    if (!Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid messages format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (messages.length > MAX_MESSAGES) {
+      return new Response(
+        JSON.stringify({ error: `Too many messages. Maximum allowed: ${MAX_MESSAGES}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate each message
+    for (const msg of messages) {
+      if (!msg.role || !msg.content) {
+        return new Response(
+          JSON.stringify({ error: "Each message must have role and content" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (typeof msg.content !== "string" || msg.content.length > MAX_MESSAGE_LENGTH) {
+        return new Response(
+          JSON.stringify({ error: `Message content too long. Maximum: ${MAX_MESSAGE_LENGTH} characters` }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Validate durationSeconds
+    const validatedDuration = typeof durationSeconds === "number" && durationSeconds >= 0 && durationSeconds <= MAX_DURATION_SECONDS
+      ? durationSeconds
+      : 0;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -44,7 +114,7 @@ serve(async (req) => {
 
     // Format conversation for evaluation
     const conversationText = messages
-      .map((msg: any) => {
+      .map((msg: { role: string; content: string }) => {
         const role = msg.role === "user" ? "SALESPERSON" : "CUSTOMER";
         return `${role}: ${msg.content}`;
       })
@@ -52,11 +122,11 @@ serve(async (req) => {
 
     const contextInfo = `
 Scenario: ${scenario?.name || "Unknown"}
-Duration: ${Math.floor((durationSeconds || 0) / 60)} minutes
+Duration: ${Math.floor(validatedDuration / 60)} minutes
 Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).length}/11
 `;
 
-    console.log("Calling Lovable AI for evaluation");
+    console.log("Calling Lovable AI for evaluation, user:", claimsData.claims.sub);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

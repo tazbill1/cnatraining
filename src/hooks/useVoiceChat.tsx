@@ -81,6 +81,19 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const retryCountRef = useRef(0);
   const isRetryingRef = useRef(false);
 
+  const safeCloseAudioContext = useCallback((ctx: AudioContext | null) => {
+    if (!ctx) return;
+    try {
+      // AudioContext.close() returns a Promise and may reject in some browsers
+      // if called at an unexpected time/state. We never want that to bubble up.
+      void ctx.close().catch((e) => {
+        console.warn("AudioContext.close() rejected:", e);
+      });
+    } catch (e) {
+      console.warn("AudioContext.close() threw:", e);
+    }
+  }, []);
+
   // Check for Speech Recognition support
   const getSpeechRecognition = useCallback(() => {
     return window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -93,7 +106,8 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         cancelAnimationFrame(animationFrameRef.current);
       }
       if (audioContextRef.current) {
-        audioContextRef.current.close();
+        safeCloseAudioContext(audioContextRef.current);
+        audioContextRef.current = null;
       }
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
@@ -189,7 +203,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       animationFrameRef.current = null;
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close();
+      safeCloseAudioContext(audioContextRef.current);
       audioContextRef.current = null;
     }
     if (mediaStreamRef.current) {
@@ -197,7 +211,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       mediaStreamRef.current = null;
     }
     setAudioLevel(0);
-  }, []);
+  }, [safeCloseAudioContext]);
 
   // Start silence countdown
   const startSilenceCountdown = useCallback(() => {

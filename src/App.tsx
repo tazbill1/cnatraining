@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { CrashReporter } from "@/components/debug/CrashReporter";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +15,7 @@ import Progress from "./pages/Progress";
 import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
+import { CrashReporter } from "@/components/debug/CrashReporter";
 
 const queryClient = new QueryClient();
 

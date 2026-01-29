@@ -1,6 +1,7 @@
 import { Calendar, Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { scenarios } from "@/lib/scenarios";
+import { scenarios, getCategoryById } from "@/lib/scenarios";
+import { Badge } from "@/components/ui/badge";
 
 interface RecentSessionCardProps {
   scenarioType: string;
@@ -17,6 +18,7 @@ export function RecentSessionCard({
 }: RecentSessionCardProps) {
   const scenario = scenarios.find((s) => s.id === scenarioType);
   const Icon = scenario?.icon || Trophy;
+  const category = scenario ? getCategoryById(scenario.category) : null;
 
   const getScoreClass = (score: number) => {
     if (score >= 90) return "score-excellent";
@@ -36,10 +38,17 @@ export function RecentSessionCard({
         <Icon className="w-5 h-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">
-          {scenario?.name || scenarioType}
-        </p>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="font-medium text-foreground truncate">
+            {scenario?.name || scenarioType}
+          </p>
+          {category && (
+            <Badge variant="secondary" className="text-xs shrink-0">
+              {category.name}
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5" />
             {date.toLocaleDateString()}

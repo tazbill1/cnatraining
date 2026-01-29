@@ -1,17 +1,24 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FolderOpen } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
 import { Button } from "@/components/ui/button";
-import { scenarios } from "@/lib/scenarios";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { scenarios, scenarioCategories, getScenariosByCategory, ScenarioCategory } from "@/lib/scenarios";
 
 export default function Scenarios() {
   const navigate = useNavigate();
+  const [activeCategory, setActiveCategory] = useState<ScenarioCategory>("cna-practice");
 
   const handleSelectScenario = (scenarioId: string) => {
     navigate(`/training/${scenarioId}`);
   };
+
+  const cnaPracticeScenarios = getScenariosByCategory("cna-practice");
+  const vehicleTradeScenarios = getScenariosByCategory("vehicle-trade");
 
   return (
     <AuthGuard>
@@ -28,39 +35,125 @@ export default function Scenarios() {
               Back to Dashboard
             </Button>
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Choose Your Customer
+              Practice Center
             </h1>
             <p className="text-muted-foreground">
-              Select a scenario to practice your Customer Needs Analysis skills
+              Choose a category to practice your sales skills
             </p>
           </div>
 
-          {/* Difficulty Legend */}
-          <div className="flex items-center gap-6 mb-6">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-success" />
-              <span className="text-sm text-muted-foreground">Beginner</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-warning" />
-              <span className="text-sm text-muted-foreground">Intermediate</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-destructive" />
-              <span className="text-sm text-muted-foreground">Advanced</span>
-            </div>
-          </div>
+          {/* Category Tabs */}
+          <Tabs
+            value={activeCategory}
+            onValueChange={(value) => setActiveCategory(value as ScenarioCategory)}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              {scenarioCategories.map((category) => (
+                <TabsTrigger
+                  key={category.id}
+                  value={category.id}
+                  className="flex items-center gap-2"
+                >
+                  <category.icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{category.name}</span>
+                  <span className="sm:hidden">
+                    {category.name.split(" ")[0]}
+                  </span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {/* Scenario Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
-            {scenarios.map((scenario) => (
-              <ScenarioCard
-                key={scenario.id}
-                scenario={scenario}
-                onClick={() => handleSelectScenario(scenario.id)}
-              />
-            ))}
-          </div>
+            {/* CNA Practice Tab */}
+            <TabsContent value="cna-practice" className="mt-0">
+              {/* Difficulty Legend */}
+              <div className="flex items-center gap-6 mb-6">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-success" />
+                  <span className="text-sm text-muted-foreground">Beginner</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-warning" />
+                  <span className="text-sm text-muted-foreground">Intermediate</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-destructive" />
+                  <span className="text-sm text-muted-foreground">Advanced</span>
+                </div>
+              </div>
+
+              {/* Scenario Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                {cnaPracticeScenarios.map((scenario) => (
+                  <ScenarioCard
+                    key={scenario.id}
+                    scenario={scenario}
+                    onClick={() => handleSelectScenario(scenario.id)}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Vehicle Selection & Trade Appraisal Tab */}
+            <TabsContent value="vehicle-trade" className="mt-0">
+              {vehicleTradeScenarios.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                  {vehicleTradeScenarios.map((scenario) => (
+                    <ScenarioCard
+                      key={scenario.id}
+                      scenario={scenario}
+                      onClick={() => handleSelectScenario(scenario.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="border-dashed">
+                  <CardHeader className="text-center pb-2">
+                    <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <FolderOpen className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <CardTitle className="text-lg">Coming Soon</CardTitle>
+                    <CardDescription>
+                      Vehicle Selection & Trade Appraisal scenarios are being developed.
+                      Check back soon for new training content!
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveCategory("cna-practice")}
+                    >
+                      Practice CNA Skills Instead
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Reference Materials Tab */}
+            <TabsContent value="reference" className="mt-0">
+              <Card className="border-dashed">
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <FolderOpen className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <CardTitle className="text-lg">Reference Materials</CardTitle>
+                  <CardDescription>
+                    Guides, scripts, and training resources will be available here soon.
+                    This section will include CNA checklists, best practices, and quick reference guides.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveCategory("cna-practice")}
+                  >
+                    Start Practicing Instead
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </AppLayout>
     </AuthGuard>

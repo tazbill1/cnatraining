@@ -1,18 +1,22 @@
 import { Clock } from "lucide-react";
-import { Scenario } from "@/lib/scenarios";
+import { Scenario, getCategoryById } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface ScenarioCardProps {
   scenario: Scenario;
   onClick: () => void;
+  showCategory?: boolean;
 }
 
-export function ScenarioCard({ scenario, onClick }: ScenarioCardProps) {
+export function ScenarioCard({ scenario, onClick, showCategory = false }: ScenarioCardProps) {
   const difficultyClass = {
     beginner: "difficulty-beginner",
     intermediate: "difficulty-intermediate",
     advanced: "difficulty-advanced",
   }[scenario.difficulty];
+
+  const category = getCategoryById(scenario.category);
 
   return (
     <button
@@ -24,9 +28,16 @@ export function ScenarioCard({ scenario, onClick }: ScenarioCardProps) {
           <scenario.icon className="w-7 h-7 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-            {scenario.name}
-          </h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+              {scenario.name}
+            </h3>
+            {showCategory && category && (
+              <Badge variant="secondary" className="text-xs">
+                {category.name}
+              </Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
             {scenario.description}
           </p>

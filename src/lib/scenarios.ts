@@ -1,4 +1,34 @@
-import { User, Search, RefreshCw, Users, DollarSign, Gauge, Clock, Shield, Zap, Heart } from "lucide-react";
+import { User, Search, RefreshCw, Users, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, FileText, BookOpen } from "lucide-react";
+
+export type ScenarioCategory = "cna-practice" | "vehicle-trade" | "reference";
+
+export interface ScenarioCategory_Info {
+  id: ScenarioCategory;
+  name: string;
+  description: string;
+  icon: typeof User;
+}
+
+export const scenarioCategories: ScenarioCategory_Info[] = [
+  {
+    id: "cna-practice",
+    name: "CNA Practice",
+    description: "Practice Customer Needs Analysis with diverse customer personas",
+    icon: Users,
+  },
+  {
+    id: "vehicle-trade",
+    name: "Vehicle Selection & Trade Appraisal",
+    description: "Practice vehicle matching and trade-in evaluation scenarios",
+    icon: Car,
+  },
+  {
+    id: "reference",
+    name: "Reference Materials",
+    description: "Guides, scripts, and training resources",
+    icon: BookOpen,
+  },
+];
 
 export interface Scenario {
   id: string;
@@ -10,6 +40,7 @@ export interface Scenario {
   icon: typeof User;
   systemPrompt: string;
   openingLine: string;
+  category: ScenarioCategory;
 }
 
 export const scenarios: Scenario[] = [
@@ -21,6 +52,7 @@ export const scenarios: Scenario[] = [
     difficulty: "beginner",
     estimatedTime: "15-20 min",
     icon: User,
+    category: "cna-practice",
     systemPrompt: `You are playing a first-time car buyer named Jamie. You're 26 years old, just got your first real job, and this is your first time buying a car. You're nervous and unsure about the process.
 
 BACKGROUND (reveal when asked appropriately):
@@ -64,6 +96,7 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Search,
+    category: "cna-practice",
     systemPrompt: `You are playing a meticulous researcher named Alex. You're 38, work in IT, and spent weeks researching cars online. You're 95% decided but want validation.
 
 BACKGROUND (reveal when asked appropriately):
@@ -106,6 +139,7 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: RefreshCw,
+    category: "cna-practice",
     systemPrompt: `You are playing a frustrated car owner named Morgan. You're 42 and absolutely done with your current minivan. Want to trade up to something better.
 
 BACKGROUND (reveal when asked appropriately):
@@ -148,6 +182,7 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Users,
+    category: "cna-practice",
     systemPrompt: `You are playing TWO characters - a couple named Sam and Jordan who have different priorities for their next car.
 
 SAM's priorities:
@@ -190,6 +225,7 @@ JORDAN: "Budget is $50,000, Sam. We agreed on this."`,
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: DollarSign,
+    category: "cna-practice",
     systemPrompt: `You are playing a budget-conscious shopper named Taylor. You're 35 with a young family and need to make every dollar count.
 
 BACKGROUND (reveal when asked appropriately):
@@ -236,6 +272,7 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Gauge,
+    category: "cna-practice",
     systemPrompt: `You are playing a car enthusiast named Chris. You're 45 years old, own a classic car you restore on weekends, and know more about cars than most salespeople.
 
 Key characteristics:
@@ -265,6 +302,7 @@ You're not trying to show off - you genuinely love cars and want a salesperson w
     difficulty: "intermediate",
     estimatedTime: "10-15 min",
     icon: Clock,
+    category: "cna-practice",
     systemPrompt: `You are playing a busy executive named Patricia. You're 48 years old, VP of Operations at a tech company, and your time is extremely valuable. You have 20 minutes before your next meeting.
 
 Key characteristics:
@@ -294,6 +332,7 @@ You'll buy today if the salesperson is efficient. You'll walk out if they waste 
     difficulty: "beginner",
     estimatedTime: "15-20 min",
     icon: Shield,
+    category: "cna-practice",
     systemPrompt: `You are playing a new parent named Rachel. You're 32 and just had your first baby 3 months ago. Your current sports car is impractical and you're terrified of accidents.
 
 BACKGROUND (reveal when asked appropriately):
@@ -340,6 +379,7 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "10-15 min",
     icon: Zap,
+    category: "cna-practice",
     systemPrompt: `You are playing an impulse buyer named Derek. You're 29 years old, just got a promotion, and want to treat yourself. You make decisions based on how things make you feel.
 
 Key characteristics:
@@ -369,6 +409,7 @@ You're ready to buy something beautiful TODAY. A good salesperson will help you 
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Heart,
+    category: "cna-practice",
     systemPrompt: `You are playing a loyal customer named Robert. You're 58 years old and this is your 6th vehicle from this dealership over 20 years. You expect to be treated like family.
 
 Key characteristics:
@@ -394,4 +435,12 @@ You want to continue your relationship with this brand, but you need to feel val
 
 export const getScenarioById = (id: string): Scenario | undefined => {
   return scenarios.find((s) => s.id === id);
+};
+
+export const getScenariosByCategory = (category: ScenarioCategory): Scenario[] => {
+  return scenarios.filter((s) => s.category === category);
+};
+
+export const getCategoryById = (id: ScenarioCategory): ScenarioCategory_Info | undefined => {
+  return scenarioCategories.find((c) => c.id === id);
 };

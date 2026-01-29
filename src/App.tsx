@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Learn from "./pages/Learn";
 import ModuleContent from "./pages/ModuleContent";
+import Module2Content from "./pages/Module2Content";
 import Scenarios from "./pages/Scenarios";
 import Training from "./pages/Training";
 import VoiceTraining from "./pages/VoiceTraining";
@@ -34,6 +35,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/learn/vehicle-selection-fundamentals" element={<ModuleContent />} />
+            <Route path="/learn/trade-appraisal-process" element={<Module2Content />} />
             <Route path="/learn/:moduleId" element={<ModuleContent />} />
             <Route path="/scenarios" element={<Scenarios />} />
             <Route path="/training/:scenarioId" element={<Training />} />

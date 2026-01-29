@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -9,35 +9,31 @@ import { ModuleIntro } from "@/components/learn/ModuleIntro";
 import { ModuleProgress } from "@/components/learn/ModuleProgress";
 import { KnowledgeCheck } from "@/components/learn/KnowledgeCheck";
 import { ModuleQuiz } from "@/components/learn/ModuleQuiz";
-import { VehicleSelectionSection } from "@/components/learn/sections/VehicleSelectionSection";
-import { ACVSection } from "@/components/learn/sections/ACVSection";
-import { TradeValueSection } from "@/components/learn/sections/TradeValueSection";
-import { PresentationSection } from "@/components/learn/sections/PresentationSection";
+import { FramingSection } from "@/components/learn/sections/FramingSection";
+import { EvaluationSection } from "@/components/learn/sections/EvaluationSection";
+import { DisclosureSection } from "@/components/learn/sections/DisclosureSection";
 import {
-  module1Objectives,
-  module1Overview,
-  module1KnowledgeChecks,
-  module1Quiz,
-} from "@/lib/moduleContent";
+  module2Objectives,
+  module2Overview,
+  module2KnowledgeChecks,
+  module2Quiz,
+} from "@/lib/module2Content";
 import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "quiz" | "complete";
+type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "complete";
 
-const sectionLabels = ["Intro", "Vehicle Selection", "ACV vs Trade", "6-Step Process", "Presentation", "Quiz"];
+const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Quiz"];
 
-export default function ModuleContent() {
-  const { moduleId } = useParams();
+export default function Module2Content() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
 
-  // Default to vehicle-selection-fundamentals if no moduleId
-  const effectiveModuleId = moduleId || "vehicle-selection-fundamentals";
-  const module = getModuleById(effectiveModuleId);
+  const module = getModuleById("trade-appraisal-process");
 
   useEffect(() => {
     if (!module) {
@@ -58,10 +54,10 @@ export default function ModuleContent() {
   };
 
   const handleNextSection = () => {
-    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "quiz"];
+    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
     const currentIndex = stageOrder.indexOf(stage);
     
-    if (currentIndex >= 1 && currentIndex <= 4) {
+    if (currentIndex >= 1 && currentIndex <= 3) {
       setCompletedSections([...completedSections, currentIndex]);
     }
     
@@ -72,7 +68,7 @@ export default function ModuleContent() {
   };
 
   const handlePreviousSection = () => {
-    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "quiz"];
+    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
     const currentIndex = stageOrder.indexOf(stage);
     if (currentIndex > 0) {
       setStage(stageOrder[currentIndex - 1]);
@@ -82,7 +78,6 @@ export default function ModuleContent() {
 
   const handleQuizComplete = (passed: boolean, score: number) => {
     if (passed && user) {
-      // Mark module as complete
       const storageKey = `completed_modules_${user.id}`;
       const stored = localStorage.getItem(storageKey);
       const completed = stored ? JSON.parse(stored) : [];
@@ -105,9 +100,8 @@ export default function ModuleContent() {
       section1: 1,
       section2: 2,
       section3: 3,
-      section4: 4,
-      quiz: 5,
-      complete: 5,
+      quiz: 4,
+      complete: 4,
     };
     return stageMap[stage];
   };
@@ -118,10 +112,10 @@ export default function ModuleContent() {
         return (
           <ModuleIntro
             title={module.title}
-            welcomeMessage="Vehicle selection isn't about showing cars. It's about understanding what drives the decision—and guiding customers to vehicles that deliver on their expectations."
-            overview={module1Overview}
-            objectives={module1Objectives}
-            estimatedTime="10-12 minutes"
+            welcomeMessage="The trade appraisal isn't a negotiation — it's a process. Learn to set expectations, evaluate consistently, and disclose with confidence."
+            overview={module2Overview}
+            objectives={module2Objectives}
+            estimatedTime="12-15 minutes"
             onStart={handleStart}
           />
         );
@@ -129,9 +123,9 @@ export default function ModuleContent() {
       case "section1":
         return (
           <div className="space-y-8">
-            <VehicleSelectionSection />
+            <FramingSection />
             <KnowledgeCheck
-              check={module1KnowledgeChecks.section1}
+              check={module2KnowledgeChecks.section1}
               onComplete={(passed) => handleKnowledgeCheckComplete("section1", passed)}
             />
           </div>
@@ -140,9 +134,9 @@ export default function ModuleContent() {
       case "section2":
         return (
           <div className="space-y-8">
-            <ACVSection />
+            <EvaluationSection />
             <KnowledgeCheck
-              check={module1KnowledgeChecks.section2}
+              check={module2KnowledgeChecks.section2}
               onComplete={(passed) => handleKnowledgeCheckComplete("section2", passed)}
             />
           </div>
@@ -151,21 +145,10 @@ export default function ModuleContent() {
       case "section3":
         return (
           <div className="space-y-8">
-            <TradeValueSection />
+            <DisclosureSection />
             <KnowledgeCheck
-              check={module1KnowledgeChecks.section3}
+              check={module2KnowledgeChecks.section3}
               onComplete={(passed) => handleKnowledgeCheckComplete("section3", passed)}
-            />
-          </div>
-        );
-
-      case "section4":
-        return (
-          <div className="space-y-8">
-            <PresentationSection />
-            <KnowledgeCheck
-              check={module1KnowledgeChecks.section4}
-              onComplete={(passed) => handleKnowledgeCheckComplete("section4", passed)}
             />
           </div>
         );
@@ -180,7 +163,7 @@ export default function ModuleContent() {
               </p>
             </div>
             <ModuleQuiz
-              questions={module1Quiz}
+              questions={module2Quiz}
               passingScore={80}
               onComplete={handleQuizComplete}
             />
@@ -263,7 +246,7 @@ export default function ModuleContent() {
                     Previous
                   </Button>
                   <Button onClick={handleNextSection} className="gap-2">
-                    {stage === "section4" ? "Take Quiz" : "Next Section"}
+                    {stage === "section3" ? "Take Quiz" : "Next Section"}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>

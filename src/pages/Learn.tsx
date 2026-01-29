@@ -43,7 +43,7 @@ export default function Learn() {
       return;
     }
     // Modules with full content
-    const implementedModules = ["vehicle-selection-fundamentals", "trade-appraisal-process"];
+    const implementedModules = ["vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework"];
     if (implementedModules.includes(moduleId)) {
       navigate(`/learn/${moduleId}`);
     } else {

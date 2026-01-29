@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { cnaChecklist } from "@/lib/checklist";
+import { logger } from "@/lib/logger";
 
 interface SessionData {
   id: string;
@@ -75,7 +76,7 @@ export default function ProgressPage() {
           certificationProgress: certProgress,
         });
       } catch (error) {
-        console.error("Error fetching progress data:", error);
+        logger.error("Error fetching progress data:", error);
       } finally {
         setIsLoading(false);
       }

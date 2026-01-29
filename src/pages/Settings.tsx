@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { User, Building, Volume2, Gauge, MessageSquare, Lock, Save, Loader2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export default function Settings() {
   const { profile, refreshProfile, signOut } = useAuth();
@@ -58,7 +59,7 @@ export default function Settings() {
         description: "Your preferences have been updated.",
       });
     } catch (error) {
-      console.error("Error saving settings:", error);
+      logger.error("Error saving settings:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -102,7 +103,7 @@ export default function Settings() {
       });
       setPasswordData({ newPassword: "", confirmPassword: "" });
     } catch (error) {
-      console.error("Error changing password:", error);
+      logger.error("Error changing password:", error);
       toast({
         variant: "destructive",
         title: "Error",

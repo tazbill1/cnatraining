@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Learn from "./pages/Learn";
 import Scenarios from "./pages/Scenarios";
 import Training from "./pages/Training";
 import VoiceTraining from "./pages/VoiceTraining";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/learn" element={<Learn />} />
             <Route path="/scenarios" element={<Scenarios />} />
             <Route path="/training/:scenarioId" element={<Training />} />
             <Route path="/voice-training" element={<VoiceTraining />} />

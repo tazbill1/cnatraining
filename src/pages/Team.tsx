@@ -12,6 +12,7 @@ import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, CheckCirc
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
+import { logger } from "@/lib/logger";
 
 interface UserEngagement {
   id: string;
@@ -121,7 +122,7 @@ export default function Team() {
         avgTeamScore,
       });
     } catch (error) {
-      console.error("Error fetching engagement data:", error);
+      logger.error("Error fetching engagement data:", error);
     } finally {
       setLoading(false);
     }
@@ -284,6 +285,14 @@ interface UserTableProps {
   getScoreBadge: (score: number) => { color: string };
 }
 
+// Mask email addresses for privacy - only show first 2 chars + domain
+function maskEmail(email: string): string {
+  if (!email || !email.includes("@")) return "***@***.***";
+  const [user, domain] = email.split("@");
+  const maskedUser = user.length > 2 ? `${user.substring(0, 2)}${"*".repeat(Math.min(user.length - 2, 5))}` : user;
+  return `${maskedUser}@${domain}`;
+}
+
 function UserTable({ users, getActivityStatus, getScoreBadge }: UserTableProps) {
   if (users.length === 0) {
     return (
@@ -321,7 +330,7 @@ function UserTable({ users, getActivityStatus, getScoreBadge }: UserTableProps) 
                   </Avatar>
                   <div>
                     <div className="font-medium">{user.full_name}</div>
-                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                    <div className="text-xs text-muted-foreground">{maskEmail(user.email)}</div>
                   </div>
                 </div>
               </TableCell>

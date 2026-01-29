@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { logger } from "@/lib/logger";
 
 interface Message {
   role: "user" | "assistant";
@@ -176,7 +177,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
 
       updateLevel();
     } catch (error) {
-      console.error("Error starting audio monitoring:", error);
+      logger.error("Error starting audio monitoring:", error);
     }
   }, [voiceStatus]);
 
@@ -266,7 +267,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       // Convert response to speech, then auto-restart if hands-free
       await speakText(data.message, data.voice);
     } catch (error) {
-      console.error("Chat error:", error);
+      logger.error("Chat error:", error);
       setVoiceStatus("idle");
       toast({
         title: "Error",
@@ -319,7 +320,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     startAudioLevelMonitoring();
 
     recognition.onstart = () => {
-      console.log("Speech recognition started");
+      logger.log("Speech recognition started");
       setIsRecording(true);
     };
 
@@ -369,7 +370,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     };
 
     recognition.onend = () => {
-      console.log("Speech recognition ended, final:", finalTranscriptRef.current.trim());
+      logger.log("Speech recognition ended, final:", finalTranscriptRef.current.trim());
       setIsRecording(false);
       setInterimTranscript("");
       
@@ -393,7 +394,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
+      logger.error("Speech recognition error:", event.error);
       setIsRecording(false);
       setInterimTranscript("");
       setVoiceStatus("idle");

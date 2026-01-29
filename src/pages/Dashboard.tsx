@@ -9,6 +9,7 @@ import { RecentSessionCard } from "@/components/dashboard/RecentSessionCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface SessionData {
   id: string;
@@ -66,7 +67,7 @@ export default function Dashboard() {
           certificationProgress: certProgress,
         });
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        logger.error("Error fetching dashboard data:", error);
       } finally {
         setIsLoading(false);
       }

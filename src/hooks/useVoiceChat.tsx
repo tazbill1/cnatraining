@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 interface UseVoiceChatOptions {
   onTranscription?: (text: string) => void;
@@ -87,10 +88,10 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       // AudioContext.close() returns a Promise and may reject in some browsers
       // if called at an unexpected time/state. We never want that to bubble up.
       void ctx.close().catch((e) => {
-        console.warn("AudioContext.close() rejected:", e);
+        logger.warn("AudioContext.close() rejected:", e);
       });
     } catch (e) {
-      console.warn("AudioContext.close() threw:", e);
+      logger.warn("AudioContext.close() threw:", e);
     }
   }, []);
 
@@ -192,7 +193,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
       updateLevel();
     } catch (error) {
-      console.error("Error starting audio monitoring:", error);
+      logger.error("Error starting audio monitoring:", error);
     }
   }, []);
 
@@ -284,7 +285,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       isRetryingRef.current = false;
 
       recognition.onstart = () => {
-        console.log("Speech recognition started");
+        logger.log("Speech recognition started");
         setIsRecording(true);
       };
 
@@ -318,11 +319,11 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       };
 
       recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
+        logger.error("Speech recognition error:", event.error);
         
         // Handle recoverable errors with retry
         if ((event.error === "audio-capture" || event.error === "network") && retryCountRef.current < MAX_RETRY_ATTEMPTS && !isRetryingRef.current) {
-          console.log(`Retrying speech recognition (attempt ${retryCountRef.current + 1}/${MAX_RETRY_ATTEMPTS})`);
+          logger.log(`Retrying speech recognition (attempt ${retryCountRef.current + 1}/${MAX_RETRY_ATTEMPTS})`);
           retryCountRef.current++;
           isRetryingRef.current = true;
           
@@ -333,7 +334,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
               try {
                 recognitionRef.current.start();
               } catch (e) {
-                console.error("Retry failed:", e);
+                logger.error("Retry failed:", e);
                 // Cleanup on retry failure
                 setIsRecording(false);
                 setIsProcessing(false);
@@ -399,7 +400,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       };
 
       recognition.onend = () => {
-        console.log("Speech recognition ended, final:", finalTranscriptRef.current.trim());
+        logger.log("Speech recognition ended, final:", finalTranscriptRef.current.trim());
         setIsRecording(false);
         stopAudioLevelMonitoring();
         
@@ -436,7 +437,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       recognition.start();
       
     } catch (error: any) {
-      console.error("Error starting speech recognition:", error);
+      logger.error("Error starting speech recognition:", error);
       
       if (error.name === "NotAllowedError") {
         setMicPermission("denied");

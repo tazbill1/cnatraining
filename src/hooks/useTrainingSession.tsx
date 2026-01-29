@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { Scenario } from "@/lib/scenarios";
 import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 interface Message {
   id: string;
@@ -90,7 +91,7 @@ export function useTrainingSession() {
           elapsedSeconds: 0,
         });
       } catch (error) {
-        console.error("Error starting session:", error);
+        logger.error("Error starting session:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -171,7 +172,7 @@ export function useTrainingSession() {
           })
           .eq("id", sessionState.id);
       } catch (error) {
-        console.error("Error sending message:", error);
+        logger.error("Error sending message:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -248,7 +249,7 @@ export function useTrainingSession() {
         scenarioType: sessionState.scenario?.id,
       };
     } catch (error) {
-      console.error("Error ending session:", error);
+      logger.error("Error ending session:", error);
       toast({
         variant: "destructive",
         title: "Error",

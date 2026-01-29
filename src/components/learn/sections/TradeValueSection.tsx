@@ -12,9 +12,10 @@ import {
   Truck, 
   Users, 
   TrendingUp,
-  CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  ArrowRight,
+  ChevronRight
 } from "lucide-react";
 
 const steps = [
@@ -251,12 +252,12 @@ export function TradeValueSection() {
                   <div>
                     <p className="text-sm font-medium text-foreground mb-2">This decision is based on:</p>
                     <div className="space-y-1">
-                      {step.content.basedOn.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          <span className="text-muted-foreground">{item}</span>
-                        </div>
-                      ))}
+                    {step.content.basedOn.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <ChevronRight className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground">{item}</span>
+                      </div>
+                    ))}
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
@@ -265,7 +266,7 @@ export function TradeValueSection() {
                       <div className="space-y-1">
                         {step.content.outcomes.clean.map((item, i) => (
                           <div key={i} className="flex items-center gap-2 text-xs">
-                            <CheckCircle2 className="w-3 h-3 text-green-500" />
+                            <ArrowRight className="w-3 h-3 text-green-500" />
                             <span className="text-muted-foreground">{item}</span>
                           </div>
                         ))}
@@ -358,12 +359,12 @@ export function TradeValueSection() {
                   <div>
                     <p className="text-sm font-medium text-foreground mb-2">This analysis determines:</p>
                     <div className="space-y-1">
-                      {step.content.determines.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
-                          <span className="text-muted-foreground">{item}</span>
-                        </div>
-                      ))}
+                    {step.content.determines.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <ArrowRight className="w-4 h-4 text-primary" />
+                        <span className="text-muted-foreground">{item}</span>
+                      </div>
+                    ))}
                     </div>
                   </div>
                 </div>
@@ -372,10 +373,12 @@ export function TradeValueSection() {
               {step.id === "step6" && (
                 <div className="space-y-4">
                   <p className="text-muted-foreground">{step.content.intro}</p>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {step.content.afterSteps.map((item, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <div key={i} className="flex items-center gap-3 text-sm">
+                        <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary shrink-0">
+                          {i + 1}
+                        </span>
                         <span className="text-muted-foreground">{item}</span>
                       </div>
                     ))}

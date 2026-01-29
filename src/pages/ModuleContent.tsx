@@ -15,6 +15,7 @@ import { TradeValueSection } from "@/components/learn/sections/TradeValueSection
 import { PresentationSection } from "@/components/learn/sections/PresentationSection";
 import {
   module1Objectives,
+  module1Overview,
   module1KnowledgeChecks,
   module1Quiz,
 } from "@/lib/moduleContent";
@@ -115,9 +116,10 @@ export default function ModuleContent() {
         return (
           <ModuleIntro
             title={module.title}
-            welcomeMessage="Let's master the fundamentals of vehicle selection and trade appraisal"
+            welcomeMessage="Vehicle selection isn't about showing cars. It's about understanding what drives the decision—and guiding customers to vehicles that deliver on their expectations."
+            overview={module1Overview}
             objectives={module1Objectives}
-            estimatedTime={module.estimatedTime}
+            estimatedTime="10-12 minutes"
             onStart={handleStart}
           />
         );
@@ -156,7 +158,15 @@ export default function ModuleContent() {
         );
 
       case "section4":
-        return <PresentationSection />;
+        return (
+          <div className="space-y-8">
+            <PresentationSection />
+            <KnowledgeCheck
+              check={module1KnowledgeChecks.section4}
+              onComplete={(passed) => handleKnowledgeCheckComplete("section4", passed)}
+            />
+          </div>
+        );
 
       case "quiz":
         return (

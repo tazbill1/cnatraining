@@ -6,6 +6,7 @@ import { LearningObjective } from "@/lib/moduleContent";
 interface ModuleIntroProps {
   title: string;
   welcomeMessage: string;
+  overview?: string;
   objectives: LearningObjective[];
   estimatedTime: string;
   onStart: () => void;
@@ -14,6 +15,7 @@ interface ModuleIntroProps {
 export function ModuleIntro({
   title,
   welcomeMessage,
+  overview,
   objectives,
   estimatedTime,
   onStart,
@@ -26,8 +28,18 @@ export function ModuleIntro({
           <BookOpen className="w-8 h-8 text-primary" />
         </div>
         <h1 className="text-3xl font-bold text-foreground">{title}</h1>
-        <p className="text-lg text-muted-foreground">{welcomeMessage}</p>
+        <p className="text-lg text-muted-foreground leading-relaxed">{welcomeMessage}</p>
       </div>
+
+      {/* Module Overview */}
+      {overview && (
+        <Card className="border-muted">
+          <CardContent className="p-6">
+            <h2 className="font-semibold text-foreground mb-3">Module Overview</h2>
+            <p className="text-muted-foreground leading-relaxed">{overview}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Learning Objectives */}
       <Card className="border-primary/20">
@@ -55,7 +67,7 @@ export function ModuleIntro({
       {/* Start Button */}
       <div className="flex justify-center">
         <Button size="lg" onClick={onStart} className="px-8">
-          Start Module
+          Begin Module
         </Button>
       </div>
     </div>

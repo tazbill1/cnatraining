@@ -45,11 +45,14 @@ export default function Team() {
   const checkManagerRole = async () => {
     if (!user) return;
 
+    // Check if user has manager role - use .maybeSingle() or filter for manager role
+    // to avoid 406 error when user has multiple roles
     const { data } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .single();
+      .eq("role", "manager")
+      .maybeSingle();
 
     if (data?.role === "manager") {
       setIsManager(true);

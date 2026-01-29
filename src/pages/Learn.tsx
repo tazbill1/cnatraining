@@ -42,8 +42,12 @@ export default function Learn() {
       toast.error("Complete the prerequisites first to unlock this module.");
       return;
     }
-    // Navigate to module content page (to be built)
-    toast.info("Module content coming soon! This is a placeholder.");
+    // Only Module 1 has content for now
+    if (moduleId === "vehicle-selection-fundamentals") {
+      navigate(`/learn/${moduleId}`);
+    } else {
+      toast.info("Module content coming soon!");
+    }
   };
 
   const completedCount = completedModules.length;

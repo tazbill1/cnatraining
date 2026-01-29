@@ -42,8 +42,9 @@ export default function Learn() {
       toast.error("Complete the prerequisites first to unlock this module.");
       return;
     }
-    // Only Module 1 has content for now
-    if (moduleId === "vehicle-selection-fundamentals") {
+    // Modules with full content
+    const implementedModules = ["vehicle-selection-fundamentals", "trade-appraisal-process"];
+    if (implementedModules.includes(moduleId)) {
       navigate(`/learn/${moduleId}`);
     } else {
       toast.info("Module content coming soon!");

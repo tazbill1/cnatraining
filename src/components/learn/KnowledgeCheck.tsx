@@ -108,60 +108,86 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
             onValueChange={handleSingleSelect}
             className="space-y-2"
           >
-            {check.options.map((option) => (
-              <div
-                key={option.id}
-                className={cn(
-                  "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                  submitted && option.isCorrect && "bg-green-500/10 border-green-500/50",
-                  submitted && selectedAnswers.includes(option.id) && !option.isCorrect && "bg-red-500/10 border-red-500/50",
-                  !submitted && "hover:bg-muted/50"
-                )}
-              >
-                <RadioGroupItem
-                  value={option.id}
-                  id={option.id}
-                  disabled={submitted}
-                />
-                <Label
-                  htmlFor={option.id}
-                  className="flex-1 cursor-pointer text-foreground"
+            {check.options.map((option) => {
+              const isSelected = selectedAnswers.includes(option.id);
+              const showCorrect = submitted && option.isCorrect;
+              const showIncorrect = submitted && isSelected && !option.isCorrect;
+              
+              return (
+                <div
+                  key={option.id}
+                  className={cn(
+                    "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
+                    // Default neutral state
+                    !submitted && !isSelected && "border-border bg-background hover:bg-muted/50",
+                    // Selected but not submitted
+                    !submitted && isSelected && "border-primary/50 bg-primary/5",
+                    // After submission - correct answer
+                    showCorrect && "bg-green-500/10 border-green-500/50",
+                    // After submission - incorrect selection
+                    showIncorrect && "bg-red-500/10 border-red-500/50",
+                    // After submission - not selected and not correct (neutral)
+                    submitted && !showCorrect && !showIncorrect && "border-border bg-background opacity-60"
+                  )}
                 >
-                  {option.text}
-                </Label>
-              </div>
-            ))}
+                  <RadioGroupItem
+                    value={option.id}
+                    id={option.id}
+                    disabled={submitted}
+                  />
+                  <Label
+                    htmlFor={option.id}
+                    className="flex-1 cursor-pointer text-foreground"
+                  >
+                    {option.text}
+                  </Label>
+                </div>
+              );
+            })}
           </RadioGroup>
         )}
 
         {check.type === "multiple" && (
           <div className="space-y-2">
-            {check.options.map((option) => (
-              <div
-                key={option.id}
-                className={cn(
-                  "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                  submitted && option.isCorrect && "bg-green-500/10 border-green-500/50",
-                  submitted && selectedAnswers.includes(option.id) && !option.isCorrect && "bg-red-500/10 border-red-500/50",
-                  !submitted && "hover:bg-muted/50"
-                )}
-              >
-                <Checkbox
-                  id={option.id}
-                  checked={selectedAnswers.includes(option.id)}
-                  onCheckedChange={(checked) =>
-                    handleMultipleSelect(option.id, checked as boolean)
-                  }
-                  disabled={submitted}
-                />
-                <Label
-                  htmlFor={option.id}
-                  className="flex-1 cursor-pointer text-foreground"
+            {check.options.map((option) => {
+              const isSelected = selectedAnswers.includes(option.id);
+              const showCorrect = submitted && option.isCorrect;
+              const showIncorrect = submitted && isSelected && !option.isCorrect;
+              
+              return (
+                <div
+                  key={option.id}
+                  className={cn(
+                    "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
+                    // Default neutral state
+                    !submitted && !isSelected && "border-border bg-background hover:bg-muted/50",
+                    // Selected but not submitted
+                    !submitted && isSelected && "border-primary/50 bg-primary/5",
+                    // After submission - correct answer
+                    showCorrect && "bg-green-500/10 border-green-500/50",
+                    // After submission - incorrect selection
+                    showIncorrect && "bg-red-500/10 border-red-500/50",
+                    // After submission - not selected and not correct (neutral)
+                    submitted && !showCorrect && !showIncorrect && "border-border bg-background opacity-60"
+                  )}
                 >
-                  {option.text}
-                </Label>
-              </div>
-            ))}
+                  <Checkbox
+                    id={option.id}
+                    checked={isSelected}
+                    onCheckedChange={(checked) =>
+                      handleMultipleSelect(option.id, checked as boolean)
+                    }
+                    disabled={submitted}
+                  />
+                  <Label
+                    htmlFor={option.id}
+                    className="flex-1 cursor-pointer text-foreground"
+                  >
+                    {option.text}
+                  </Label>
+                </div>
+              );
+            })}
           </div>
         )}
 

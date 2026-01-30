@@ -38,10 +38,18 @@ export default function Learn() {
   }, [user]);
 
   const handleModuleClick = (moduleId: string, isLocked: boolean) => {
-    if (isLocked) {
+    // For development/testing: allow bypassing locked modules with shift+click
+    const bypassLock = window.event && (window.event as MouseEvent).shiftKey;
+    
+    if (isLocked && !bypassLock) {
       toast.error("Complete the prerequisites first to unlock this module.");
       return;
     }
+    
+    if (isLocked && bypassLock) {
+      toast.info("Dev mode: bypassing prerequisite lock");
+    }
+    
     // Modules with full content
     const implementedModules = ["vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework"];
     if (implementedModules.includes(moduleId)) {

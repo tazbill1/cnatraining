@@ -110,6 +110,7 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
           >
             {check.options.map((option) => {
               const isSelected = selectedAnswers.includes(option.id);
+              // Only show correct/incorrect AFTER user submits
               const showCorrect = submitted && option.isCorrect;
               const showIncorrect = submitted && isSelected && !option.isCorrect;
               
@@ -118,15 +119,15 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
                   key={option.id}
                   className={cn(
                     "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                    // Default neutral state
-                    !submitted && !isSelected && "border-border bg-background hover:bg-muted/50",
-                    // Selected but not submitted
+                    // Before submission: all options look the same (neutral)
+                    !submitted && "border-border bg-background hover:bg-muted/50",
+                    // Selected state before submission - subtle highlight only
                     !submitted && isSelected && "border-primary/50 bg-primary/5",
-                    // After submission - correct answer
+                    // ONLY AFTER SUBMISSION: show correct answer in green
                     showCorrect && "bg-green-500/10 border-green-500/50",
-                    // After submission - incorrect selection
+                    // ONLY AFTER SUBMISSION: show incorrect selection in red
                     showIncorrect && "bg-red-500/10 border-red-500/50",
-                    // After submission - not selected and not correct (neutral)
+                    // ONLY AFTER SUBMISSION: dim unselected wrong answers
                     submitted && !showCorrect && !showIncorrect && "border-border bg-background opacity-60"
                   )}
                 >

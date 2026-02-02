@@ -1,4 +1,4 @@
-import { Wrench, FileText, Calculator, ClipboardList, ArrowRight } from "lucide-react";
+import { Wrench, FileText, ClipboardList, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -25,15 +25,6 @@ const tools: Tool[] = [
     path: "/toolbox/cna-form",
     status: "available",
     category: "forms",
-  },
-  {
-    id: "payment-calculator",
-    name: "Payment Calculator",
-    description: "Calculate monthly payments, compare financing options, and show lease vs buy",
-    icon: Calculator,
-    path: "/toolbox/payment-calculator",
-    status: "coming-soon",
-    category: "calculators",
   },
   {
     id: "trade-worksheet",

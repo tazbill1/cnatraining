@@ -1,4 +1,5 @@
-import { FileText, Download, BookOpen } from "lucide-react";
+import { FileText, Download, BookOpen, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { CNAFormDigital } from "@/components/learn/CNAFormDigital";
@@ -7,10 +8,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CNAForm() {
+  const navigate = useNavigate();
+
   return (
     <AuthGuard>
       <AppLayout>
         <div className="p-8 max-w-6xl mx-auto">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/toolbox")}
+            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Toolbox
+          </Button>
+
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">

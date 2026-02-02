@@ -11,6 +11,7 @@ import Learn from "./pages/Learn";
 import ModuleContent from "./pages/ModuleContent";
 import Module2Content from "./pages/Module2Content";
 import Module3Content from "./pages/Module3Content";
+import Toolbox from "./pages/Toolbox";
 import CNAForm from "./pages/CNAForm";
 import Scenarios from "./pages/Scenarios";
 import Training from "./pages/Training";
@@ -41,7 +42,8 @@ const App = () => (
             <Route path="/learn/trade-appraisal-process" element={<Module2Content />} />
             <Route path="/learn/objection-handling-framework" element={<Module3Content />} />
             <Route path="/learn/:moduleId" element={<ModuleContent />} />
-            <Route path="/cna-form" element={<CNAForm />} />
+            <Route path="/toolbox" element={<Toolbox />} />
+            <Route path="/toolbox/cna-form" element={<CNAForm />} />
             <Route path="/scenarios" element={<Scenarios />} />
             <Route path="/training/:scenarioId" element={<Training />} />
             <Route path="/voice-training" element={<VoiceTraining />} />

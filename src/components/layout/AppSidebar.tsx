@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import werkandmeLogo from "@/assets/werkandme-logo.png";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -26,14 +27,12 @@ export function AppSidebar() {
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <GraduationCap className="w-6 h-6 text-sidebar-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg">CNA Training</h1>
-            <p className="text-xs text-sidebar-foreground/60">Pro Edition</p>
-          </div>
+        <div className="flex items-center justify-center">
+          <img 
+            src={werkandmeLogo} 
+            alt="Werkandme" 
+            className="h-10 w-auto"
+          />
         </div>
       </div>
 

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable";
+import werkandmeLogo from "@/assets/werkandme-logo.png";
 
 type AuthMode = "signin" | "signup";
 
@@ -103,7 +104,7 @@ export default function Auth() {
         } else {
           toast({
             title: "Account created!",
-            description: "Welcome to CNA Training Pro",
+            description: "Welcome to Werkandme",
           });
           navigate("/dashboard");
         }
@@ -134,13 +135,11 @@ export default function Auth() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <GraduationCap className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">CNA Training Pro</h1>
-              <p className="text-sm text-muted-foreground">Master customer needs analysis</p>
-            </div>
+            <img 
+              src={werkandmeLogo} 
+              alt="Werkandme" 
+              className="h-12 w-auto"
+            />
           </div>
 
           {/* Form */}
@@ -296,24 +295,24 @@ export default function Auth() {
               Train Smarter, Sell Better
             </h2>
             <p className="text-lg text-primary-foreground/80 mb-8">
-              Practice customer needs analysis with AI-powered role play. Get instant feedback and improve your close rate.
+              Master automotive sales with AI-powered training, comprehensive learning modules, and real-time feedback.
             </p>
             <div className="grid grid-cols-2 gap-6 text-left">
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">6</p>
-                <p className="text-sm text-primary-foreground/70">Customer Personas</p>
+                <p className="text-3xl font-bold">14</p>
+                <p className="text-sm text-primary-foreground/70">Training Scenarios</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">11</p>
+                <p className="text-3xl font-bold">23</p>
                 <p className="text-sm text-primary-foreground/70">CNA Checkpoints</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
                 <p className="text-3xl font-bold">AI</p>
-                <p className="text-sm text-primary-foreground/70">Powered Feedback</p>
+                <p className="text-sm text-primary-foreground/70">Powered Coaching</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">∞</p>
-                <p className="text-sm text-primary-foreground/70">Practice Sessions</p>
+                <p className="text-3xl font-bold">3</p>
+                <p className="text-sm text-primary-foreground/70">Learning Modules</p>
               </div>
             </div>
           </div>

@@ -3,16 +3,23 @@ export interface ChecklistItem {
   label: string;
   description: string;
   keywords: string[];
-  category?: "rapport" | "discovery" | "vehicle" | "purchase";
+  category?: "rapport" | "discovery" | "vehicle" | "purchase" | "contact";
 }
 
 export const cnaChecklist: ChecklistItem[] = [
   // Rapport Building
   {
     id: "customer-name",
-    label: "Got customer name",
+    label: "Customer name",
     description: "Introduced yourself and learned the customer's name",
     keywords: ["name", "call you", "who am i speaking", "my name is", "i'm", "nice to meet"],
+    category: "rapport",
+  },
+  {
+    id: "first-visit",
+    label: "First visit?",
+    description: "Asked if this is their first visit to the dealership",
+    keywords: ["first time", "first visit", "been here before", "visited before", "new to us", "come in before"],
     category: "rapport",
   },
   {
@@ -22,82 +29,91 @@ export const cnaChecklist: ChecklistItem[] = [
     keywords: ["hear about", "find us", "referred", "advertisement", "online", "recommendation", "friend told", "google", "website"],
     category: "rapport",
   },
-  {
-    id: "why-today",
-    label: "What made today the day?",
-    description: "Discovered the trigger that brought them in today",
-    keywords: ["today", "now", "what brings you", "why now", "timing", "decided to come in", "what happened", "pushed you"],
-    category: "rapport",
-  },
 
   // Discovery - Use & Utility
   {
-    id: "primary-driver",
-    label: "Primary driver identified",
-    description: "Determined who will be the main driver",
-    keywords: ["who will", "driving", "primary driver", "mainly drive", "for yourself", "for you", "spouse", "partner", "behind the wheel"],
-    category: "discovery",
-  },
-  {
     id: "goals-today",
     label: "Goals for today",
-    description: "Product Info, Demo, Purchase Info, or Trade Appraisal",
-    keywords: ["accomplish", "goal", "hoping", "looking to", "want to", "plan to", "objective", "information", "test drive", "numbers"],
+    description: "Product Info, Demo, Purchase Info, or Live Market Appraisal",
+    keywords: ["accomplish", "goal", "hoping", "looking to", "want to", "plan to", "objective", "information", "test drive", "numbers", "appraisal"],
     category: "discovery",
   },
   {
     id: "use-utility",
-    label: "Use & utility (day-to-day)",
+    label: "Use and utility",
     description: "How they'll use the vehicle daily",
     keywords: ["use", "commute", "highway", "city", "road trip", "haul", "cargo", "passengers", "kids", "family", "work", "drive to", "miles"],
     category: "discovery",
   },
   {
     id: "fun-adventure",
-    label: "Fun & adventure use",
+    label: "Fun & adventure",
     description: "Recreational or lifestyle uses",
     keywords: ["weekend", "vacation", "camping", "boat", "trailer", "golf", "hobbies", "fun", "adventure", "recreation", "towing"],
     category: "discovery",
   },
 
-  // Vehicle Information
+  // Current Vehicle
   {
     id: "current-vehicle",
     label: "Current vehicle details",
-    description: "Year, make, model, mileage of current vehicle",
-    keywords: ["current", "driving now", "own", "trade", "lease", "present vehicle", "what do you drive", "year", "make", "model"],
+    description: "Year, make, model, trim, color, odometer",
+    keywords: ["current", "driving now", "own", "trade", "lease", "present vehicle", "what do you drive", "year", "make", "model", "trim", "odometer"],
+    category: "vehicle",
+  },
+  {
+    id: "miles-per-year",
+    label: "Miles per year",
+    description: "How many miles they drive annually",
+    keywords: ["miles per year", "annual mileage", "drive per year", "yearly miles", "how many miles", "average miles"],
     category: "vehicle",
   },
   {
     id: "title-clear",
-    label: "Title clear / payoff",
+    label: "Title clear?",
     description: "Do they own it outright or have a payoff?",
-    keywords: ["title", "payoff", "owe", "paid off", "own it", "loan", "finance", "balance", "lien"],
+    keywords: ["title", "payoff", "owe", "paid off", "own it", "loan", "finance", "balance", "lien", "clear"],
     category: "vehicle",
   },
   {
-    id: "love-dont-love",
-    label: "What they love / don't love",
-    description: "Likes and dislikes about current vehicle",
-    keywords: ["like", "love", "hate", "dislike", "frustrat", "enjoy", "appreciate", "problem with", "issue with", "annoying"],
+    id: "replacing-adding",
+    label: "Replacing or adding?",
+    description: "Are they replacing their current vehicle or adding to the household?",
+    keywords: ["replacing", "adding", "additional", "second car", "another vehicle", "keep", "trade in", "get rid of"],
     category: "vehicle",
   },
+
+  // New Vehicle Preferences
   {
-    id: "vehicle-type",
-    label: "Vehicle type preference",
-    description: "Sedan, SUV, truck, or other body style",
-    keywords: ["sedan", "suv", "truck", "crossover", "van", "coupe", "convertible", "hatchback", "body style", "type of vehicle"],
+    id: "specific-research",
+    label: "Specific vehicle / research",
+    description: "Have they researched a specific vehicle already?",
+    keywords: ["research", "looking at", "specific", "particular", "online", "read about", "reviews", "comparison", "narrowed down"],
     category: "vehicle",
   },
   {
     id: "new-preowned",
-    label: "New vs pre-owned",
+    label: "New or pre-owned/certified?",
     description: "Preference for new, certified, or pre-owned",
     keywords: ["new", "used", "pre-owned", "preowned", "certified", "cpo", "brand new", "previously owned"],
     category: "vehicle",
   },
+  {
+    id: "vehicle-type",
+    label: "Vehicle type",
+    description: "Sedan, SUV, truck, convertible, or other",
+    keywords: ["sedan", "suv", "truck", "crossover", "van", "coupe", "convertible", "hatchback", "body style", "type of vehicle"],
+    category: "vehicle",
+  },
+  {
+    id: "color-preference",
+    label: "Color preference",
+    description: "Lighter, darker, or no preference",
+    keywords: ["color", "lighter", "darker", "white", "black", "silver", "red", "blue", "gray", "grey", "neutral"],
+    category: "vehicle",
+  },
 
-  // Priority Categories (Most Important To You)
+  // Most Important To You (Priorities)
   {
     id: "priority-safety",
     label: "Priority: Safety",
@@ -116,7 +132,7 @@ export const cnaChecklist: ChecklistItem[] = [
     id: "priority-appearance",
     label: "Priority: Appearance",
     description: "Looks, style, color importance",
-    keywords: ["appearance", "look", "style", "color", "design", "beautiful", "sharp", "sleek", "attractive", "aesthetic"],
+    keywords: ["appearance", "look", "style", "design", "beautiful", "sharp", "sleek", "attractive", "aesthetic"],
     category: "vehicle",
   },
   {
@@ -141,13 +157,29 @@ export const cnaChecklist: ChecklistItem[] = [
     category: "vehicle",
   },
 
-  // Purchase Readiness
+  // Vehicle Recommendations
   {
-    id: "must-have-nice-have",
-    label: "Must-haves vs nice-to-haves",
-    description: "Distinguished deal breakers from preferences",
-    keywords: ["must have", "nice to have", "necessary", "optional", "deal breaker", "non-negotiable", "flexible on", "absolutely need", "can live without"],
+    id: "vehicle-recommendations",
+    label: "Vehicle recommendations (Rule of 2)",
+    description: "Recommended at least 2 vehicle options based on needs",
+    keywords: ["recommend", "suggest", "option", "alternative", "consider", "show you", "let me show", "two options", "few options"],
     category: "purchase",
+  },
+
+  // Contact Information
+  {
+    id: "drivers-license",
+    label: "Driver's license",
+    description: "Collected driver's license for test drive",
+    keywords: ["license", "driver's license", "drivers license", "id", "identification", "scan your"],
+    category: "contact",
+  },
+  {
+    id: "best-contact",
+    label: "Best contact info",
+    description: "Cell, work phone, or email preference",
+    keywords: ["phone", "cell", "mobile", "email", "contact", "reach you", "call you", "text you", "best way to reach"],
+    category: "contact",
   },
 ];
 
@@ -191,3 +223,17 @@ export function calculateChecklistProgress(state: Record<string, boolean>): numb
   const completed = Object.values(state).filter(Boolean).length;
   return Math.round((completed / total) * 100);
 }
+
+// Get checklist items by category
+export function getChecklistByCategory(category: ChecklistItem["category"]): ChecklistItem[] {
+  return cnaChecklist.filter((item) => item.category === category);
+}
+
+// Category labels for display
+export const categoryLabels: Record<NonNullable<ChecklistItem["category"]>, string> = {
+  rapport: "Rapport Building",
+  discovery: "Discovery",
+  vehicle: "Vehicle Information",
+  purchase: "Purchase Readiness",
+  contact: "Contact Information",
+};

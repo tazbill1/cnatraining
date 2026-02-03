@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Scenario } from "@/lib/scenarios";
 import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
+import { analyzePhoneChecklistFromConversation, calculatePhoneChecklistProgress } from "@/lib/phoneChecklist";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 
@@ -146,11 +147,17 @@ export function useTrainingSession() {
 
         const allMessages = [...updatedMessages, aiMessage];
 
-        // Analyze checklist
-        const newChecklistState = analyzeChecklistFromConversation(
-          allMessages.map((m) => ({ role: m.role, content: m.content })),
-          sessionState.checklistState
-        );
+        // Analyze checklist based on scenario category
+        const isPhoneScenario = sessionState.scenario?.category === "phone-practice";
+        const newChecklistState = isPhoneScenario
+          ? analyzePhoneChecklistFromConversation(
+              allMessages.map((m) => ({ role: m.role, content: m.content })),
+              sessionState.checklistState
+            )
+          : analyzeChecklistFromConversation(
+              allMessages.map((m) => ({ role: m.role, content: m.content })),
+              sessionState.checklistState
+            );
 
         setSessionState((prev) => ({
           ...prev,
@@ -193,8 +200,11 @@ export function useTrainingSession() {
     }
 
     try {
-      // Calculate scores
-      const checklistProgress = calculateChecklistProgress(sessionState.checklistState);
+      // Calculate scores based on scenario type
+      const isPhoneScenario = sessionState.scenario?.category === "phone-practice";
+      const checklistProgress = isPhoneScenario
+        ? calculatePhoneChecklistProgress(sessionState.checklistState)
+        : calculateChecklistProgress(sessionState.checklistState);
       
       // Get AI evaluation
       const evalResponse = await supabase.functions.invoke("evaluate-session", {

@@ -18,6 +18,7 @@ import Training from "./pages/Training";
 import VoiceTraining from "./pages/VoiceTraining";
 import Results from "./pages/Results";
 import Progress from "./pages/Progress";
+import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/voice-training" element={<VoiceTraining />} />
             <Route path="/results" element={<Results />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/performance" element={<Performance />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/team" element={<Team />} />
             <Route path="*" element={<NotFound />} />

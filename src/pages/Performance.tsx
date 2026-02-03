@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Target, Plus, BarChart3, Trophy, TrendingUp } from "lucide-react";
+import { Target, Plus, BarChart3, Trophy, TrendingUp, DollarSign } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { QuickEntryTab } from "@/components/performance/QuickEntryTab";
 import { PipelineTab } from "@/components/performance/PipelineTab";
 import { ProgressTab } from "@/components/performance/ProgressTab";
 import { LeaderboardTab } from "@/components/performance/LeaderboardTab";
+import { CommissionTab } from "@/components/performance/CommissionTab";
 import {
   initialLeads,
   initialUserData,
@@ -194,7 +195,7 @@ export default function Performance() {
 
           {/* Tab Navigation */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="entry" className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Quick Entry
@@ -210,6 +211,10 @@ export default function Performance() {
               <TabsTrigger value="leaderboard" className="flex items-center gap-2">
                 <Trophy className="w-4 h-4" />
                 Leaderboard
+              </TabsTrigger>
+              <TabsTrigger value="commission" className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Commission
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -249,6 +254,8 @@ export default function Performance() {
               setLeaderboardView={setLeaderboardView}
             />
           )}
+
+          {activeTab === "commission" && <CommissionTab />}
         </div>
 
         {/* Modals */}

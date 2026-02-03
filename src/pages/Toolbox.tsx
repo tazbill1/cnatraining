@@ -1,4 +1,4 @@
-import { Wrench, FileText, ClipboardList, ArrowRight } from "lucide-react";
+import { Wrench, FileText, ClipboardList, ArrowRight, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -13,7 +13,7 @@ interface Tool {
   icon: React.ElementType;
   path: string;
   status: "available" | "coming-soon";
-  category: "forms" | "calculators" | "checklists";
+  category: "forms" | "calculators" | "checklists" | "scripts";
 }
 
 const tools: Tool[] = [
@@ -35,12 +35,22 @@ const tools: Tool[] = [
     status: "coming-soon",
     category: "forms",
   },
+  {
+    id: "phone-scripts",
+    name: "Phone Scripts",
+    description: "Ready-to-use scripts for inbound calls, outbound prospecting, and objection handling",
+    icon: Phone,
+    path: "/toolbox/phone-scripts",
+    status: "available",
+    category: "scripts",
+  },
 ];
 
 const categoryLabels = {
   forms: "Forms & Worksheets",
   calculators: "Calculators",
   checklists: "Checklists",
+  scripts: "Scripts & Guides",
 };
 
 export default function Toolbox() {

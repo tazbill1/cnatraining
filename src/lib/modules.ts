@@ -1,4 +1,4 @@
-import { BookOpen, Car, MessageSquare, FileText, LucideIcon } from "lucide-react";
+import { BookOpen, Car, MessageSquare, FileText, Phone, LucideIcon } from "lucide-react";
 
 export type ModuleDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -58,6 +58,21 @@ export const trainingModules: TrainingModule[] = [
     sections: [
       { title: "AEAIR methodology" },
       { title: "Real objection examples" },
+    ],
+    prerequisiteIds: ["vehicle-selection-fundamentals"],
+  },
+  {
+    id: "phone-sales-fundamentals",
+    title: "Module 4: Phone Sales Fundamentals",
+    description: "Master inbound and outbound phone techniques, appointment setting, objection handling on calls, and converting internet leads to showroom visits.",
+    icon: Phone,
+    estimatedTime: "15-18 min",
+    difficulty: "intermediate",
+    sections: [
+      { title: "Inbound Call Handling" },
+      { title: "Outbound Prospecting" },
+      { title: "Appointment Setting Techniques" },
+      { title: "Phone Objection Handling" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
   },

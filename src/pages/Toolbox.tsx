@@ -1,4 +1,4 @@
-import { Wrench, FileText, ClipboardList, ArrowRight, Phone } from "lucide-react";
+import { Wrench, FileText, ClipboardList, ArrowRight, Phone, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -41,6 +41,15 @@ const tools: Tool[] = [
     description: "Ready-to-use scripts for inbound calls, outbound prospecting, and objection handling",
     icon: Phone,
     path: "/toolbox/phone-scripts",
+    status: "available",
+    category: "scripts",
+  },
+  {
+    id: "consultative-call-guide",
+    name: "Consultative Call Guide",
+    description: "Visual 6-step process for handling incoming sales calls with customer path strategies",
+    icon: BookOpen,
+    path: "/toolbox/consultative-call-guide",
     status: "available",
     category: "scripts",
   },

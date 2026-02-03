@@ -53,4 +53,4 @@ export interface PaceData {
 
 export type TimePeriod = "mtd" | "rolling90" | "ytd";
 export type LeaderboardView = "sales" | "showRate" | "closeRate" | "conversion";
-export type ActiveTab = "entry" | "pipeline" | "dashboard" | "leaderboard";
+export type ActiveTab = "entry" | "pipeline" | "dashboard" | "leaderboard" | "commission";

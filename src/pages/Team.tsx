@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { formatDistanceToNow } from "date-fns";
 import { logger } from "@/lib/logger";
 
@@ -28,6 +29,7 @@ interface UserEngagement {
 export default function Team() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [isManager, setIsManager] = useState(false);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
@@ -45,8 +47,6 @@ export default function Team() {
   const checkManagerRole = async () => {
     if (!user) return;
 
-    // Check if user has manager role - use .maybeSingle() or filter for manager role
-    // to avoid 406 error when user has multiple roles
     const { data } = await supabase
       .from("user_roles")
       .select("role")
@@ -64,7 +64,6 @@ export default function Team() {
 
   const fetchEngagementData = async () => {
     try {
-      // Fetch all profiles (managers can see all)
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -72,14 +71,12 @@ export default function Team() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch all training sessions
       const { data: sessions, error: sessionsError } = await supabase
         .from("training_sessions")
         .select("*");
 
       if (sessionsError) throw sessionsError;
 
-      // Calculate engagement metrics per user
       const userEngagement: UserEngagement[] = (profiles || []).map((profile) => {
         const userSessions = (sessions || []).filter((s) => s.user_id === profile.user_id);
         const completedSessions = userSessions.filter((s) => s.status === "completed");
@@ -104,7 +101,6 @@ export default function Team() {
 
       setUsers(userEngagement);
 
-      // Calculate overall stats
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       
@@ -155,10 +151,10 @@ export default function Team() {
     return (
       <AuthGuard>
         <AppLayout>
-          <div className="p-8 max-w-4xl mx-auto text-center">
-            <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
-            <p className="text-muted-foreground mb-4">
+          <div className="p-4 md:p-8 max-w-4xl mx-auto text-center">
+            <AlertTriangle className="w-12 h-12 md:w-16 md:h-16 text-yellow-500 mx-auto mb-4" />
+            <h1 className="text-xl md:text-2xl font-bold mb-2">Access Restricted</h1>
+            <p className="text-muted-foreground mb-4 text-sm md:text-base">
               This page is only available to managers.
             </p>
             <Button onClick={() => navigate("/dashboard")}>Back to Dashboard</Button>
@@ -181,97 +177,117 @@ export default function Team() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <Button
               variant="ghost"
+              size={isMobile ? "sm" : "default"}
               onClick={() => navigate("/dashboard")}
-              className="mb-4"
+              className="mb-3 md:mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
+              Back
             </Button>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Team Engagement</h1>
-            <p className="text-muted-foreground">
-              Monitor user activity and training progress across your team
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">Team Engagement</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Monitor user activity and training progress
             </p>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <div className="text-xl md:text-2xl font-bold">{stats.totalUsers}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active This Week</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium">Active</CardTitle>
+                <Activity className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.activeThisWeek}</div>
-                <p className="text-xs text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <div className="text-xl md:text-2xl font-bold text-green-600">{stats.activeThisWeek}</div>
+                <p className="text-[10px] md:text-xs text-muted-foreground">
                   {stats.totalUsers > 0 ? Math.round((stats.activeThisWeek / stats.totalUsers) * 100) : 0}% of team
                 </p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium">Sessions</CardTitle>
+                <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalSessions}</div>
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <div className="text-xl md:text-2xl font-bold">{stats.totalSessions}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Team Avg Score</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 p-3 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium">Avg Score</CardTitle>
+                <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.avgTeamScore}%</div>
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <div className="text-xl md:text-2xl font-bold">{stats.avgTeamScore}%</div>
               </CardContent>
             </Card>
           </div>
 
-          {/* User Tables */}
+          {/* User Tables/Cards */}
           <Tabs defaultValue="all" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="all">All Users ({users.length})</TabsTrigger>
-              <TabsTrigger value="active">Active ({activeUsers.length})</TabsTrigger>
-              <TabsTrigger value="inactive" className="text-destructive">
-                Needs Attention ({inactiveUsers.length})
+            <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex">
+              <TabsTrigger value="all" className="text-xs md:text-sm">
+                All ({users.length})
+              </TabsTrigger>
+              <TabsTrigger value="active" className="text-xs md:text-sm">
+                Active ({activeUsers.length})
+              </TabsTrigger>
+              <TabsTrigger value="inactive" className="text-xs md:text-sm text-destructive">
+                Attention ({inactiveUsers.length})
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
-              <UserTable users={users} getActivityStatus={getActivityStatus} getScoreBadge={getScoreBadge} />
+              <UserList 
+                users={users} 
+                getActivityStatus={getActivityStatus} 
+                getScoreBadge={getScoreBadge}
+                isMobile={isMobile}
+              />
             </TabsContent>
 
             <TabsContent value="active">
-              <UserTable users={activeUsers} getActivityStatus={getActivityStatus} getScoreBadge={getScoreBadge} />
+              <UserList 
+                users={activeUsers} 
+                getActivityStatus={getActivityStatus} 
+                getScoreBadge={getScoreBadge}
+                isMobile={isMobile}
+              />
             </TabsContent>
 
             <TabsContent value="inactive">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                <CardHeader className="p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />
                     Users Needing Attention
                   </CardTitle>
-                  <CardDescription>
-                    These users haven't practiced recently or never logged in
+                  <CardDescription className="text-xs md:text-sm">
+                    These users haven't practiced recently
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <UserTable users={inactiveUsers} getActivityStatus={getActivityStatus} getScoreBadge={getScoreBadge} />
+                <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+                  <UserList 
+                    users={inactiveUsers} 
+                    getActivityStatus={getActivityStatus} 
+                    getScoreBadge={getScoreBadge}
+                    isMobile={isMobile}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -282,13 +298,13 @@ export default function Team() {
   );
 }
 
-interface UserTableProps {
+interface UserListProps {
   users: UserEngagement[];
   getActivityStatus: (lastActive: string | null) => { label: string; variant: "default" | "secondary" | "destructive" | "outline" };
   getScoreBadge: (score: number) => { color: string };
+  isMobile: boolean;
 }
 
-// Mask email addresses for privacy - only show first 2 chars + domain
 function maskEmail(email: string): string {
   if (!email || !email.includes("@")) return "***@***.***";
   const [user, domain] = email.split("@");
@@ -296,15 +312,74 @@ function maskEmail(email: string): string {
   return `${maskedUser}@${domain}`;
 }
 
-function UserTable({ users, getActivityStatus, getScoreBadge }: UserTableProps) {
+function UserList({ users, getActivityStatus, getScoreBadge, isMobile }: UserListProps) {
   if (users.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 text-muted-foreground text-sm">
         No users found
       </div>
     );
   }
 
+  // Mobile: Card-based layout
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {users.map((user) => {
+          const status = getActivityStatus(user.last_active_at);
+          const scoreBadge = getScoreBadge(user.avg_score);
+          
+          return (
+            <Card key={user.id} className="p-4">
+              <div className="flex items-start gap-3">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarFallback className="text-xs">
+                    {user.full_name.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm truncate">{user.full_name}</span>
+                    <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
+                      {status.label}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{maskEmail(user.email)}</p>
+                  
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Sessions</p>
+                      <p className="text-sm font-medium">{user.total_sessions}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Avg Score</p>
+                      {user.avg_score > 0 ? (
+                        <Badge variant="outline" className={`${scoreBadge.color} text-xs px-1.5`}>
+                          {user.avg_score}%
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Last Active</p>
+                      <p className="text-xs">
+                        {user.last_active_at
+                          ? formatDistanceToNow(new Date(user.last_active_at), { addSuffix: true }).replace(" ago", "")
+                          : "Never"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Desktop: Table layout
   return (
     <Table>
       <TableHeader>

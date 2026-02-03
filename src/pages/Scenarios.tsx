@@ -19,6 +19,7 @@ export default function Scenarios() {
 
   const cnaPracticeScenarios = getScenariosByCategory("cna-practice");
   const vehicleTradeScenarios = getScenariosByCategory("vehicle-trade");
+  const phonePracticeScenarios = getScenariosByCategory("phone-practice");
 
   return (
     <AuthGuard>
@@ -48,7 +49,7 @@ export default function Scenarios() {
             onValueChange={(value) => setActiveCategory(value as ScenarioCategory)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               {scenarioCategories.map((category) => (
                 <TabsTrigger
                   key={category.id}
@@ -128,6 +129,36 @@ export default function Scenarios() {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* Phone Skills Tab */}
+            <TabsContent value="phone-practice" className="mt-0">
+              {/* Difficulty Legend */}
+              <div className="flex items-center gap-6 mb-6">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-success" />
+                  <span className="text-sm text-muted-foreground">Beginner</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-warning" />
+                  <span className="text-sm text-muted-foreground">Intermediate</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-destructive" />
+                  <span className="text-sm text-muted-foreground">Advanced</span>
+                </div>
+              </div>
+
+              {/* Scenario Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                {phonePracticeScenarios.map((scenario) => (
+                  <ScenarioCard
+                    key={scenario.id}
+                    scenario={scenario}
+                    onClick={() => handleSelectScenario(scenario.id)}
+                  />
+                ))}
+              </div>
             </TabsContent>
 
             {/* Reference Materials Tab */}

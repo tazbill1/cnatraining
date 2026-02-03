@@ -9,8 +9,8 @@ const navItems = [
   { icon: GraduationCap, label: "Learn", path: "/learn" },
   { icon: Wrench, label: "Toolbox", path: "/toolbox" },
   { icon: MessageSquare, label: "Practice", path: "/scenarios" },
+  { icon: TrendingUp, label: "Training Progress", path: "/progress" },
   { icon: Trophy, label: "Performance", path: "/performance" },
-  { icon: TrendingUp, label: "Progress", path: "/progress" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

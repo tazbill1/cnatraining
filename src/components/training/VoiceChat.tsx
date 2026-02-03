@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { logger } from "@/lib/logger";
-
+import { supabase } from "@/integrations/supabase/client";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -232,30 +232,20 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     setIsProcessing(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: newMessages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-            persona: persona,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("chat", {
+        body: {
+          messages: newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          persona: persona,
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to get response");
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       const assistantMessage: Message = {
         role: "assistant",
         content: data.message,
@@ -477,30 +467,20 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     setIsProcessing(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: newMessages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-            persona: persona,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("chat", {
+        body: {
+          messages: newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          persona: persona,
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to get response");
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       const assistantMessage: Message = {
         role: "assistant",
         content: data.message,
@@ -526,6 +506,14 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
   const speakText = async (text: string, voice: string) => {
     setIsSpeaking(true);
     try {
+      // Get the current session to use the user's JWT
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speak`,
         {
@@ -533,7 +521,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ text, voice }),
         }

@@ -15,6 +15,7 @@ import Module4Content from "./pages/Module4Content";
 import Toolbox from "./pages/Toolbox";
 import CNAForm from "./pages/CNAForm";
 import PhoneScripts from "./pages/PhoneScripts";
+import ConsultativeCallGuide from "./pages/ConsultativeCallGuide";
 import Scenarios from "./pages/Scenarios";
 import Training from "./pages/Training";
 import VoiceTraining from "./pages/VoiceTraining";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/toolbox" element={<Toolbox />} />
             <Route path="/toolbox/cna-form" element={<CNAForm />} />
             <Route path="/toolbox/phone-scripts" element={<PhoneScripts />} />
+            <Route path="/toolbox/consultative-call-guide" element={<ConsultativeCallGuide />} />
             <Route path="/cna-form" element={<Navigate to="/toolbox/cna-form" replace />} />
             <Route path="/scenarios" element={<Scenarios />} />
             <Route path="/training/:scenarioId" element={<Training />} />

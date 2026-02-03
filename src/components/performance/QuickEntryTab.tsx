@@ -16,7 +16,7 @@ interface QuickEntryTabProps {
 export function QuickEntryTab({ leads, userData, onAddLead, onLogWalkIn }: QuickEntryTabProps) {
   const [leadForm, setLeadForm] = useState({
     name: "",
-    source: "internet" as "internet" | "phone",
+    source: "internet" as "internet" | "phone" | "walk-in",
     status: "lead" as Lead["status"],
   });
   const [walkInAction, setWalkInAction] = useState<"visit" | "sale">("visit");
@@ -40,7 +40,7 @@ export function QuickEntryTab({ leads, userData, onAddLead, onLogWalkIn }: Quick
       <div className="card-premium p-6">
         <h3 className="text-lg font-semibold text-foreground mb-1">Add Lead</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Internet and phone leads require customer name
+          Log leads from any source with customer details
         </p>
 
         <div className="space-y-4">
@@ -57,7 +57,7 @@ export function QuickEntryTab({ leads, userData, onAddLead, onLogWalkIn }: Quick
             <Label>Lead Source</Label>
             <Select
               value={leadForm.source}
-              onValueChange={(value: "internet" | "phone") =>
+              onValueChange={(value: "internet" | "phone" | "walk-in") =>
                 setLeadForm({ ...leadForm, source: value })
               }
             >
@@ -67,6 +67,7 @@ export function QuickEntryTab({ leads, userData, onAddLead, onLogWalkIn }: Quick
               <SelectContent>
                 <SelectItem value="internet">Internet</SelectItem>
                 <SelectItem value="phone">Phone</SelectItem>
+                <SelectItem value="walk-in">Walk-In</SelectItem>
               </SelectContent>
             </Select>
           </div>

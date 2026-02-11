@@ -8,8 +8,8 @@ import werkandmeLogo from "@/assets/werkandme-logo.png";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: GraduationCap, label: "Learn", path: "/learn" },
-  { icon: Wrench, label: "Toolbox", path: "/toolbox" },
   { icon: MessageSquare, label: "Practice", path: "/scenarios" },
+  { icon: Wrench, label: "Toolbox", path: "/toolbox" },
   { icon: TrendingUp, label: "Training Progress", path: "/progress" },
   { icon: Trophy, label: "Performance", path: "/performance" },
   { icon: Settings, label: "Settings", path: "/settings" },

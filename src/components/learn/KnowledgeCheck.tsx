@@ -90,7 +90,19 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
 
     setIsCorrect(correct);
     setSubmitted(true);
-    onComplete(correct);
+    if (correct) {
+      onComplete(true);
+    }
+  };
+
+  const handleRetry = () => {
+    setSelectedAnswers([]);
+    setSubmitted(false);
+    setIsCorrect(false);
+    if (check.type === "reorder") {
+      const shuffled = [...check.options].sort(() => Math.random() - 0.5);
+      setReorderItems(shuffled);
+    }
   };
 
   const canSubmit =
@@ -241,6 +253,12 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
               {isCorrect ? check.feedback.correct : check.feedback.incorrect}
             </p>
           </div>
+        )}
+
+        {submitted && !isCorrect && (
+          <Button onClick={handleRetry} variant="outline" className="w-full">
+            Try Again
+          </Button>
         )}
 
         {!submitted && (

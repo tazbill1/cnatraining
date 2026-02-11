@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseVoiceChatOptions {
   onTranscription?: (text: string) => void;
@@ -501,7 +502,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   }, []);
 
   const speakText = useCallback(
-    async (text: string, _voice: string = "alloy") => {
+    async (text: string, voice: string = "alloy") => {
       if (isSpeaking) {
         window.speechSynthesis.cancel();
         if (audioRef.current) {
@@ -512,97 +513,65 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         return;
       }
 
-      if ('speechSynthesis' in window) {
-        try {
-          setIsSpeaking(true);
-          
-          // Cancel any ongoing speech first
-          window.speechSynthesis.cancel();
-          
-          const utterance = new SpeechSynthesisUtterance(text);
-          
-          // Slower, more natural speaking rate
-          utterance.rate = 0.9;
-          utterance.pitch = 1.05;
-          utterance.volume = 1.0;
-          
-          // Get voices - may need to wait for them to load
-          let voices = window.speechSynthesis.getVoices();
-          
-          // If no voices yet, wait for them to load
-          if (voices.length === 0) {
-            await new Promise<void>((resolve) => {
-              window.speechSynthesis.onvoiceschanged = () => {
-                voices = window.speechSynthesis.getVoices();
-                resolve();
-              };
-              // Timeout fallback
-              setTimeout(resolve, 100);
-            });
-          }
-          
-          // Priority order for natural-sounding female voices
-          const preferredVoices = [
-            'google us english female',
-            'google uk english female', 
-            'samantha',
-            'victoria',
-            'karen',
-            'moira',
-            'fiona',
-            'tessa',
-            'veena',
-            'female',
-            'woman',
-            'zira',
-            'hazel'
-          ];
-          
-          // Find the best available voice
-          let selectedVoice = null;
-          for (const preferred of preferredVoices) {
-            selectedVoice = voices.find(v => 
-              v.name.toLowerCase().includes(preferred)
-            );
-            if (selectedVoice) break;
-          }
-          
-          // Fallback: prefer any English voice that's not the default robotic one
-          if (!selectedVoice) {
-            selectedVoice = voices.find(v => 
-              v.lang.startsWith('en') && !v.name.toLowerCase().includes('microsoft')
-            ) || voices.find(v => v.lang.startsWith('en'));
-          }
-          
-          if (selectedVoice) {
-            utterance.voice = selectedVoice;
-            console.log("Using voice:", selectedVoice.name);
-          }
+      try {
+        setIsSpeaking(true);
 
-          utterance.onend = () => {
-            setIsSpeaking(false);
-            // Auto-restart recording if hands-free mode is enabled
-            if (handsFreeModeEnabled) {
-              setTimeout(() => {
-                startRecording();
-              }, 300);
-            }
-          };
+        // Get the current session to use the user's JWT
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
 
-          utterance.onerror = () => {
-            setIsSpeaking(false);
-          };
-
-          window.speechSynthesis.speak(utterance);
-        } catch (error) {
-          console.error("Speech error:", error);
-          setIsSpeaking(false);
+        if (!token) {
+          throw new Error("Not authenticated");
         }
-      } else {
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speak`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ text, voice }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`TTS request failed: ${response.status}`);
+        }
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+          audioRef.current = null;
+          // Auto-restart recording if hands-free mode is enabled
+          if (handsFreeModeEnabled) {
+            setTimeout(() => {
+              startRecording();
+            }, 300);
+          }
+        };
+
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+          audioRef.current = null;
+        };
+
+        await audio.play();
+      } catch (error) {
+        console.error("ElevenLabs speech error:", error);
+        setIsSpeaking(false);
         toast({
           variant: "destructive",
-          title: "Speech Unavailable",
-          description: "Your browser doesn't support text-to-speech.",
+          title: "Speech Error",
+          description: "Failed to generate speech. Please try again.",
         });
       }
     },

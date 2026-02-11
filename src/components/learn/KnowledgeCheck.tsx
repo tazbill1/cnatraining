@@ -20,13 +20,19 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
   const [isCorrect, setIsCorrect] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+  // Reset state whenever the check changes (e.g., navigating between sections)
   useEffect(() => {
+    setSelectedAnswers([]);
+    setSubmitted(false);
+    setIsCorrect(false);
+    setDraggedIndex(null);
     if (check.type === "reorder") {
-      // Shuffle the options for reorder questions
       const shuffled = [...check.options].sort(() => Math.random() - 0.5);
       setReorderItems(shuffled);
+    } else {
+      setReorderItems([]);
     }
-  }, [check]);
+  }, [check.id]);
 
   const handleSingleSelect = (value: string) => {
     if (!submitted) {

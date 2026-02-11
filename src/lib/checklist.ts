@@ -183,6 +183,31 @@ export const cnaChecklist: ChecklistItem[] = [
   },
 ];
 
+// Extract customer name from AI messages (the AI introduces itself with a name)
+function extractCustomerName(conversation: Array<{ role: string; content: string }>): string | null {
+  const namePatterns = [
+    /(?:i'?m|my name is|this is|it'?s|i am|hey,?\s*i'?m|hi,?\s*i'?m)\s+([A-Z][a-z]+)/i,
+    /(?:^|\.\s+)([A-Z][a-z]+)\s+here\b/i,
+    /\bname'?s\s+([A-Z][a-z]+)/i,
+  ];
+
+  for (const msg of conversation) {
+    if (msg.role === "assistant") {
+      for (const pattern of namePatterns) {
+        const match = msg.content.match(pattern);
+        if (match && match[1]) {
+          const name = match[1];
+          const falsePositives = ["I", "The", "This", "That", "What", "How", "Hey", "Hi", "Yes", "No", "Well", "So", "Thanks", "Sure", "Great", "Good"];
+          if (!falsePositives.includes(name)) {
+            return name;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export function analyzeChecklistFromConversation(
   conversation: Array<{ role: string; content: string }>,
   currentState: Record<string, boolean>
@@ -203,9 +228,18 @@ export function analyzeChecklistFromConversation(
 
   const allText = salesMessages + " " + customerMessages;
 
+  // Extract the customer's actual name for enhanced name detection
+  const customerName = extractCustomerName(conversation);
+
   // Check each item
   cnaChecklist.forEach((item) => {
     if (!newState[item.id]) {
+      // Enhanced check for "customer-name": also check if they used the actual name
+      if (item.id === "customer-name" && customerName && salesMessages.includes(customerName.toLowerCase())) {
+        newState[item.id] = true;
+        return;
+      }
+
       const hasKeyword = item.keywords.some((keyword) =>
         allText.includes(keyword.toLowerCase())
       );

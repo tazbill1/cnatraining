@@ -169,6 +169,33 @@ export const phoneCategoryLabels: Record<PhoneChecklistItem["category"], string>
   appointment: "Appointment Setting",
 };
 
+// Extract customer name from AI messages (the AI introduces itself with a name)
+function extractCustomerName(conversation: Array<{ role: string; content: string }>): string | null {
+  // Common patterns: "I'm Tom", "My name is Tom", "This is Alex", "Hey, it's Jennifer"
+  const namePatterns = [
+    /(?:i'?m|my name is|this is|it'?s|i am|hey,?\s*i'?m|hi,?\s*i'?m)\s+([A-Z][a-z]+)/i,
+    /(?:^|\.\s+)([A-Z][a-z]+)\s+here\b/i,
+    /\bname'?s\s+([A-Z][a-z]+)/i,
+  ];
+
+  for (const msg of conversation) {
+    if (msg.role === "assistant") {
+      for (const pattern of namePatterns) {
+        const match = msg.content.match(pattern);
+        if (match && match[1]) {
+          const name = match[1];
+          // Filter out common false positives
+          const falsePositives = ["I", "The", "This", "That", "What", "How", "Hey", "Hi", "Yes", "No", "Well", "So", "Thanks", "Sure", "Great", "Good"];
+          if (!falsePositives.includes(name)) {
+            return name;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export function analyzePhoneChecklistFromConversation(
   conversation: Array<{ role: string; content: string }>,
   currentState: Record<string, boolean>
@@ -189,14 +216,27 @@ export function analyzePhoneChecklistFromConversation(
 
   const allText = salesMessages + " " + customerMessages;
 
+  // Extract the customer's actual name for dynamic checking
+  const customerName = extractCustomerName(conversation);
+
   // Check each item
   phoneChecklist.forEach((item) => {
-    if (!newState[item.id] && item.keywords.length > 0) {
-      const hasKeyword = item.keywords.some((keyword) =>
-        allText.includes(keyword.toLowerCase())
-      );
-      if (hasKeyword) {
-        newState[item.id] = true;
+    if (!newState[item.id]) {
+      // Special dynamic check for "Used their name"
+      if (item.id === "phone-use-name") {
+        if (customerName && salesMessages.includes(customerName.toLowerCase())) {
+          newState[item.id] = true;
+        }
+        return;
+      }
+
+      if (item.keywords.length > 0) {
+        const hasKeyword = item.keywords.some((keyword) =>
+          allText.includes(keyword.toLowerCase())
+        );
+        if (hasKeyword) {
+          newState[item.id] = true;
+        }
       }
     }
   });

@@ -67,7 +67,7 @@ export default function Module4Content() {
   };
 
   const getSectionKey = () => {
-    const sectionKeys = ["inbound", "outbound", "appointment", "objections"];
+    const sectionKeys = ["firstImpression", "care", "appointment", "objections"];
     return sectionKeys[currentSection];
   };
 
@@ -190,8 +190,8 @@ export default function Module4Content() {
             </Button>
 
             <ModuleIntro
-              title="Module 4: Phone Sales Fundamentals"
-              welcomeMessage="The phone is your most powerful tool for filling your pipeline."
+              title="Module 4: Inbound Call Mastery"
+              welcomeMessage="Every inbound call is a customer raising their hand — make the most of it."
               overview={phoneModuleOverview}
               objectives={phoneModuleObjectives}
               estimatedTime="15-18 min"
@@ -232,7 +232,7 @@ export default function Module4Content() {
                 Module Complete!
               </h1>
               <p className="text-muted-foreground mb-8">
-                You've mastered Phone Sales Fundamentals. You're now ready to convert more calls into appointments!
+                You've mastered Inbound Call Mastery. You're now ready to convert more inbound calls into showroom appointments!
               </p>
               <div className="flex gap-4 justify-center">
                 <Button variant="outline" onClick={() => navigate("/learn")}>

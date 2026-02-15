@@ -70,6 +70,14 @@ export function ChecklistPanel({
           </div>
         </div>
         <p className="text-xs text-muted-foreground">{scenario.description}</p>
+        {scenario.category === "trade-appraisal" && scenario.customerName && (
+          <div className="mt-3 p-2.5 rounded-lg bg-muted/50 border border-border">
+            <p className="text-xs font-medium text-foreground">Customer: {scenario.customerName}</p>
+            {scenario.tradeVehicle && (
+              <p className="text-xs text-muted-foreground">Trade: {scenario.tradeVehicle}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Timer */}

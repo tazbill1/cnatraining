@@ -119,12 +119,6 @@ export default function Auth() {
             });
           }
         } else {
-          // Mark invitation as used
-          await supabase
-            .from("invitations")
-            .update({ status: "accepted", used_at: new Date().toISOString() })
-            .eq("email", formData.email.trim().toLowerCase());
-
           toast({
             title: "Account created!",
             description: "Welcome to Werkandme",

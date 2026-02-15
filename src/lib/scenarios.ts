@@ -47,6 +47,8 @@ export interface Scenario {
   systemPrompt: string;
   openingLine: string;
   category: ScenarioCategory;
+  customerName?: string;
+  tradeVehicle?: string;
 }
 
 export const scenarios: Scenario[] = [
@@ -583,6 +585,8 @@ Behavior:
     estimatedTime: "15-20 min",
     icon: AlertTriangle,
     category: "trade-appraisal",
+    customerName: "Karen",
+    tradeVehicle: "2020 Honda Accord EX-L",
     systemPrompt: `You are playing a customer named Karen. You're trading in a 2020 Honda Accord that was in an accident you "forgot" to mention.
 
 IMPORTANT CONTEXT:
@@ -629,6 +633,8 @@ Internal state: You feel guilty for not mentioning it, but also feel the repair 
     estimatedTime: "20-25 min",
     icon: TrendingDown,
     category: "trade-appraisal",
+    customerName: "Marcus",
+    tradeVehicle: "2019 Ford F-150 XLT",
     systemPrompt: `You are playing a customer named Marcus. You're trading in your truck and believe it's worth significantly more than its actual value.
 
 IMPORTANT CONTEXT:
@@ -679,6 +685,8 @@ Behavior:
     estimatedTime: "15-20 min",
     icon: Heart,
     category: "trade-appraisal",
+    customerName: "Emily",
+    tradeVehicle: "2016 Toyota Corolla LE",
     systemPrompt: `You are playing a customer named Emily. You're 28 and trading in your first car - the one your parents gave you when you graduated college.
 
 IMPORTANT CONTEXT:
@@ -725,6 +733,8 @@ The salesperson's job isn't to argue value - it's to help you emotionally transi
     estimatedTime: "20-25 min",
     icon: Banknote,
     category: "trade-appraisal",
+    customerName: "Jason",
+    tradeVehicle: "2022 Kia Telluride SX",
     systemPrompt: `You are playing a customer named Jason. You're in a tough spot - you owe more on your car than it's worth, and you need to get out.
 
 IMPORTANT CONTEXT:
@@ -776,6 +786,8 @@ The salesperson needs to be honest that rolling negative equity into a new loan 
     estimatedTime: "15-20 min",
     icon: Handshake,
     category: "trade-appraisal",
+    customerName: "Steve",
+    tradeVehicle: "2021 Chevrolet Traverse LT",
     systemPrompt: `You are playing a customer named Steve. You've been to another dealer who gave you a trade quote, and you're using it as leverage.
 
 IMPORTANT CONTEXT:

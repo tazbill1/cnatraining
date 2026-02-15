@@ -294,6 +294,14 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                     ? "Time to explain the trade process!"
                     : "Your turn to greet the customer!"}
                 </h3>
+                {sessionState.scenario?.category === "trade-appraisal" && sessionState.scenario?.customerName && (
+                  <div className="mb-3 p-3 rounded-lg bg-muted/50 border border-border text-sm">
+                    <p className="font-medium text-foreground">Customer: {sessionState.scenario.customerName}</p>
+                    {sessionState.scenario.tradeVehicle && (
+                      <p className="text-muted-foreground">Trade Vehicle: {sessionState.scenario.tradeVehicle}</p>
+                    )}
+                  </div>
+                )}
                 <p className="text-muted-foreground max-w-md mx-auto">
                   {sessionState.scenario?.category === "trade-appraisal"
                     ? "The CNA is complete. Now explain how the trade evaluation works before inspecting the vehicle."

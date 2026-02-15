@@ -76,6 +76,9 @@ export function ChecklistPanel({
             {scenario.tradeVehicle && (
               <p className="text-xs text-muted-foreground">Trade: {scenario.tradeVehicle}</p>
             )}
+            {scenario.tradeValue && (
+              <p className="text-xs text-muted-foreground">ACV: <span className="font-semibold text-foreground">{scenario.tradeValue}</span></p>
+            )}
           </div>
         )}
       </div>

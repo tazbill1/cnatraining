@@ -300,6 +300,9 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                     {sessionState.scenario.tradeVehicle && (
                       <p className="text-muted-foreground">Trade Vehicle: {sessionState.scenario.tradeVehicle}</p>
                     )}
+                    {sessionState.scenario.tradeValue && (
+                      <p className="text-muted-foreground">ACV: <span className="font-semibold text-foreground">{sessionState.scenario.tradeValue}</span></p>
+                    )}
                   </div>
                 )}
                 <p className="text-muted-foreground max-w-md mx-auto">

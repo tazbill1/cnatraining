@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -12,11 +12,17 @@ const Index = () => {
   const { user, isLoading, error } = useAuth();
   const [showLoader, setShowLoader] = useState(false);
   const [showTimeout, setShowTimeout] = useState(false);
+  const isLoadingRef = useRef(isLoading);
+
+  // Keep ref in sync
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   // Delay showing loader to prevent flash for fast auth checks
   useEffect(() => {
     const loaderTimer = setTimeout(() => {
-      if (isLoading) {
+      if (isLoadingRef.current) {
         setShowLoader(true);
       }
     }, LOADER_DELAY_MS);
@@ -27,7 +33,7 @@ const Index = () => {
   // Safety timeout - show manual navigation after 5 seconds
   useEffect(() => {
     const timeoutTimer = setTimeout(() => {
-      if (isLoading) {
+      if (isLoadingRef.current) {
         setShowTimeout(true);
       }
     }, TIMEOUT_MS);
@@ -45,7 +51,7 @@ const Index = () => {
 
   // Redirect logic - navigate is stable, excluded from deps intentionally
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !error) {
       if (user) {
         navigate("/dashboard", { replace: true });
       } else {
@@ -53,10 +59,10 @@ const Index = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isLoading]);
+  }, [user, isLoading, error]);
 
-  // Error state
-  if (error) {
+  // Error state - only show after loading resolves
+  if (!isLoading && error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4 text-center px-4 max-w-md">

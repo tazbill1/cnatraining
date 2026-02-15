@@ -166,21 +166,6 @@ export const cnaChecklist: ChecklistItem[] = [
     category: "purchase",
   },
 
-  // Contact Information
-  {
-    id: "drivers-license",
-    label: "Driver's license",
-    description: "Collected driver's license for test drive",
-    keywords: ["license", "driver's license", "drivers license", "id", "identification", "scan your"],
-    category: "contact",
-  },
-  {
-    id: "best-contact",
-    label: "Best contact info",
-    description: "Cell, work phone, or email preference",
-    keywords: ["phone", "cell", "mobile", "email", "contact", "reach you", "call you", "text you", "best way to reach"],
-    category: "contact",
-  },
 ];
 
 // Extract customer name from AI messages (the AI introduces itself with a name)

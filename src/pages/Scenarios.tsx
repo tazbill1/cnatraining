@@ -49,20 +49,33 @@ export default function Scenarios() {
             onValueChange={(value) => setActiveCategory(value as ScenarioCategory)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-4 mb-6">
-              {scenarioCategories.map((category) => (
-                <TabsTrigger
-                  key={category.id}
-                  value={category.id}
-                  className="flex items-center gap-2"
-                >
-                  <category.icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{category.name}</span>
-                  <span className="sm:hidden">
-                    {category.name.split(" ")[0]}
-                  </span>
-                </TabsTrigger>
-              ))}
+            <TabsList className="grid w-full grid-cols-4 mb-6 h-auto p-1.5 gap-1.5">
+              {scenarioCategories.map((category) => {
+                const colorMap: Record<string, string> = {
+                  "cna-practice": "text-blue-500",
+                  "vehicle-trade": "text-emerald-500",
+                  "phone-practice": "text-amber-500",
+                  "reference": "text-purple-500",
+                };
+                const bgMap: Record<string, string> = {
+                  "cna-practice": "data-[state=active]:border-blue-500/40 data-[state=active]:bg-blue-500/10",
+                  "vehicle-trade": "data-[state=active]:border-emerald-500/40 data-[state=active]:bg-emerald-500/10",
+                  "phone-practice": "data-[state=active]:border-amber-500/40 data-[state=active]:bg-amber-500/10",
+                  "reference": "data-[state=active]:border-purple-500/40 data-[state=active]:bg-purple-500/10",
+                };
+                return (
+                  <TabsTrigger
+                    key={category.id}
+                    value={category.id}
+                    className={`flex flex-col items-center gap-1 py-3 px-2 rounded-lg border border-transparent transition-all ${bgMap[category.id] || ""}`}
+                  >
+                    <category.icon className={`w-5 h-5 ${colorMap[category.id] || ""}`} />
+                    <span className="text-xs sm:text-sm font-medium leading-tight text-center">
+                      {category.name}
+                    </span>
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
 
             {/* CNA Practice Tab */}

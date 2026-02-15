@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable";
+import { supabase } from "@/integrations/supabase/client";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 
 type AuthMode = "signin" | "signup";
@@ -86,6 +87,22 @@ export default function Auth() {
           setIsLoading(false);
           return;
         }
+
+        // Check if email has been invited via edge function
+        const { data: inviteCheck } = await supabase.functions.invoke("check-invite", {
+          body: { email: formData.email.trim() },
+        });
+
+        if (!inviteCheck?.invited) {
+          toast({
+            variant: "destructive",
+            title: "Invitation required",
+            description: "You need an invitation to create an account. Please contact your manager.",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
           if (error.message.includes("already registered")) {
@@ -102,6 +119,12 @@ export default function Auth() {
             });
           }
         } else {
+          // Mark invitation as used
+          await supabase
+            .from("invitations")
+            .update({ status: "accepted", used_at: new Date().toISOString() })
+            .eq("email", formData.email.trim().toLowerCase());
+
           toast({
             title: "Account created!",
             description: "Welcome to Werkandme",
@@ -147,11 +170,20 @@ export default function Auth() {
             <h2 className="text-xl font-semibold mb-2">
               {mode === "signin" ? "Welcome back" : "Create your account"}
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               {mode === "signin"
                 ? "Sign in to continue your training"
                 : "Start your journey to sales excellence"}
             </p>
+
+            {mode === "signup" && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border mb-4">
+                <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Signup is invite-only. You must have received an invitation from your manager to create an account.
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "signup" && (

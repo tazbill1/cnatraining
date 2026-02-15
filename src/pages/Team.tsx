@@ -5,13 +5,16 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { logger } from "@/lib/logger";
 
@@ -26,13 +29,24 @@ interface UserEngagement {
   last_session_date: string | null;
 }
 
+interface Invitation {
+  id: string;
+  email: string;
+  status: string;
+  created_at: string;
+}
+
 export default function Team() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isManager, setIsManager] = useState(false);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeThisWeek: 0,
@@ -57,8 +71,38 @@ export default function Team() {
     if (data?.role === "manager") {
       setIsManager(true);
       fetchEngagementData();
+      fetchInvitations();
     } else {
       setLoading(false);
+    }
+  };
+  const fetchInvitations = async () => {
+    const { data } = await supabase
+      .from("invitations")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setInvitations(data as Invitation[]);
+  };
+
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim() || !inviteEmail.includes("@")) {
+      toast({ variant: "destructive", title: "Please enter a valid email" });
+      return;
+    }
+    setIsSendingInvite(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-invite", {
+        body: { email: inviteEmail.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Invitation sent!", description: `Invite sent to ${inviteEmail.trim()}` });
+      setInviteEmail("");
+      fetchInvitations();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to send invite", description: err.message });
+    } finally {
+      setIsSendingInvite(false);
     }
   };
 
@@ -194,6 +238,66 @@ export default function Team() {
               Monitor user activity and training progress
             </p>
           </div>
+
+          {/* Invite Section */}
+          <Card className="mb-6 md:mb-8">
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <UserPlus className="w-4 h-4 md:w-5 md:h-5" />
+                Invite Team Member
+              </CardTitle>
+              <CardDescription className="text-xs md:text-sm">
+                Send an invitation email to add someone to the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="colleague@dealership.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="pl-10"
+                    onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
+                  />
+                </div>
+                <Button onClick={handleSendInvite} disabled={isSendingInvite}>
+                  {isSendingInvite ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send Invite
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {invitations.length > 0 && (
+                <div className="mt-4">
+                  <Label className="text-xs text-muted-foreground mb-2 block">Recent Invitations</Label>
+                  <div className="space-y-2">
+                    {invitations.slice(0, 5).map((inv) => (
+                      <div key={inv.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30">
+                        <span className="truncate">{inv.email}</span>
+                        <Badge variant={inv.status === "accepted" ? "default" : "secondary"} className="text-xs">
+                          {inv.status === "accepted" ? (
+                            <><Check className="w-3 h-3 mr-1" /> Joined</>
+                          ) : inv.status === "sent" ? (
+                            <><Mail className="w-3 h-3 mr-1" /> Sent</>
+                          ) : (
+                            inv.status
+                          )}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">

@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.chat]
 verify_jwt = false
+
+[functions.send-invite]
+verify_jwt = false
+
+[functions.check-invite]
+verify_jwt = false

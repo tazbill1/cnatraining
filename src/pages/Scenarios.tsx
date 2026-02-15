@@ -18,7 +18,7 @@ export default function Scenarios() {
   };
 
   const cnaPracticeScenarios = getScenariosByCategory("cna-practice");
-  const vehicleTradeScenarios = getScenariosByCategory("vehicle-trade");
+  const tradeAppraisalScenarios = getScenariosByCategory("trade-appraisal");
   const phonePracticeScenarios = getScenariosByCategory("phone-practice");
 
   return (
@@ -53,13 +53,13 @@ export default function Scenarios() {
               {scenarioCategories.map((category) => {
                 const colorMap: Record<string, string> = {
                   "cna-practice": "text-blue-500",
-                  "vehicle-trade": "text-emerald-500",
+                  "trade-appraisal": "text-emerald-500",
                   "phone-practice": "text-amber-500",
                   "reference": "text-purple-500",
                 };
                 const bgMap: Record<string, string> = {
                   "cna-practice": "data-[state=active]:border-blue-500/40 data-[state=active]:bg-blue-500/10",
-                  "vehicle-trade": "data-[state=active]:border-emerald-500/40 data-[state=active]:bg-emerald-500/10",
+                  "trade-appraisal": "data-[state=active]:border-emerald-500/40 data-[state=active]:bg-emerald-500/10",
                   "phone-practice": "data-[state=active]:border-amber-500/40 data-[state=active]:bg-amber-500/10",
                   "reference": "data-[state=active]:border-purple-500/40 data-[state=active]:bg-purple-500/10",
                 };
@@ -108,40 +108,34 @@ export default function Scenarios() {
               </div>
             </TabsContent>
 
-            {/* Vehicle Selection & Trade Appraisal Tab */}
-            <TabsContent value="vehicle-trade" className="mt-0">
-              {vehicleTradeScenarios.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
-                  {vehicleTradeScenarios.map((scenario) => (
-                    <ScenarioCard
-                      key={scenario.id}
-                      scenario={scenario}
-                      onClick={() => handleSelectScenario(scenario.id)}
-                    />
-                  ))}
+            {/* Trade Appraisal Tab */}
+            <TabsContent value="trade-appraisal" className="mt-0">
+              {/* Difficulty Legend */}
+              <div className="flex items-center gap-6 mb-6">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-success" />
+                  <span className="text-sm text-muted-foreground">Beginner</span>
                 </div>
-              ) : (
-                <Card className="border-dashed">
-                  <CardHeader className="text-center pb-2">
-                    <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                      <FolderOpen className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <CardTitle className="text-lg">Coming Soon</CardTitle>
-                    <CardDescription>
-                      Vehicle Selection & Trade Appraisal scenarios are being developed.
-                      Check back soon for new training content!
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <Button
-                      variant="outline"
-                      onClick={() => setActiveCategory("cna-practice")}
-                    >
-                      Practice CNA Skills Instead
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-warning" />
+                  <span className="text-sm text-muted-foreground">Intermediate</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-destructive" />
+                  <span className="text-sm text-muted-foreground">Advanced</span>
+                </div>
+              </div>
+
+              {/* Scenario Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                {tradeAppraisalScenarios.map((scenario) => (
+                  <ScenarioCard
+                    key={scenario.id}
+                    scenario={scenario}
+                    onClick={() => handleSelectScenario(scenario.id)}
+                  />
+                ))}
+              </div>
             </TabsContent>
 
             {/* Phone Skills Tab */}

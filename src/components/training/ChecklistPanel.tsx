@@ -21,11 +21,11 @@ function getChecklistForScenario(category: string) {
         title: "Phone Call Checklist",
         progressLabel: "Call Progress",
       };
-    case "vehicle-trade":
+    case "trade-appraisal":
       return {
-        checklist: [...tradeAppraisalChecklist, ...vehicleSelectionChecklist],
-        title: "Trade & Selection Checklist",
-        progressLabel: "Process Progress",
+        checklist: tradeAppraisalChecklist,
+        title: "Trade Appraisal Checklist",
+        progressLabel: "Appraisal Progress",
       };
     case "cna-practice":
     default:

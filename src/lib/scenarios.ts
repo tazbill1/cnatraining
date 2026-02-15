@@ -1,6 +1,6 @@
 import { User, Search, RefreshCw, Users, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, FileText, BookOpen, Scale, AlertTriangle, TrendingDown, Sparkles, CarFront, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar } from "lucide-react";
 
-export type ScenarioCategory = "cna-practice" | "vehicle-trade" | "phone-practice" | "reference";
+export type ScenarioCategory = "cna-practice" | "trade-appraisal" | "phone-practice" | "reference";
 
 export interface ScenarioCategory_Info {
   id: ScenarioCategory;
@@ -13,19 +13,19 @@ export const scenarioCategories: ScenarioCategory_Info[] = [
   {
     id: "cna-practice",
     name: "CNA Practice",
-    description: "Practice Customer Needs Analysis with diverse customer personas",
+    description: "Practice Customer Needs Analysis and vehicle selection with diverse customer personas",
     icon: Users,
   },
   {
-    id: "vehicle-trade",
-    name: "Vehicle Selection & Trade Appraisal",
-    description: "Practice vehicle matching and trade-in evaluation scenarios",
+    id: "trade-appraisal",
+    name: "Trade Appraisal",
+    description: "Practice trade-in evaluation, value presentation, and objection handling",
     icon: Car,
   },
   {
     id: "phone-practice",
     name: "Phone Skills",
-    description: "Practice inbound calls, outbound prospecting, and appointment setting",
+    description: "Practice inbound calls and appointment setting",
     icon: Phone,
   },
   {
@@ -431,7 +431,7 @@ You want to continue your relationship with this brand, but you need to feel val
   },
 
   // ============================================
-  // VEHICLE SELECTION SCENARIOS
+  // VEHICLE SELECTION SCENARIOS (CNA Practice)
   // ============================================
   {
     id: "undecided-family",
@@ -441,7 +441,7 @@ You want to continue your relationship with this brand, but you need to feel val
     difficulty: "intermediate",
     estimatedTime: "20-25 min",
     icon: Users,
-    category: "vehicle-trade",
+    category: "cna-practice",
     systemPrompt: `You are playing TWO characters - a married couple named Mike and Lisa who disagree on what vehicle to buy.
 
 MIKE's perspective:
@@ -493,7 +493,7 @@ LISA: "So anyway... we need some help figuring this out."`,
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Scale,
-    category: "vehicle-trade",
+    category: "cna-practice",
     systemPrompt: `You are playing a customer named Priya. You're 34 years old and you've fallen in love with a fully-loaded luxury vehicle, but your actual budget can only afford the base model.
 
 BACKGROUND:
@@ -535,7 +535,7 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Search,
-    category: "vehicle-trade",
+    category: "cna-practice",
     systemPrompt: `You are playing a savvy shopper named David. You're 45 years old and you've spent 3 weeks getting quotes from every dealer within 100 miles. You have printed quotes from 3 competitors.
 
 BACKGROUND:
@@ -582,7 +582,7 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: AlertTriangle,
-    category: "vehicle-trade",
+    category: "trade-appraisal",
     systemPrompt: `You are playing a customer named Karen. You're trading in a 2020 Honda Accord that was in an accident you "forgot" to mention.
 
 BACKGROUND:
@@ -620,7 +620,7 @@ Internal state: You feel guilty for not mentioning it, but also feel the repair 
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: TrendingDown,
-    category: "vehicle-trade",
+    category: "trade-appraisal",
     systemPrompt: `You are playing a customer named Marcus. You're trading in your truck and believe it's worth significantly more than its actual value.
 
 BACKGROUND:
@@ -662,7 +662,7 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "15-20 min",
     icon: Heart,
-    category: "vehicle-trade",
+    category: "trade-appraisal",
     systemPrompt: `You are playing a customer named Emily. You're 28 and trading in your first car - the one your parents gave you when you graduated college.
 
 BACKGROUND:
@@ -700,7 +700,7 @@ The salesperson's job isn't to argue value - it's to help you emotionally transi
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Banknote,
-    category: "vehicle-trade",
+    category: "trade-appraisal",
     systemPrompt: `You are playing a customer named Jason. You're in a tough spot - you owe more on your car than it's worth, and you need to get out.
 
 BACKGROUND:
@@ -742,7 +742,7 @@ The salesperson needs to be honest that rolling negative equity into a new loan 
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Handshake,
-    category: "vehicle-trade",
+    category: "trade-appraisal",
     systemPrompt: `You are playing a customer named Steve. You've been to another dealer who gave you a trade quote, and you're using it as leverage.
 
 BACKGROUND:

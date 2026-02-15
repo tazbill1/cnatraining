@@ -12,6 +12,7 @@ import ModuleContent from "./pages/ModuleContent";
 import Module2Content from "./pages/Module2Content";
 import Module3Content from "./pages/Module3Content";
 import Module4Content from "./pages/Module4Content";
+import BaseStatementContent from "./pages/BaseStatementContent";
 import Toolbox from "./pages/Toolbox";
 import CNAForm from "./pages/CNAForm";
 import PhoneScripts from "./pages/PhoneScripts";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/learn/base-statement" element={<BaseStatementContent />} />
             <Route path="/learn/vehicle-selection-fundamentals" element={<ModuleContent />} />
             <Route path="/learn/trade-appraisal-process" element={<Module2Content />} />
             <Route path="/learn/objection-handling-framework" element={<Module3Content />} />

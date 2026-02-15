@@ -30,13 +30,6 @@ const PERSONAS = [
     icon: RefreshCw,
   },
   {
-    id: "conflicted-couple",
-    name: "Conflicted Couple",
-    description: "Partners with different priorities need help aligning",
-    difficulty: "advanced",
-    icon: Users,
-  },
-  {
     id: "budget-shopper",
     name: "Budget Shopper",
     description: "Price-focused, needs help seeing total value",

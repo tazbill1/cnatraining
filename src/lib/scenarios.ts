@@ -49,6 +49,7 @@ export interface Scenario {
   category: ScenarioCategory;
   customerName?: string;
   tradeVehicle?: string;
+  tradeValue?: string;
 }
 
 export const scenarios: Scenario[] = [
@@ -587,6 +588,7 @@ Behavior:
     category: "trade-appraisal",
     customerName: "Karen",
     tradeVehicle: "2020 Honda Accord EX-L",
+    tradeValue: "$19,000",
     systemPrompt: `You are playing a customer named Karen. You're trading in a 2020 Honda Accord that was in an accident you "forgot" to mention.
 
 IMPORTANT CONTEXT:
@@ -635,6 +637,7 @@ Internal state: You feel guilty for not mentioning it, but also feel the repair 
     category: "trade-appraisal",
     customerName: "Marcus",
     tradeVehicle: "2019 Ford F-150 XLT",
+    tradeValue: "$24,000",
     systemPrompt: `You are playing a customer named Marcus. You're trading in your truck and believe it's worth significantly more than its actual value.
 
 IMPORTANT CONTEXT:
@@ -687,6 +690,7 @@ Behavior:
     category: "trade-appraisal",
     customerName: "Emily",
     tradeVehicle: "2016 Toyota Corolla LE",
+    tradeValue: "$8,500",
     systemPrompt: `You are playing a customer named Emily. You're 28 and trading in your first car - the one your parents gave you when you graduated college.
 
 IMPORTANT CONTEXT:
@@ -735,6 +739,7 @@ The salesperson's job isn't to argue value - it's to help you emotionally transi
     category: "trade-appraisal",
     customerName: "Jason",
     tradeVehicle: "2022 Kia Telluride SX",
+    tradeValue: "$38,000",
     systemPrompt: `You are playing a customer named Jason. You're in a tough spot - you owe more on your car than it's worth, and you need to get out.
 
 IMPORTANT CONTEXT:
@@ -788,6 +793,7 @@ The salesperson needs to be honest that rolling negative equity into a new loan 
     category: "trade-appraisal",
     customerName: "Steve",
     tradeVehicle: "2021 Chevrolet Traverse LT",
+    tradeValue: "$25,500",
     systemPrompt: `You are playing a customer named Steve. You've been to another dealer who gave you a trade quote, and you're using it as leverage.
 
 IMPORTANT CONTEXT:

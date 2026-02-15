@@ -1,4 +1,4 @@
-import { BookOpen, Car, MessageSquare, FileText, Phone, LucideIcon } from "lucide-react";
+import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, LucideIcon } from "lucide-react";
 
 export type ModuleDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -20,8 +20,22 @@ export interface TrainingModule {
 
 export const trainingModules: TrainingModule[] = [
   {
+    id: "base-statement",
+    title: "Module 1: The Base Statement",
+    description: "Master the foundation of every customer interaction. Learn the script that sets the tone, builds trust, and differentiates your dealership from day one.",
+    icon: Handshake,
+    estimatedTime: "8-10 min",
+    difficulty: "beginner",
+    sections: [
+      { title: "Purpose & Context" },
+      { title: "Script Part 1: Community, Mission & Differentiation" },
+      { title: "Script Part 2: Two Pillars & Close" },
+    ],
+    prerequisiteIds: [],
+  },
+  {
     id: "vehicle-selection-fundamentals",
-    title: "Module 1: Vehicle Selection Fundamentals",
+    title: "Module 2: Vehicle Selection Fundamentals",
     description: "Learn proper vehicle selection theory, the Rule of Alternatives, ACV vs Trade Allowance, the 6-step trade value calculation, and vehicle presentation standards.",
     icon: Car,
     estimatedTime: "10-12 min",
@@ -32,11 +46,11 @@ export const trainingModules: TrainingModule[] = [
       { title: "6-Step Trade Value Calculation" },
       { title: "Vehicle Presentation & Key Management" },
     ],
-    prerequisiteIds: [],
+    prerequisiteIds: ["base-statement"],
   },
   {
     id: "trade-appraisal-process",
-    title: "Module 2: The 3-Step Trade Appraisal Process",
+    title: "Module 3: The 3-Step Trade Appraisal Process",
     description: "Master the complete trade appraisal workflow: framing the conversation, standardized vehicle evaluation, and purchase disclosure with the AEAIR objection handling framework.",
     icon: BookOpen,
     estimatedTime: "12-15 min",
@@ -63,7 +77,7 @@ export const trainingModules: TrainingModule[] = [
   },
   {
     id: "phone-sales-fundamentals",
-    title: "Module 4: Inbound Call Mastery",
+    title: "Module 5: Inbound Call Mastery",
     description: "Master inbound call handling: make a great first impression, apply the CARE framework, set firm appointments, and overcome common caller objections.",
     icon: Phone,
     estimatedTime: "12-15 min",

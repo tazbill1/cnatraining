@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -10,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -47,6 +49,15 @@ export default function Team() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [teamSessions, setTeamSessions] = useState<Array<{
+    user_id: string;
+    score: number;
+    rapport_score: number;
+    info_gathering_score: number;
+    needs_identification_score: number;
+    cna_completion_score: number;
+    completed_at: string;
+  }>>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeThisWeek: 0,
@@ -144,6 +155,20 @@ export default function Team() {
       });
 
       setUsers(userEngagement);
+
+      // Store completed sessions for insights
+      const completedAll = (sessions || [])
+        .filter((s) => s.status === "completed" && s.score != null)
+        .map((s) => ({
+          user_id: s.user_id,
+          score: s.score || 0,
+          rapport_score: s.rapport_score || 0,
+          info_gathering_score: s.info_gathering_score || 0,
+          needs_identification_score: s.needs_identification_score || 0,
+          cna_completion_score: s.cna_completion_score || 0,
+          completed_at: s.completed_at || s.started_at,
+        }));
+      setTeamSessions(completedAll);
 
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -344,7 +369,7 @@ export default function Team() {
 
           {/* User Tables/Cards */}
           <Tabs defaultValue="all" className="space-y-4">
-            <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex">
+            <TabsList className="w-full md:w-auto grid grid-cols-4 md:flex">
               <TabsTrigger value="all" className="text-xs md:text-sm">
                 All ({users.length})
               </TabsTrigger>
@@ -353,6 +378,9 @@ export default function Team() {
               </TabsTrigger>
               <TabsTrigger value="inactive" className="text-xs md:text-sm text-destructive">
                 Attention ({inactiveUsers.length})
+              </TabsTrigger>
+              <TabsTrigger value="insights" className="text-xs md:text-sm">
+                <BarChart3 className="w-3 h-3 mr-1" /> Insights
               </TabsTrigger>
             </TabsList>
 
@@ -395,10 +423,149 @@ export default function Team() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="insights">
+              <TeamInsights sessions={teamSessions} users={users} />
+            </TabsContent>
           </Tabs>
         </div>
       </AppLayout>
     </AuthGuard>
+  );
+}
+
+// Team Insights Component
+interface TeamInsightsProps {
+  sessions: Array<{
+    user_id: string;
+    score: number;
+    rapport_score: number;
+    info_gathering_score: number;
+    needs_identification_score: number;
+    cna_completion_score: number;
+    completed_at: string;
+  }>;
+  users: UserEngagement[];
+}
+
+function TeamInsights({ sessions, users }: TeamInsightsProps) {
+  if (sessions.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+        <p>No completed sessions yet. Insights will appear once team members complete training.</p>
+      </div>
+    );
+  }
+
+  const avg = (arr: number[]) => arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+
+  const teamAvgs = {
+    rapport: avg(sessions.map((s) => s.rapport_score)),
+    infoGathering: avg(sessions.map((s) => s.info_gathering_score)),
+    needsId: avg(sessions.map((s) => s.needs_identification_score)),
+    cnaCompletion: avg(sessions.map((s) => s.cna_completion_score)),
+  };
+
+  const categories = [
+    { label: "Rapport Building", value: teamAvgs.rapport, icon: "🤝" },
+    { label: "Info Gathering", value: teamAvgs.infoGathering, icon: "🔍" },
+    { label: "Needs Identification", value: teamAvgs.needsId, icon: "🎯" },
+    { label: "CNA Completion", value: teamAvgs.cnaCompletion, icon: "📋" },
+  ];
+
+  // Find weakest area
+  const weakest = categories.reduce((min, cat) => cat.value < min.value ? cat : min, categories[0]);
+
+  // Top performers (sorted by avg score)
+  const topPerformers = [...users]
+    .filter((u) => u.avg_score > 0 && u.total_sessions >= 2)
+    .sort((a, b) => b.avg_score - a.avg_score)
+    .slice(0, 5);
+
+  // Most improved: users with 3+ sessions where recent scores > older scores
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-score-excellent";
+    if (score >= 75) return "text-score-good";
+    if (score >= 60) return "text-score-needs-work";
+    return "text-score-practice";
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Category Breakdown */}
+      <Card>
+        <CardHeader className="p-4 md:p-6 pb-2">
+          <CardTitle className="text-base md:text-lg">Team Score Breakdown</CardTitle>
+          <CardDescription className="text-xs md:text-sm">
+            Average scores across all {sessions.length} completed sessions
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6 pt-2 space-y-4">
+          {categories.map((cat) => (
+            <div key={cat.label}>
+              <div className="flex items-center justify-between text-sm mb-1">
+                <span className="flex items-center gap-2">
+                  <span>{cat.icon}</span>
+                  <span className="text-muted-foreground">{cat.label}</span>
+                </span>
+                <span className={cn("font-bold", getScoreColor(cat.value))}>
+                  {cat.value}%
+                </span>
+              </div>
+              <Progress value={cat.value} className="h-2" />
+            </div>
+          ))}
+          <div className="mt-4 p-3 rounded-lg bg-warning/10 border border-warning/20">
+            <p className="text-sm">
+              <span className="font-medium text-warning">Focus area:</span>{" "}
+              <span className="text-muted-foreground">
+                {weakest.icon} {weakest.label} ({weakest.value}%) is the team's weakest category
+              </span>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Performers */}
+      <Card>
+        <CardHeader className="p-4 md:p-6 pb-2">
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            🏆 Top Performers
+          </CardTitle>
+          <CardDescription className="text-xs md:text-sm">
+            Team members with highest average scores (2+ sessions)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6 pt-2">
+          {topPerformers.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Need more sessions to determine top performers
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {topPerformers.map((user, i) => (
+                <div key={user.id} className="flex items-center gap-3">
+                  <span className="text-lg font-bold text-muted-foreground w-6">{i + 1}</span>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="text-xs">
+                      {user.full_name.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{user.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{user.total_sessions} sessions</p>
+                  </div>
+                  <span className={cn("text-lg font-bold", getScoreColor(user.avg_score))}>
+                    {user.avg_score}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

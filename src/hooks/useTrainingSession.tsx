@@ -222,6 +222,8 @@ export function useTrainingSession() {
         infoGatheringScore: 70,
         needsIdentificationScore: 72,
         cnaCompletionScore: checklistProgress,
+        categories: null,
+        overallTip: null,
         feedback: {
           strengths: ["Good questioning technique", "Built rapport with customer"],
           improvements: ["Could probe deeper on priorities", "Ask more follow-up questions"],
@@ -253,6 +255,8 @@ export function useTrainingSession() {
       return {
         sessionId: sessionState.id,
         ...evaluation,
+        categories: evaluation.categories || null,
+        overallTip: evaluation.overallTip || null,
         conversation: sessionState.messages,
         checklistState: sessionState.checklistState,
         durationSeconds: sessionState.elapsedSeconds,

@@ -6,34 +6,153 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Input validation constants
 const MAX_MESSAGES = 100;
 const MAX_MESSAGE_LENGTH = 2000;
-const MAX_DURATION_SECONDS = 7200; // 2 hours max
+const MAX_DURATION_SECONDS = 7200;
 
 const EVALUATION_PROMPT = `You are an expert automotive sales trainer evaluating a Customer Needs Analysis (CNA) conversation.
 
 Analyze this conversation and score the salesperson's performance.
 
 SCORING (0-100 for each category):
-1. RAPPORT BUILDING - Conversational tone, built trust, listened actively
-2. INFORMATION GATHERING - Asked good questions, dug deeper on answers
-3. NEEDS IDENTIFICATION - Found emotional "why", identified true priorities
-4. CNA COMPLETION - Covered key areas, set expectations properly
+1. RAPPORT BUILDING - Greeting, base statement delivery, community connection, conversational tone, built trust
+2. INFORMATION GATHERING - Asked good questions, dug deeper on answers, covered key areas
+3. NEEDS IDENTIFICATION - Found emotional "why", identified true priorities, uncovered pain points
+4. CNA COMPLETION - Covered all checklist items, set expectations, smooth transitions
+
+For each category, provide:
+- A score (0-100)
+- 1-2 specific strengths referencing actual conversation moments
+- 1-2 specific improvements with actionable coaching advice
+
+Also provide an overall coaching tip.
 
 Provide your evaluation in this exact JSON format:
 {
   "overallScore": 75,
-  "rapportScore": 80,
-  "infoGatheringScore": 70,
-  "needsIdentificationScore": 72,
-  "cnaCompletionScore": 78,
-  "strengths": ["strength 1", "strength 2", "strength 3"],
-  "improvements": ["area 1", "area 2", "area 3"],
-  "coachingTips": ["tip 1", "tip 2"]
+  "categories": {
+    "rapport": {
+      "score": 80,
+      "label": "Rapport Building",
+      "strengths": ["Specific strength referencing conversation"],
+      "improvements": ["Specific actionable improvement"],
+      "tip": "One sentence coaching tip for this category"
+    },
+    "infoGathering": {
+      "score": 70,
+      "label": "Information Gathering",
+      "strengths": ["Specific strength"],
+      "improvements": ["Specific improvement"],
+      "tip": "Coaching tip"
+    },
+    "needsIdentification": {
+      "score": 72,
+      "label": "Needs Identification",
+      "strengths": ["Specific strength"],
+      "improvements": ["Specific improvement"],
+      "tip": "Coaching tip"
+    },
+    "cnaCompletion": {
+      "score": 78,
+      "label": "CNA Completion",
+      "strengths": ["Specific strength"],
+      "improvements": ["Specific improvement"],
+      "tip": "Coaching tip"
+    }
+  },
+  "overallTip": "One key takeaway for the salesperson to focus on next session"
 }
 
-Be specific and reference actual parts of the conversation.`;
+Be specific and reference actual parts of the conversation. Use encouraging but honest language.`;
+
+function validateRequest(body: Record<string, unknown>) {
+  const { messages, durationSeconds } = body;
+
+  if (!Array.isArray(messages)) {
+    return { valid: false, error: "Invalid messages format", status: 400 };
+  }
+  if (messages.length > MAX_MESSAGES) {
+    return { valid: false, error: `Too many messages. Maximum: ${MAX_MESSAGES}`, status: 400 };
+  }
+  for (const msg of messages) {
+    if (!msg.role || !msg.content) {
+      return { valid: false, error: "Each message must have role and content", status: 400 };
+    }
+    if (typeof msg.content !== "string" || msg.content.length > MAX_MESSAGE_LENGTH) {
+      return { valid: false, error: `Message content too long. Maximum: ${MAX_MESSAGE_LENGTH} characters`, status: 400 };
+    }
+  }
+
+  const validatedDuration = typeof durationSeconds === "number" && durationSeconds >= 0 && durationSeconds <= MAX_DURATION_SECONDS
+    ? durationSeconds : 0;
+
+  return { valid: true, validatedDuration };
+}
+
+function buildFallbackEvaluation() {
+  const fallbackCategory = (label: string) => ({
+    score: 65,
+    label,
+    strengths: ["Completed the session"],
+    improvements: ["Practice more to improve"],
+    tip: "Focus on being conversational and natural",
+  });
+
+  return {
+    overallScore: 65,
+    categories: {
+      rapport: fallbackCategory("Rapport Building"),
+      infoGathering: fallbackCategory("Information Gathering"),
+      needsIdentification: fallbackCategory("Needs Identification"),
+      cnaCompletion: { ...fallbackCategory("CNA Completion"), score: 50 },
+    },
+    overallTip: "Keep practicing — consistency is key to improvement.",
+    // Legacy fields for backward compat
+    rapportScore: 65,
+    infoGatheringScore: 65,
+    needsIdentificationScore: 65,
+    cnaCompletionScore: 50,
+    feedback: {
+      strengths: ["Completed the session"],
+      improvements: ["Practice more scenarios"],
+      coachingTips: ["Focus on open-ended questions"],
+      examples: [],
+    },
+  };
+}
+
+function formatResponse(evaluation: Record<string, unknown>) {
+  const cats = evaluation.categories as Record<string, Record<string, unknown>> | undefined;
+  const rapport = cats?.rapport as Record<string, unknown> | undefined;
+  const info = cats?.infoGathering as Record<string, unknown> | undefined;
+  const needs = cats?.needsIdentification as Record<string, unknown> | undefined;
+  const cna = cats?.cnaCompletion as Record<string, unknown> | undefined;
+
+  // Collect all strengths/improvements for legacy fields
+  const allStrengths: string[] = [];
+  const allImprovements: string[] = [];
+  for (const cat of [rapport, info, needs, cna]) {
+    if (cat?.strengths) allStrengths.push(...(cat.strengths as string[]));
+    if (cat?.improvements) allImprovements.push(...(cat.improvements as string[]));
+  }
+
+  return {
+    overallScore: evaluation.overallScore || 65,
+    categories: evaluation.categories || {},
+    overallTip: evaluation.overallTip || "",
+    // Legacy compat
+    rapportScore: (rapport?.score as number) || 65,
+    infoGatheringScore: (info?.score as number) || 65,
+    needsIdentificationScore: (needs?.score as number) || 65,
+    cnaCompletionScore: (cna?.score as number) || 50,
+    feedback: {
+      strengths: allStrengths.length > 0 ? allStrengths : ["Completed the session"],
+      improvements: allImprovements.length > 0 ? allImprovements : ["Practice more"],
+      coachingTips: evaluation.overallTip ? [evaluation.overallTip as string] : [],
+      examples: [],
+    },
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -41,13 +160,10 @@ serve(async (req) => {
   }
 
   try {
-    // Authentication check
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const supabase = createClient(
@@ -58,61 +174,22 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    
     if (claimsError || !claimsData?.claims) {
-      return new Response(
-        JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Parse and validate input
     const body = await req.json();
-    const { messages, scenario, checklistState, durationSeconds } = body;
-
-    // Validate messages array
-    if (!Array.isArray(messages)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid messages format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const validation = validateRequest(body);
+    if (!validation.valid) {
+      return new Response(JSON.stringify({ error: validation.error }),
+        { status: validation.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (messages.length > MAX_MESSAGES) {
-      return new Response(
-        JSON.stringify({ error: `Too many messages. Maximum allowed: ${MAX_MESSAGES}` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Validate each message
-    for (const msg of messages) {
-      if (!msg.role || !msg.content) {
-        return new Response(
-          JSON.stringify({ error: "Each message must have role and content" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (typeof msg.content !== "string" || msg.content.length > MAX_MESSAGE_LENGTH) {
-        return new Response(
-          JSON.stringify({ error: `Message content too long. Maximum: ${MAX_MESSAGE_LENGTH} characters` }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
-
-    // Validate durationSeconds
-    const validatedDuration = typeof durationSeconds === "number" && durationSeconds >= 0 && durationSeconds <= MAX_DURATION_SECONDS
-      ? durationSeconds
-      : 0;
-
+    const { messages, scenario, checklistState } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    // Format conversation for evaluation
     const conversationText = messages
       .map((msg: { role: string; content: string }) => {
         const role = msg.role === "user" ? "SALESPERSON" : "CUSTOMER";
@@ -122,8 +199,8 @@ serve(async (req) => {
 
     const contextInfo = `
 Scenario: ${scenario?.name || "Unknown"}
-Duration: ${Math.floor(validatedDuration / 60)} minutes
-Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).length}/11
+Duration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes
+Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).length}/16
 `;
 
     console.log("Calling Lovable AI for evaluation, user:", claimsData.claims.sub);
@@ -136,7 +213,7 @@ Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).l
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [
           { role: "system", content: EVALUATION_PROMPT },
           { role: "user", content: `${contextInfo}\n\nEvaluate this CNA conversation:\n\n${conversationText}` },
@@ -147,78 +224,36 @@ Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).l
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Lovable AI error:", response.status, errorText);
-      
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Rate limit exceeded" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      
       throw new Error(`Lovable AI error: ${response.status}`);
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "{}";
-
     console.log("Evaluation received successfully");
 
-    // Parse JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     let evaluation;
-    
     try {
       evaluation = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch {
       evaluation = null;
     }
 
-    if (!evaluation) {
-      evaluation = {
-        overallScore: 65,
-        rapportScore: 65,
-        infoGatheringScore: 65,
-        needsIdentificationScore: 65,
-        cnaCompletionScore: 50,
-        strengths: ["Completed the session", "Engaged in conversation"],
-        improvements: ["Ask more open-ended questions", "Dig deeper on priorities"],
-        coachingTips: ["Review CNA checklist before sessions"],
-      };
+    if (!evaluation || !evaluation.categories) {
+      return new Response(JSON.stringify(buildFallbackEvaluation()),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    return new Response(
-      JSON.stringify({
-        overallScore: evaluation.overallScore || 65,
-        rapportScore: evaluation.rapportScore || 65,
-        infoGatheringScore: evaluation.infoGatheringScore || 65,
-        needsIdentificationScore: evaluation.needsIdentificationScore || 65,
-        cnaCompletionScore: evaluation.cnaCompletionScore || 50,
-        feedback: {
-          strengths: evaluation.strengths || [],
-          improvements: evaluation.improvements || [],
-          coachingTips: evaluation.coachingTips || [],
-          examples: [],
-        },
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify(formatResponse(evaluation)),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (error) {
     console.error("Evaluation error:", error);
-    return new Response(
-      JSON.stringify({
-        overallScore: 65,
-        rapportScore: 65,
-        infoGatheringScore: 65,
-        needsIdentificationScore: 65,
-        cnaCompletionScore: 50,
-        feedback: {
-          strengths: ["Completed the session"],
-          improvements: ["Practice more scenarios"],
-          coachingTips: ["Focus on open-ended questions"],
-          examples: [],
-        },
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify(buildFallbackEvaluation()),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

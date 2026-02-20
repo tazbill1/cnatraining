@@ -21,6 +21,7 @@ import Scenarios from "./pages/Scenarios";
 import Training from "./pages/Training";
 import VoiceTraining from "./pages/VoiceTraining";
 import Results from "./pages/Results";
+import SessionHistory from "./pages/SessionHistory";
 import Progress from "./pages/Progress";
 import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
@@ -58,6 +59,8 @@ const App = () => (
             <Route path="/training/:scenarioId" element={<Training />} />
             <Route path="/voice-training" element={<VoiceTraining />} />
             <Route path="/results" element={<Results />} />
+            <Route path="/history" element={<SessionHistory />} />
+            <Route path="/history/:sessionId" element={<SessionHistory />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/performance" element={<Performance />} />
             <Route path="/settings" element={<Settings />} />

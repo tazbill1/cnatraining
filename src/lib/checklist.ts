@@ -7,12 +7,40 @@ export interface ChecklistItem {
 }
 
 export const cnaChecklist: ChecklistItem[] = [
-  // Rapport Building
+  // Meet & Greet / Base Statement
   {
-    id: "customer-name",
-    label: "Customer name",
-    description: "Introduced yourself and learned the customer's name",
-    keywords: ["name", "call you", "who am i speaking", "my name is", "i'm", "nice to meet"],
+    id: "greeting-intro",
+    label: "Greeting & name exchange",
+    description: "Greeted the customer, introduced yourself, and learned their name",
+    keywords: ["name", "call you", "who am i speaking", "my name is", "i'm", "nice to meet", "welcome", "hello", "hi there", "good morning", "good afternoon"],
+    category: "rapport",
+  },
+  {
+    id: "base-community",
+    label: "Community connection",
+    description: "Mentioned the dealership's roots in the community",
+    keywords: ["community", "years", "family", "locally", "hometown", "neighborhood", "been here since", "serving", "part of"],
+    category: "rapport",
+  },
+  {
+    id: "base-mission",
+    label: "Core mission",
+    description: "Shared the dealership's mission or what sets you apart",
+    keywords: ["mission", "believe", "philosophy", "goal", "committed", "dedicated", "pride ourselves", "what we do", "different", "about us"],
+    category: "rapport",
+  },
+  {
+    id: "base-pillars",
+    label: "Pillars of ownership",
+    description: "Mentioned the buying and ownership experience pillars",
+    keywords: ["buying experience", "ownership experience", "pillar", "two things", "purchase experience", "after the sale", "service", "maintain", "take care of"],
+    category: "rapport",
+  },
+  {
+    id: "base-transition",
+    label: "Transition to CNA",
+    description: "Smoothly transitioned from intro to needs discovery",
+    keywords: ["learn about", "tell me", "what brings you", "looking for", "help you find", "how can i help", "start by", "few questions"],
     category: "rapport",
   },
   {

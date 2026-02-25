@@ -13,28 +13,21 @@ interface ChecklistPanelProps {
   onEndSession: () => void;
 }
 
-function getChecklistForScenario(category: string) {
-  switch (category) {
-    case "phone-practice":
-      return {
-        checklist: phoneChecklist,
-        title: "Phone Call Checklist",
-        progressLabel: "Call Progress",
-      };
-    case "trade-appraisal":
-      return {
-        checklist: tradeAppraisalChecklist,
-        title: "Trade Appraisal Checklist",
-        progressLabel: "Appraisal Progress",
-      };
-    case "cna-practice":
-    default:
-      return {
-        checklist: cnaChecklist,
-        title: "CNA Checklist",
-        progressLabel: "CNA Progress",
-      };
+function getChecklistForScenario(scenario: Scenario) {
+  // Use trade checklist if the scenario has trade data
+  if (scenario.customerName && scenario.tradeVehicle) {
+    return {
+      checklist: tradeAppraisalChecklist,
+      title: "Trade Appraisal Checklist",
+      progressLabel: "Appraisal Progress",
+    };
   }
+  // Default to CNA checklist for all buying-type scenarios
+  return {
+    checklist: cnaChecklist,
+    title: "CNA Checklist",
+    progressLabel: "CNA Progress",
+  };
 }
 
 export function ChecklistPanel({
@@ -43,18 +36,12 @@ export function ChecklistPanel({
   elapsedTime,
   onEndSession,
 }: ChecklistPanelProps) {
-  const { checklist, title, progressLabel } = getChecklistForScenario(scenario.category);
+  const { checklist, title, progressLabel } = getChecklistForScenario(scenario);
   const completedCount = checklist.filter((item) => checklistState[item.id]).length;
   const progress = Math.round((completedCount / checklist.length) * 100);
 
-  // Group checklist items by category for phone scenarios
-  const groupedItems = scenario.category === "phone-practice"
-    ? Object.entries(phoneCategoryLabels).map(([category, label]) => ({
-        category,
-        label,
-        items: phoneChecklist.filter((item) => item.category === category),
-      }))
-    : null;
+  // No phone grouping needed in the new buying-type system
+  const groupedItems = null;
 
   return (
     <div className="w-full sm:w-80 sm:border-l border-border bg-card flex flex-col sm:h-full">
@@ -70,7 +57,7 @@ export function ChecklistPanel({
           </div>
         </div>
         <p className="text-xs text-muted-foreground">{scenario.description}</p>
-        {scenario.category === "trade-appraisal" && scenario.customerName && (
+        {scenario.customerName && (
           <div className="mt-3 p-2.5 rounded-lg bg-muted/50 border border-border">
             <p className="text-xs font-medium text-foreground">Customer: {scenario.customerName}</p>
             {scenario.tradeVehicle && (

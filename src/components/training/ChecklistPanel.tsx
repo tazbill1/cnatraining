@@ -57,7 +57,7 @@ export function ChecklistPanel({
     : null;
 
   return (
-    <div className="w-80 border-l border-border bg-card flex flex-col h-full">
+    <div className="w-full sm:w-80 sm:border-l border-border bg-card flex flex-col sm:h-full">
       {/* Scenario Info */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-3 mb-3">

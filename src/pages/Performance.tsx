@@ -148,16 +148,16 @@ export default function Performance() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Sales Performance Tracker
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
+                  Sales Performance
                 </h1>
-                <p className="text-muted-foreground">
-                  Track your activity, hit your goals, climb the leaderboard
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Track activity, hit goals, climb the leaderboard
                 </p>
               </div>
               <Button
@@ -165,6 +165,7 @@ export default function Performance() {
                   setGoalForm(userData.goals);
                   setShowGoalModal(true);
                 }}
+                className="w-full sm:w-auto"
               >
                 <Target className="w-4 h-4 mr-2" />
                 Set Goals
@@ -173,44 +174,44 @@ export default function Performance() {
           </div>
 
           {/* Time Period Selector */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
             {(["mtd", "rolling90", "ytd"] as TimePeriod[]).map((period) => (
               <button
                 key={period}
                 onClick={() => setTimePeriod(period)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm whitespace-nowrap ${
                   timePeriod === period
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
                 {period === "mtd"
-                  ? "Month to Date"
+                  ? "MTD"
                   : period === "rolling90"
-                  ? "Rolling 90 Days"
-                  : "Year to Date"}
+                  ? "90 Days"
+                  : "YTD"}
               </button>
             ))}
           </div>
 
           {/* Tab Navigation */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="entry" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+              <TabsTrigger value="entry" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
                 <Plus className="w-4 h-4" />
-                Quick Entry
+                <span>Entry</span>
               </TabsTrigger>
-              <TabsTrigger value="pipeline" className="flex items-center gap-2">
+              <TabsTrigger value="pipeline" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
                 <BarChart3 className="w-4 h-4" />
-                Pipeline
+                <span>Pipeline</span>
               </TabsTrigger>
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <TabsTrigger value="dashboard" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
                 <TrendingUp className="w-4 h-4" />
-                My Progress
+                <span>Progress</span>
               </TabsTrigger>
-              <TabsTrigger value="leaderboard" className="flex items-center gap-2">
+              <TabsTrigger value="leaderboard" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-1 sm:px-3 text-xs sm:text-sm">
                 <Trophy className="w-4 h-4" />
-                Leaderboard
+                <span>Board</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw, AlertCircle, ExternalLink, X, Keyboard } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw, AlertCircle, ExternalLink, X, Keyboard, ClipboardList } from "lucide-react";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
 import { ChatBubble, TypingIndicator } from "@/components/training/ChatBubble";
@@ -12,6 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TrainingInterfaceProps {
   scenario: Scenario;
@@ -45,6 +47,7 @@ function AudioLevelIndicator({ level }: { level: number }) {
 
 export function TrainingInterface({ scenario, onComplete }: TrainingInterfaceProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [inputValue, setInputValue] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -216,51 +219,46 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
       {/* Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
-          <div className="flex items-center gap-3">
+        <header className="h-14 sm:h-16 border-b border-border px-3 sm:px-6 flex items-center justify-between bg-card">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate("/scenarios")}
+              className="shrink-0 px-2 sm:px-3"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
-            <div>
-              <h1 className="font-semibold text-foreground">Training Session</h1>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="font-semibold text-sm sm:text-base text-foreground truncate">Training Session</h1>
+              <p className="text-xs text-muted-foreground truncate hidden sm:block">
                 Practice with: {sessionState.scenario.name}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Hands-free mode toggle */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
-                  <Switch
-                    id="hands-free"
-                    checked={handsFreeModeEnabled}
-                    onCheckedChange={setHandsFreeModeEnabled}
-                    className="scale-90"
-                  />
-                  <Label htmlFor="hands-free" className="text-xs cursor-pointer">
-                    Hands-free
-                  </Label>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Auto-restart listening after AI speaks</p>
-              </TooltipContent>
-            </Tooltip>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Hands-free mode toggle - hidden on mobile for space */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
+              <Switch
+                id="hands-free"
+                checked={handsFreeModeEnabled}
+                onCheckedChange={setHandsFreeModeEnabled}
+                className="scale-90"
+              />
+              <Label htmlFor="hands-free" className="text-xs cursor-pointer">
+                Hands-free
+              </Label>
+            </div>
 
             <Button
               variant="outline"
               size="sm"
               onClick={() => startSession(scenario)}
               title="Start over with fresh conversation"
+              className="px-2 sm:px-3"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Restart</span>
             </Button>
             <Button
@@ -268,6 +266,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               size="sm"
               onClick={() => setAutoSpeak(!autoSpeak)}
               title={autoSpeak ? "Auto-speak enabled" : "Auto-speak disabled"}
+              className="px-2 sm:px-3"
             >
               {autoSpeak ? (
                 <Volume2 className="w-4 h-4" />
@@ -282,8 +281,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="max-w-2xl mx-auto space-y-4">
+        <div className="flex-1 overflow-auto p-3 sm:p-6">
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
             {sessionState.messages.length === 0 && (
               <div className="text-center py-12">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
@@ -425,14 +424,37 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         )}
 
         {/* Input Area */}
-        <div className="border-t border-border p-4 bg-card">
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
+        <div className="border-t border-border p-3 sm:p-4 bg-card">
+          <div className="max-w-2xl mx-auto flex items-center gap-2 sm:gap-3">
+            {/* Mobile: Checklist drawer trigger */}
+            {isMobile && (
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <button className="p-3 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground shrink-0">
+                    <ClipboardList className="w-5 h-5" />
+                  </button>
+                </DrawerTrigger>
+                <DrawerContent className="max-h-[80vh]">
+                  <DrawerHeader>
+                    <DrawerTitle>Session Progress</DrawerTitle>
+                  </DrawerHeader>
+                  <div className="overflow-auto">
+                    <ChecklistPanel
+                      scenario={sessionState.scenario}
+                      checklistState={sessionState.checklistState}
+                      elapsedTime={formatTime(sessionState.elapsedSeconds)}
+                      onEndSession={handleEndSession}
+                    />
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={toggleRecording}
                   disabled={isProcessing || isMicUnavailable || voiceStatus === "sending"}
-                  className={`p-3 rounded-full transition-colors ${
+                  className={`p-3 sm:p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${
                     isRecording
                       ? "bg-destructive text-destructive-foreground recording-pulse"
                       : isProcessing || voiceStatus === "sending"
@@ -458,7 +480,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
             
             <button
               onClick={handleSpeakLastMessage}
-              className={`p-3 rounded-full transition-colors ${
+              className={`p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center shrink-0 ${
                 isSpeaking
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted hover:bg-muted/80 text-muted-foreground"
@@ -476,29 +498,31 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or press Space to talk..."}
+              placeholder={isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or tap mic..."}
               disabled={isTyping || isRecording || voiceStatus === "sending"}
-              className="flex-1"
+              className="flex-1 min-w-0"
             />
             <Button
               onClick={handleSend}
               disabled={!inputValue.trim() || isTyping || voiceStatus === "sending"}
-              className="btn-gradient px-6"
+              className="btn-gradient px-3 sm:px-6 shrink-0"
             >
-              <Send className="w-4 h-4 mr-2" />
-              Send
+              <Send className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Send</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Sidebar */}
-      <ChecklistPanel
-        scenario={sessionState.scenario}
-        checklistState={sessionState.checklistState}
-        elapsedTime={formatTime(sessionState.elapsedSeconds)}
-        onEndSession={handleEndSession}
-      />
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <ChecklistPanel
+          scenario={sessionState.scenario}
+          checklistState={sessionState.checklistState}
+          elapsedTime={formatTime(sessionState.elapsedSeconds)}
+          onEndSession={handleEndSession}
+        />
+      )}
     </div>
   );
 }

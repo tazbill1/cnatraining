@@ -88,7 +88,7 @@ export default function Dashboard() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -159,7 +159,7 @@ export default function Dashboard() {
             <div className="lg:col-span-2 space-y-6">
               {/* Start Training CTA */}
               <div className="card-premium p-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-                <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
                     <h2 className="text-xl font-semibold mb-2">Ready to Practice?</h2>
                     <p className="text-primary-foreground/80">
@@ -169,7 +169,7 @@ export default function Dashboard() {
                   <Button
                     onClick={() => navigate("/scenarios")}
                     size="lg"
-                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg"
+                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg w-full sm:w-auto"
                   >
                     <Play className="w-5 h-5 mr-2" />
                     Start Training

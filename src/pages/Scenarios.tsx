@@ -24,7 +24,7 @@ export default function Scenarios() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <Button
@@ -49,7 +49,7 @@ export default function Scenarios() {
             onValueChange={(value) => setActiveCategory(value as ScenarioCategory)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-4 mb-6 h-auto p-1.5 gap-1.5">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 h-auto p-1.5 gap-1.5">
               {scenarioCategories.map((category) => {
                 const colorMap: Record<string, string> = {
                   "cna-practice": "text-blue-500",

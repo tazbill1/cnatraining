@@ -251,7 +251,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     }
   }, [voiceStatus]);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(() => {
     const SpeechRecognitionAPI = getSpeechRecognition();
     
     if (!SpeechRecognitionAPI) {
@@ -265,13 +265,6 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     }
 
     try {
-      // Request microphone permission first
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      setMicPermission("granted");
-
-      // Start audio level monitoring
-      startAudioLevelMonitoring();
-
       const recognition = new SpeechRecognitionAPI();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -288,6 +281,9 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       recognition.onstart = () => {
         logger.log("Speech recognition started");
         setIsRecording(true);
+        setMicPermission("granted");
+        // Start audio level monitoring AFTER recognition starts (async is fine here)
+        startAudioLevelMonitoring();
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -336,7 +332,6 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
                 recognitionRef.current.start();
               } catch (e) {
                 logger.error("Retry failed:", e);
-                // Cleanup on retry failure
                 setIsRecording(false);
                 setIsProcessing(false);
                 setVoiceStatus("idle");
@@ -378,7 +373,6 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
             description: "Please allow microphone access in your browser settings.",
           });
         } else if (event.error === "no-speech") {
-          // Only show if we don't have any transcript yet
           if (!finalTranscriptRef.current.trim()) {
             toast({
               title: "No Speech Detected",
@@ -435,10 +429,12 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       };
 
       recognitionRef.current = recognition;
+      // CRITICAL: start() called directly from user gesture — no awaits before this
       recognition.start();
       
     } catch (error: any) {
       logger.error("Error starting speech recognition:", error);
+      setVoiceStatus("idle");
       
       if (error.name === "NotAllowedError") {
         setMicPermission("denied");
@@ -451,7 +447,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         toast({
           variant: "destructive",
           title: "Microphone Error",
-          description: "Could not access your microphone. Please check permissions.",
+          description: "Could not start speech recognition. Please try again.",
         });
       }
     }

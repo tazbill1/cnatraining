@@ -148,8 +148,8 @@ export function useTrainingSession() {
         const allMessages = [...updatedMessages, aiMessage];
 
         // Analyze checklist based on scenario category
-        const isPhoneScenario = sessionState.scenario?.category === "phone-practice";
-        const newChecklistState = isPhoneScenario
+        const hasTradeData = !!(sessionState.scenario?.customerName && sessionState.scenario?.tradeVehicle);
+        const newChecklistState = false // phone checklist no longer used as separate category
           ? analyzePhoneChecklistFromConversation(
               allMessages.map((m) => ({ role: m.role, content: m.content })),
               sessionState.checklistState
@@ -201,7 +201,7 @@ export function useTrainingSession() {
 
     try {
       // Calculate scores based on scenario type
-      const isPhoneScenario = sessionState.scenario?.category === "phone-practice";
+      const isPhoneScenario = false; // phone checklist no longer used as separate category
       const checklistProgress = isPhoneScenario
         ? calculatePhoneChecklistProgress(sessionState.checklistState)
         : calculateChecklistProgress(sessionState.checklistState);

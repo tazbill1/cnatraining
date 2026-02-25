@@ -81,9 +81,8 @@ export default function SessionHistory() {
     return `${mins}m ${secs}s`;
   };
 
-  const isPhoneScenario = (type: string) => {
-    const s = scenarios.find((sc) => sc.id === type);
-    return s?.category === "phone-practice";
+  const isPhoneScenario = (_type: string) => {
+    return false; // all scenarios now use CNA checklist
   };
 
   const getChecklist = (scenarioType: string) =>

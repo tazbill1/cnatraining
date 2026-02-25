@@ -289,11 +289,11 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                   <Mic className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">
-                  {sessionState.scenario?.category === "trade-appraisal"
+                  {sessionState.scenario?.customerName
                     ? "Time to explain the trade process!"
                     : "Your turn to greet the customer!"}
                 </h3>
-                {sessionState.scenario?.category === "trade-appraisal" && sessionState.scenario?.customerName && (
+                {sessionState.scenario?.customerName && (
                   <div className="mb-3 p-3 rounded-lg bg-muted/50 border border-border text-sm">
                     <p className="font-medium text-foreground">Customer: {sessionState.scenario.customerName}</p>
                     {sessionState.scenario.tradeVehicle && (
@@ -305,7 +305,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                   </div>
                 )}
                 <p className="text-muted-foreground max-w-md mx-auto">
-                  {sessionState.scenario?.category === "trade-appraisal"
+                  {sessionState.scenario?.customerName
                     ? "The CNA is complete. Now explain how the trade evaluation works before inspecting the vehicle."
                     : "A customer just walked onto the lot. Use the mic button or type your opening greeting to begin the conversation."}
                 </p>

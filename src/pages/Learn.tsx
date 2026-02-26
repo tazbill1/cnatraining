@@ -51,7 +51,7 @@ export default function Learn() {
     }
     
     // Modules with full content
-    const implementedModules = ["base-statement", "vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework", "phone-sales-fundamentals"];
+    const implementedModules = ["base-statement", "vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework", "phone-sales-fundamentals", "buyer-types"];
     if (implementedModules.includes(moduleId)) {
       navigate(`/learn/${moduleId}`);
     } else {

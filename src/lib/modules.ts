@@ -1,4 +1,4 @@
-import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, LucideIcon } from "lucide-react";
+import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, LucideIcon } from "lucide-react";
 
 export type ModuleDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -89,6 +89,23 @@ export const trainingModules: TrainingModule[] = [
       { title: "Handling Inbound Objections" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+  },
+  {
+    id: "buyer-types",
+    title: "Module 6: Understanding Buyer Types",
+    description: "Learn to identify the five behavioral buyer types — Analyst, Negotiator, Emotional, Loyal, and Urgent — and adapt your approach to close more deals with better customer experiences.",
+    icon: Users,
+    estimatedTime: "15-18 min",
+    difficulty: "beginner",
+    sections: [
+      { title: "Why Buyer Types Matter" },
+      { title: "The Analyst" },
+      { title: "The Negotiator" },
+      { title: "The Emotional Buyer" },
+      { title: "The Repeat Customer" },
+      { title: "The Life-Event Buyer" },
+    ],
+    prerequisiteIds: ["base-statement"],
   },
   {
     id: "quick-reference-library",

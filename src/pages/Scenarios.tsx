@@ -23,6 +23,9 @@ export default function Scenarios() {
     amber: "text-warning",
     purple: "text-accent-foreground",
     rose: "text-destructive",
+    teal: "text-primary",
+    sky: "text-primary",
+    indigo: "text-accent-foreground",
   };
 
   const bgMap: Record<string, string> = {
@@ -31,6 +34,9 @@ export default function Scenarios() {
     amber: "data-[state=active]:border-warning/40 data-[state=active]:bg-warning/10",
     purple: "data-[state=active]:border-accent-foreground/40 data-[state=active]:bg-accent/50",
     rose: "data-[state=active]:border-destructive/40 data-[state=active]:bg-destructive/10",
+    teal: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
+    sky: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
+    indigo: "data-[state=active]:border-accent-foreground/40 data-[state=active]:bg-accent/50",
   };
 
   return (
@@ -61,7 +67,7 @@ export default function Scenarios() {
             onValueChange={(value) => setActiveCategory(value as ScenarioCategory)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 h-auto p-1.5 gap-1.5">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 mb-6 h-auto p-1.5 gap-1.5">
               {scenarioCategories.map((category) => (
                 <TabsTrigger
                   key={category.id}

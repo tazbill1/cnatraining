@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3 } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -48,6 +48,7 @@ export default function Team() {
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [teamSessions, setTeamSessions] = useState<Array<{
     user_id: string;
@@ -114,6 +115,23 @@ export default function Team() {
       toast({ variant: "destructive", title: "Failed to send invite", description: err.message });
     } finally {
       setIsSendingInvite(false);
+    }
+  };
+
+  const handleResendInvite = async (inv: Invitation) => {
+    setResendingId(inv.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-invite", {
+        body: { email: inv.email, resend: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Invitation resent!", description: `Invite resent to ${inv.email}` });
+      fetchInvitations();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to resend", description: err.message });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -307,15 +325,32 @@ export default function Team() {
                     {invitations.slice(0, 5).map((inv) => (
                       <div key={inv.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30">
                         <span className="truncate">{inv.email}</span>
-                        <Badge variant={inv.status === "accepted" ? "default" : "secondary"} className="text-xs">
-                          {inv.status === "accepted" ? (
-                            <><Check className="w-3 h-3 mr-1" /> Joined</>
-                          ) : inv.status === "sent" ? (
-                            <><Mail className="w-3 h-3 mr-1" /> Sent</>
-                          ) : (
-                            inv.status
+                        <div className="flex items-center gap-2">
+                          {inv.status !== "accepted" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              disabled={resendingId === inv.id}
+                              onClick={() => handleResendInvite(inv)}
+                            >
+                              {resendingId === inv.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <><RefreshCw className="w-3 h-3 mr-1" /> Resend</>
+                              )}
+                            </Button>
                           )}
-                        </Badge>
+                          <Badge variant={inv.status === "accepted" ? "default" : "secondary"} className="text-xs">
+                            {inv.status === "accepted" ? (
+                              <><Check className="w-3 h-3 mr-1" /> Joined</>
+                            ) : inv.status === "sent" ? (
+                              <><Mail className="w-3 h-3 mr-1" /> Sent</>
+                            ) : (
+                              inv.status
+                            )}
+                          </Badge>
+                        </div>
                       </div>
                     ))}
                   </div>

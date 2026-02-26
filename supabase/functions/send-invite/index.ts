@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email } = await req.json();
+    const { email, resend } = await req.json();
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email required" }), {
         status: 400,
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       .eq("email", trimmedEmail)
       .maybeSingle();
 
-    if (existing) {
+    if (existing && !resend) {
       return new Response(
         JSON.stringify({ error: "This email has already been invited" }),
         {
@@ -84,13 +84,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Insert invitation record
-    const { error: insertError } = await adminClient
-      .from("invitations")
-      .insert({ email: trimmedEmail, invited_by: user.id });
+    if (existing && existing.status === "accepted") {
+      return new Response(
+        JSON.stringify({ error: "This user has already joined" }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    if (insertError) {
-      throw insertError;
+    // Insert or update invitation record
+    if (!existing) {
+      const { error: insertError } = await adminClient
+        .from("invitations")
+        .insert({ email: trimmedEmail, invited_by: user.id });
+      if (insertError) throw insertError;
     }
 
     // Send invite via Supabase Auth admin API

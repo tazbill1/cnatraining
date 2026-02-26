@@ -105,7 +105,7 @@ export default function BuyerTypesContent() {
       case "intro":
         return (
           <ModuleIntro
-            title={module?.title || "Understanding Buyer Types"}
+            title={module?.title || "Module 1: Understanding Buyer Types"}
             welcomeMessage="Not every customer shops the same way. Learning to read buyer behavior and adapt your approach is one of the most powerful skills you can develop on the sales floor."
             overview={buyerTypesOverview}
             objectives={buyerTypesObjectives}
@@ -226,7 +226,7 @@ export default function BuyerTypesContent() {
                   Back to Learn
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {module?.title || "Understanding Buyer Types"}
+                  {module?.title || "Module 1: Understanding Buyer Types"}
                 </span>
               </div>
               {stage !== "intro" && stage !== "complete" && (

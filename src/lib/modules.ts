@@ -20,8 +20,25 @@ export interface TrainingModule {
 
 export const trainingModules: TrainingModule[] = [
   {
+    id: "buyer-types",
+    title: "Module 1: Understanding Buyer Types",
+    description: "Learn to identify the five behavioral buyer types — Analyst, Negotiator, Emotional, Loyal, and Urgent — and adapt your approach to close more deals with better customer experiences.",
+    icon: Users,
+    estimatedTime: "15-18 min",
+    difficulty: "beginner",
+    sections: [
+      { title: "Why Buyer Types Matter" },
+      { title: "The Analyst" },
+      { title: "The Negotiator" },
+      { title: "The Emotional Buyer" },
+      { title: "The Repeat Customer" },
+      { title: "The Life-Event Buyer" },
+    ],
+    prerequisiteIds: [],
+  },
+  {
     id: "base-statement",
-    title: "Module 1: The Base Statement",
+    title: "Module 2: The Base Statement",
     description: "Master the foundation of every customer interaction. Learn the script that sets the tone, builds trust, and differentiates your dealership from day one.",
     icon: Handshake,
     estimatedTime: "8-10 min",
@@ -35,7 +52,7 @@ export const trainingModules: TrainingModule[] = [
   },
   {
     id: "vehicle-selection-fundamentals",
-    title: "Module 2: Vehicle Selection Fundamentals",
+    title: "Module 3: Vehicle Selection Fundamentals",
     description: "Learn proper vehicle selection theory, the Rule of Alternatives, ACV vs Trade Allowance, the 6-step trade value calculation, and vehicle presentation standards.",
     icon: Car,
     estimatedTime: "10-12 min",
@@ -50,7 +67,7 @@ export const trainingModules: TrainingModule[] = [
   },
   {
     id: "trade-appraisal-process",
-    title: "Module 3: The 3-Step Trade Appraisal Process",
+    title: "Module 4: The 3-Step Trade Appraisal Process",
     description: "Master the complete trade appraisal workflow: framing the conversation, standardized vehicle evaluation, and purchase disclosure with the AEAIR objection handling framework.",
     icon: BookOpen,
     estimatedTime: "12-15 min",
@@ -89,23 +106,6 @@ export const trainingModules: TrainingModule[] = [
       { title: "Handling Inbound Objections" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
-  },
-  {
-    id: "buyer-types",
-    title: "Module 6: Understanding Buyer Types",
-    description: "Learn to identify the five behavioral buyer types — Analyst, Negotiator, Emotional, Loyal, and Urgent — and adapt your approach to close more deals with better customer experiences.",
-    icon: Users,
-    estimatedTime: "15-18 min",
-    difficulty: "beginner",
-    sections: [
-      { title: "Why Buyer Types Matter" },
-      { title: "The Analyst" },
-      { title: "The Negotiator" },
-      { title: "The Emotional Buyer" },
-      { title: "The Repeat Customer" },
-      { title: "The Life-Event Buyer" },
-    ],
-    prerequisiteIds: ["base-statement"],
   },
   {
     id: "quick-reference-library",

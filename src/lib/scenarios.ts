@@ -1,6 +1,24 @@
-import { User, Users, Search, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, BookOpen, Scale, TrendingDown, Sparkles, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar, Brain, BadgeDollarSign, Star, AlertTriangle, Lock } from "lucide-react";
+import { User, Users, Search, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, BookOpen, Scale, TrendingDown, Sparkles, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar, Brain, BadgeDollarSign, Star, AlertTriangle, Lock, ClipboardList } from "lucide-react";
 
-export type ScenarioCategory = "research-driven" | "deal-hunter" | "impulse-buyer" | "brand-loyal" | "urgent-buyer" | "cna-practice" | "phone-mastery" | "trade-appraisal";
+export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call";
+
+export type BuyerType = "analyst" | "negotiator" | "emotional" | "loyal" | "urgent" | "general";
+
+export interface BuyerType_Info {
+  id: BuyerType;
+  name: string;
+  description: string;
+  icon: typeof User;
+}
+
+export const buyerTypes: BuyerType_Info[] = [
+  { id: "analyst", name: "The Analyst", description: "Research-driven, data-focused buyer", icon: Brain },
+  { id: "negotiator", name: "The Negotiator", description: "Deal-hunter focused on price and value", icon: BadgeDollarSign },
+  { id: "emotional", name: "The Emotional Buyer", description: "Impulse-driven, led by excitement and aesthetics", icon: Zap },
+  { id: "loyal", name: "The Repeat Customer", description: "Brand-loyal, values familiarity and trust", icon: Heart },
+  { id: "urgent", name: "The Life-Event Buyer", description: "Needs a vehicle quickly due to circumstance", icon: AlertTriangle },
+  { id: "general", name: "General", description: "Mixed or unique buyer profiles", icon: Users },
+];
 
 export interface ScenarioCategory_Info {
   id: ScenarioCategory;
@@ -13,68 +31,28 @@ export interface ScenarioCategory_Info {
 
 export const scenarioCategories: ScenarioCategory_Info[] = [
   {
-    id: "research-driven",
-    name: "The Analyst",
-    subtitle: "Research-Driven Buyer",
-    description: "Highly informed and data-focused. Values transparency and detailed information.",
-    icon: Brain,
-    color: "blue",
-  },
-  {
-    id: "deal-hunter",
-    name: "The Negotiator",
-    subtitle: "Deal-Hunter",
-    description: "Focused on price, incentives, and monthly payment. Shops multiple dealerships.",
-    icon: BadgeDollarSign,
-    color: "emerald",
-  },
-  {
-    id: "impulse-buyer",
-    name: "The Emotional Buyer",
-    subtitle: "Impulse Buyer",
-    description: "Driven by excitement, appearance, and experience. Makes faster decisions.",
-    icon: Zap,
-    color: "amber",
-  },
-  {
-    id: "brand-loyal",
-    name: "The Repeat Customer",
-    subtitle: "Brand-Loyal Buyer",
-    description: "Prefers a specific brand and often returns. Values familiarity and trust.",
-    icon: Heart,
-    color: "purple",
-  },
-  {
-    id: "urgent-buyer",
-    name: "The Life-Event Buyer",
-    subtitle: "Urgent Buyer",
-    description: "Needs a vehicle quickly due to circumstance. Focused on speed and solutions.",
-    icon: AlertTriangle,
-    color: "rose",
-  },
-  {
-    id: "cna-practice",
-    name: "CNA Practice",
+    id: "cna",
+    name: "CNA",
     subtitle: "Customer Needs Analysis",
-    description: "Practice the complete CNA process — from greeting through discovery to needs identification.",
-    icon: Search,
+    description: "Practice the complete CNA process — greeting, rapport, discovery, and needs identification with different buyer personalities.",
+    icon: ClipboardList,
     color: "teal",
   },
   {
-    id: "phone-mastery",
-    name: "Phone Mastery",
-    subtitle: "Inbound Call Handling",
-    description: "Master the 6-step consultative call process — capture leads, build rapport, and set appointments.",
-    icon: PhoneIncoming,
-    color: "sky",
-  },
-  {
     id: "trade-appraisal",
-    name: "Trade Appraisals",
+    name: "Trade Appraisal",
     subtitle: "3-Step Trade Process",
     description: "Practice framing, evaluating, and disclosing trade values using the AEAIR objection framework.",
     icon: Car,
     color: "indigo",
+  },
+  {
+    id: "inbound-call",
+    name: "Inbound Call Mastery",
+    subtitle: "Consultative Call Process",
+    description: "Master the 6-step consultative call process — capture leads, build rapport, and secure appointments.",
+    icon: PhoneIncoming,
+    color: "sky",
   },
 ];
 
@@ -89,6 +67,7 @@ export interface Scenario {
   systemPrompt: string;
   openingLine: string;
   category: ScenarioCategory;
+  buyerType: BuyerType;
   customerName?: string;
   tradeVehicle?: string;
   tradeValue?: string;
@@ -97,7 +76,7 @@ export interface Scenario {
 
 export const scenarios: Scenario[] = [
   // ============================================
-  // 1. RESEARCH-DRIVEN BUYER (The Analyst)
+  // CNA — The Analyst (Research-Driven)
   // ============================================
   {
     id: "analyst-beginner",
@@ -107,7 +86,8 @@ export const scenarios: Scenario[] = [
     difficulty: "beginner",
     estimatedTime: "12-15 min",
     icon: Search,
-    category: "research-driven",
+    category: "cna",
+    buyerType: "analyst",
     systemPrompt: `You are playing a research-driven car buyer named Jamie. You're 30 years old and have spent about a week reading reviews and comparing vehicles online. You feel somewhat informed but are not an expert.
 
 BACKGROUND (reveal when asked appropriately):
@@ -151,7 +131,8 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Brain,
-    category: "research-driven",
+    category: "cna",
+    buyerType: "analyst",
     systemPrompt: `You are playing a meticulous researcher named Alex. You're 38, work in IT, and spent weeks researching cars online. You're 95% decided but want validation.
 
 BACKGROUND (reveal when asked appropriately):
@@ -196,7 +177,8 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Target,
-    category: "research-driven",
+    category: "cna",
+    buyerType: "analyst",
     isOptional: true,
     systemPrompt: `You are playing a savvy shopper named David. You're 45 years old and you've spent 3 weeks getting quotes from every dealer within 100 miles. You have printed quotes from 3 competitors.
 
@@ -235,7 +217,7 @@ Behavior:
   },
 
   // ============================================
-  // 2. DEAL-HUNTER (The Negotiator)
+  // CNA — The Negotiator (Deal-Hunter)
   // ============================================
   {
     id: "negotiator-beginner",
@@ -245,7 +227,8 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "15-20 min",
     icon: DollarSign,
-    category: "deal-hunter",
+    category: "cna",
+    buyerType: "negotiator",
     systemPrompt: `You are playing a budget-conscious shopper named Taylor. You're 35 with a young family and need to make every dollar count.
 
 BACKGROUND (reveal when asked appropriately):
@@ -294,7 +277,8 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Handshake,
-    category: "deal-hunter",
+    category: "cna",
+    buyerType: "negotiator",
     customerName: "Steve",
     tradeVehicle: "2021 Chevrolet Traverse LT",
     tradeValue: "$25,500",
@@ -338,7 +322,8 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: BadgeDollarSign,
-    category: "deal-hunter",
+    category: "cna",
+    buyerType: "negotiator",
     isOptional: true,
     systemPrompt: `You are playing an aggressive negotiator named Marcus. You're 50 years old, own a small business, and negotiate deals for a living. You've bought 12 cars in your lifetime and treat every purchase like a business transaction.
 
@@ -376,7 +361,7 @@ Behavior:
   },
 
   // ============================================
-  // 3. IMPULSE BUYER (The Emotional Buyer)
+  // CNA — The Emotional Buyer (Impulse)
   // ============================================
   {
     id: "emotional-beginner",
@@ -386,7 +371,8 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "10-15 min",
     icon: Sparkles,
-    category: "impulse-buyer",
+    category: "cna",
+    buyerType: "emotional",
     systemPrompt: `You are playing an impulse buyer named Derek. You're 29 years old, just got a promotion, and want to treat yourself. You make decisions based on how things make you feel.
 
 Key characteristics:
@@ -425,7 +411,8 @@ You're ready to buy something beautiful TODAY. A good salesperson will help you 
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Zap,
-    category: "impulse-buyer",
+    category: "cna",
+    buyerType: "emotional",
     systemPrompt: `You are playing a customer named Megan. You're 33 and came in just to browse, but during the test drive something clicked — you fell in love with the car.
 
 BACKGROUND:
@@ -475,7 +462,8 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Star,
-    category: "impulse-buyer",
+    category: "cna",
+    buyerType: "emotional",
     isOptional: true,
     systemPrompt: `You are playing a customer named Priya. You're 34 years old and you've fallen in love with a fully-loaded luxury vehicle, but your actual budget can only afford the base model.
 
@@ -514,7 +502,7 @@ Behavior:
   },
 
   // ============================================
-  // 4. BRAND-LOYAL BUYER (The Repeat Customer)
+  // CNA — The Repeat Customer (Brand-Loyal)
   // ============================================
   {
     id: "loyal-beginner",
@@ -524,7 +512,8 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "12-15 min",
     icon: Car,
-    category: "brand-loyal",
+    category: "cna",
+    buyerType: "loyal",
     systemPrompt: `You are playing a customer named Jennifer. You're 42 and have been bringing your car to this dealership's service department for 4 years. The service advisor suggested you might want to check out what's new.
 
 BACKGROUND:
@@ -569,7 +558,8 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Heart,
-    category: "brand-loyal",
+    category: "cna",
+    buyerType: "loyal",
     systemPrompt: `You are playing a loyal customer named Robert. You're 58 years old and this is your 6th vehicle from this dealership over 20 years. You expect to be treated like family.
 
 Key characteristics:
@@ -602,7 +592,8 @@ You want to continue your relationship with this brand, but you need to feel val
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Scale,
-    category: "brand-loyal",
+    category: "cna",
+    buyerType: "loyal",
     isOptional: true,
     systemPrompt: `You are playing a long-time brand loyalist named Patricia. You're 52, and you've driven the same brand for 25 years (5 vehicles). But for the first time, you're seriously considering switching.
 
@@ -637,7 +628,7 @@ Behavior:
   },
 
   // ============================================
-  // 5. URGENT BUYER (Life-Event Buyer)
+  // CNA — The Life-Event Buyer (Urgent)
   // ============================================
   {
     id: "urgent-beginner",
@@ -647,7 +638,8 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "15-20 min",
     icon: Shield,
-    category: "urgent-buyer",
+    category: "cna",
+    buyerType: "urgent",
     systemPrompt: `You are playing a new parent named Rachel. You're 32 and just had your first baby 3 months ago. Your current sports car is impractical and you're terrified of accidents.
 
 BACKGROUND (reveal when asked appropriately):
@@ -697,7 +689,8 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: AlertTriangle,
-    category: "urgent-buyer",
+    category: "cna",
+    buyerType: "urgent",
     systemPrompt: `You are playing a customer named Mike. You're 38, a field service technician, and your truck broke down on the highway yesterday. You need a vehicle by Friday or you can't work.
 
 BACKGROUND:
@@ -743,8 +736,12 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "20-25 min",
     icon: Banknote,
-    category: "urgent-buyer",
+    category: "cna",
+    buyerType: "urgent",
     isOptional: true,
+    customerName: "Jason",
+    tradeVehicle: "2022 Kia Telluride SX",
+    tradeValue: "$38,000",
     systemPrompt: `You are playing a customer named Jason. You're in a tough spot - you owe more on your car than it's worth, and you need to get out due to a life change.
 
 IMPORTANT CONTEXT:
@@ -785,8 +782,8 @@ Behavior:
     openingLine: "",
   },
 
-
-  // 6. CNA PRACTICE
+  // ============================================
+  // CNA — General (Mixed buyer profiles)
   // ============================================
   {
     id: "cna-beginner",
@@ -796,7 +793,8 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "12-15 min",
     icon: Search,
-    category: "cna-practice",
+    category: "cna",
+    buyerType: "general",
     systemPrompt: `You are playing a first-time car buyer named Casey. You're 26 years old and just got your first full-time job after college. This is the first time you've ever walked into a dealership on your own.
 
 BACKGROUND (reveal when asked appropriately):
@@ -841,7 +839,8 @@ Behavior:
     difficulty: "intermediate",
     estimatedTime: "15-20 min",
     icon: Users,
-    category: "cna-practice",
+    category: "cna",
+    buyerType: "general",
     systemPrompt: `You are playing TWO characters — a married couple named Dan and Lisa who are shopping together but want very different things.
 
 DAN'S PERSPECTIVE:
@@ -891,7 +890,8 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "18-22 min",
     icon: Shield,
-    category: "cna-practice",
+    category: "cna",
+    buyerType: "general",
     isOptional: true,
     systemPrompt: `You are playing a guarded customer named Victor. You're 47 and you've had bad experiences at dealerships before. You're here because you need a car but you don't trust salespeople.
 
@@ -931,7 +931,145 @@ Behavior:
   },
 
   // ============================================
-  // 7. PHONE MASTERY
+  // TRADE APPRAISAL — Grouped by buyer type
+  // ============================================
+  {
+    id: "trade-beginner",
+    name: "The Clean Trade",
+    description: "Cooperative customer with a well-maintained trade — practice the full 3-step process smoothly",
+    personality: "Pleasant, cooperative, expects fair treatment",
+    difficulty: "beginner",
+    estimatedTime: "12-15 min",
+    icon: Car,
+    category: "trade-appraisal",
+    buyerType: "loyal",
+    customerName: "Michelle",
+    tradeVehicle: "2020 Toyota Camry SE",
+    tradeValue: "$18,500",
+    systemPrompt: `You are playing a customer named Michelle. You're 36 and trading in your well-maintained Toyota Camry. The CNA has already been completed — you're now at the trade appraisal stage.
+
+IMPORTANT CONTEXT:
+- The CNA and greeting have ALREADY happened.
+- The salesperson is now transitioning to the trade appraisal process.
+- They should START by explaining how the trade evaluation works (framing).
+
+TRADE VEHICLE DETAILS:
+- 2020 Toyota Camry SE, 42,000 miles
+- Excellent condition — garage kept, regular oil changes
+- No accidents, clean Carfax
+- One small door ding on passenger side
+- New tires 6 months ago
+- You take pride in maintaining your cars
+
+YOUR EXPECTATIONS:
+- You checked KBB: Shows $19,000-21,000 trade-in range
+- You expect somewhere in that range
+- You'll be disappointed if offered less but will listen to explanation
+- You're reasonable — if they explain the value fairly, you'll accept
+
+BEHAVIOR:
+- Cooperative and pleasant throughout
+- Mention the maintenance you've done: "I've kept up with every service"
+- React calmly to the value: "That's a bit less than I saw online..."
+- Accept the value if they explain market factors well
+- Appreciate transparency and professionalism
+- This is meant to be a smooth process — reward good technique`,
+    openingLine: "",
+  },
+  {
+    id: "trade-intermediate",
+    name: "The Overvalued Trade",
+    description: "Customer convinced their car is worth more than market — practice anchoring and value explanation",
+    personality: "Attached to their car, believes it's worth top dollar",
+    difficulty: "intermediate",
+    estimatedTime: "15-20 min",
+    icon: TrendingDown,
+    category: "trade-appraisal",
+    buyerType: "emotional",
+    customerName: "Greg",
+    tradeVehicle: "2019 Ford F-150 XLT",
+    tradeValue: "$27,000",
+    systemPrompt: `You are playing a customer named Greg. You're 45 and very attached to your truck. You've put money into it and think it's worth significantly more than its actual value. The CNA has already been completed.
+
+IMPORTANT CONTEXT:
+- The CNA and greeting have ALREADY happened.
+- The salesperson is now transitioning to the trade appraisal process.
+
+TRADE VEHICLE DETAILS:
+- 2019 Ford F-150 XLT SuperCrew, 68,000 miles
+- Aftermarket upgrades: lift kit ($3,000), custom wheels ($2,500), LED light bar ($500), bed liner ($400)
+- One minor fender bender — repaired, shows on Carfax
+- Tires are at 40% tread
+- You spent over $6,000 on upgrades
+
+YOUR EXPECTATIONS:
+- You think it's worth $35,000+ because of the upgrades
+- "I put six grand into this truck!"
+- You don't understand that aftermarket mods often don't add value (sometimes reduce it)
+- Fair market value is actually $26,000-28,000
+- The accident history also affects value
+
+BEHAVIOR:
+- When they present the value, be frustrated: "That can't be right. I put over six grand in upgrades alone!"
+- Push back hard: "Are you counting the lift kit? The wheels?"
+- Need education on wholesale vs retail value
+- Need to understand that mods don't always add value
+- If they explain it well with market data, you'll come around
+- If they just say "that's the number," you'll get angry
+- Respond well to the AEAIR framework
+- Closing approach: Need to feel like you were heard and given honest answers`,
+    openingLine: "",
+  },
+  {
+    id: "trade-advanced",
+    name: "The Underwater Trade",
+    description: "Customer owes more than their car is worth — guide them through options with honesty and empathy",
+    personality: "Anxious, embarrassed about financial situation, needs transparent guidance",
+    difficulty: "advanced",
+    estimatedTime: "18-22 min",
+    icon: Banknote,
+    category: "trade-appraisal",
+    buyerType: "urgent",
+    isOptional: true,
+    customerName: "Denise",
+    tradeVehicle: "2022 Nissan Pathfinder SL",
+    tradeValue: "$29,000",
+    systemPrompt: `You are playing a customer named Denise. You're 40 and in a difficult financial situation with your current vehicle. The CNA has already been completed.
+
+IMPORTANT CONTEXT:
+- The CNA and greeting have ALREADY happened.
+- The salesperson is now transitioning to the trade appraisal process.
+- You mentioned during CNA that payments are tight but didn't reveal the full picture yet.
+
+TRADE VEHICLE DETAILS:
+- 2022 Nissan Pathfinder SL, 28,000 miles
+- Good condition — a few scratches but nothing major
+- Payoff amount: $42,000 (bought at inflated pandemic prices)
+- Current trade value: $28,000-30,000
+- Negative equity: approximately $12,000-14,000
+- Monthly payment: $780 at 7.9% APR for 84 months
+
+YOUR SITUATION:
+- Bought during COVID when prices were inflated
+- Dealership added $4,000 in aftermarket products you didn't want but felt pressured into
+- Extended warranty for $3,500 that you can probably cancel
+- You feel taken advantage of on the original deal
+- Current payments are crushing you — just went through a job change
+
+BEHAVIOR:
+- Nervous when they ask about payoff: "It's... um... around forty-two thousand"
+- Feel embarrassed: "I know I got a bad deal on it originally"
+- Need reassurance that you're not being judged
+- Get emotional if they show empathy: "No one has been this honest with me"
+- Need to hear ALL options, including keeping the car
+- Appreciate when they mention canceling the extended warranty for refund
+- Don't want false hope — need realistic options
+- Closing approach: Honest guidance matters more than making a sale today`,
+    openingLine: "",
+  },
+
+  // ============================================
+  // INBOUND CALL MASTERY — Grouped by buyer type
   // ============================================
   {
     id: "phone-beginner",
@@ -941,7 +1079,8 @@ Behavior:
     difficulty: "beginner",
     estimatedTime: "8-12 min",
     icon: Phone,
-    category: "phone-mastery",
+    category: "inbound-call",
+    buyerType: "analyst",
     systemPrompt: `You are playing a phone caller named Sarah. You're 34 and you saw a vehicle on the dealership's website and want to know the price and if it's still available.
 
 CONTEXT: This is a PHONE CALL. The salesperson should be answering the phone professionally.
@@ -979,7 +1118,8 @@ BEHAVIOR:
     difficulty: "intermediate",
     estimatedTime: "10-15 min",
     icon: PhoneIncoming,
-    category: "phone-mastery",
+    category: "inbound-call",
+    buyerType: "urgent",
     systemPrompt: `You are playing a distracted caller named Kevin. You're 42, calling from work during your lunch break. You have about 5 minutes before a meeting.
 
 CONTEXT: This is a PHONE CALL. You're rushed and distracted.
@@ -1027,7 +1167,8 @@ Behavior:
     difficulty: "advanced",
     estimatedTime: "12-18 min",
     icon: Phone,
-    category: "phone-mastery",
+    category: "inbound-call",
+    buyerType: "negotiator",
     isOptional: true,
     systemPrompt: `You are playing a savvy phone shopper named Tanya. You're 39 and you've called 4 dealerships today comparing prices on the same vehicle. You're organized and taking notes.
 
@@ -1063,141 +1204,6 @@ BEHAVIOR:
 - Closing approach: Go with whoever provided the best overall experience, not just lowest price`,
     openingLine: "Hi, I'll be quick — I'm shopping the 2024 [SUV model] and I've already called three other dealers today. What's your best out-the-door price?",
   },
-
-  // ============================================
-  // 8. TRADE APPRAISAL PRACTICE
-  // ============================================
-  {
-    id: "trade-beginner",
-    name: "The Clean Trade",
-    description: "Cooperative customer with a well-maintained trade — practice the full 3-step process smoothly",
-    personality: "Pleasant, cooperative, expects fair treatment",
-    difficulty: "beginner",
-    estimatedTime: "12-15 min",
-    icon: Car,
-    category: "trade-appraisal",
-    customerName: "Michelle",
-    tradeVehicle: "2020 Toyota Camry SE",
-    tradeValue: "$18,500",
-    systemPrompt: `You are playing a customer named Michelle. You're 36 and trading in your well-maintained Toyota Camry. The CNA has already been completed — you're now at the trade appraisal stage.
-
-IMPORTANT CONTEXT:
-- The CNA and greeting have ALREADY happened.
-- The salesperson is now transitioning to the trade appraisal process.
-- They should START by explaining how the trade evaluation works (framing).
-
-TRADE VEHICLE DETAILS:
-- 2020 Toyota Camry SE, 42,000 miles
-- Excellent condition — garage kept, regular oil changes
-- No accidents, clean Carfax
-- One small door ding on passenger side
-- New tires 6 months ago
-- You take pride in maintaining your cars
-
-YOUR EXPECTATIONS:
-- You checked KBB: Shows $19,000-21,000 trade-in range
-- You expect somewhere in that range
-- You'll be disappointed if offered less but will listen to explanation
-- You're reasonable — if they explain the value fairly, you'll accept
-
-BEHAVIOR:
-- Cooperative and pleasant throughout
-- Mention the maintenance you've done: "I've kept up with every service"
-- React calmly to the value: "That's a bit less than I saw online..."
-- Accept the value if they explain market factors well
-- Appreciate transparency and professionalism
-- This is meant to be a smooth process — reward good technique`,
-    openingLine: "",
-  },
-  {
-    id: "trade-intermediate",
-    name: "The Overvalued Trade",
-    description: "Customer convinced their car is worth more than market — practice anchoring and value explanation",
-    personality: "Attached to their car, believes it's worth top dollar",
-    difficulty: "intermediate",
-    estimatedTime: "15-20 min",
-    icon: TrendingDown,
-    category: "trade-appraisal",
-    customerName: "Greg",
-    tradeVehicle: "2019 Ford F-150 XLT",
-    tradeValue: "$27,000",
-    systemPrompt: `You are playing a customer named Greg. You're 45 and very attached to your truck. You've put money into it and think it's worth significantly more than its actual value. The CNA has already been completed.
-
-IMPORTANT CONTEXT:
-- The CNA and greeting have ALREADY happened.
-- The salesperson is now transitioning to the trade appraisal process.
-
-TRADE VEHICLE DETAILS:
-- 2019 Ford F-150 XLT SuperCrew, 68,000 miles
-- Aftermarket upgrades: lift kit ($3,000), custom wheels ($2,500), LED light bar ($500), bed liner ($400)
-- One minor fender bender — repaired, shows on Carfax
-- Tires are at 40% tread
-- You spent over $6,000 on upgrades
-
-YOUR EXPECTATIONS:
-- You think it's worth $35,000+ because of the upgrades
-- "I put six grand into this truck!"
-- You don't understand that aftermarket mods often don't add value (sometimes reduce it)
-- Fair market value is actually $26,000-28,000
-- The accident history also affects value
-
-BEHAVIOR:
-- When they present the value, be frustrated: "That can't be right. I put over six grand in upgrades alone!"
-- Push back hard: "Are you counting the lift kit? The wheels?"
-- Need education on wholesale vs retail value
-- Need to understand that mods don't always add value
-- If they explain it well with market data, you'll come around
-- If they just say "that's the number," you'll get angry
-- Respond well to the AEAIR framework
-- Closing approach: Need to feel like you were heard and given honest answers`,
-    openingLine: "",
-  },
-  {
-    id: "trade-advanced",
-    name: "The Underwater Trade",
-    description: "Customer owes more than their car is worth — guide them through options with honesty and empathy",
-    personality: "Anxious, embarrassed about financial situation, needs transparent guidance",
-    difficulty: "advanced",
-    estimatedTime: "18-22 min",
-    icon: Banknote,
-    category: "trade-appraisal",
-    isOptional: true,
-    customerName: "Denise",
-    tradeVehicle: "2022 Nissan Pathfinder SL",
-    tradeValue: "$29,000",
-    systemPrompt: `You are playing a customer named Denise. You're 40 and in a difficult financial situation with your current vehicle. The CNA has already been completed.
-
-IMPORTANT CONTEXT:
-- The CNA and greeting have ALREADY happened.
-- The salesperson is now transitioning to the trade appraisal process.
-- You mentioned during CNA that payments are tight but didn't reveal the full picture yet.
-
-TRADE VEHICLE DETAILS:
-- 2022 Nissan Pathfinder SL, 28,000 miles
-- Good condition — a few scratches but nothing major
-- Payoff amount: $42,000 (bought at inflated pandemic prices)
-- Current trade value: $28,000-30,000
-- Negative equity: approximately $12,000-14,000
-- Monthly payment: $780 at 7.9% APR for 84 months
-
-YOUR SITUATION:
-- Bought during COVID when prices were inflated
-- Dealership added $4,000 in aftermarket products you didn't want but felt pressured into
-- Extended warranty for $3,500 that you can probably cancel
-- You feel taken advantage of on the original deal
-- Current payments are crushing you — just went through a job change
-
-BEHAVIOR:
-- Nervous when they ask about payoff: "It's... um... around forty-two thousand"
-- Feel embarrassed: "I know I got a bad deal on it originally"
-- Need reassurance that you're not being judged
-- Get emotional if they show empathy: "No one has been this honest with me"
-- Need to hear ALL options, including keeping the car
-- Appreciate when they mention canceling the extended warranty for refund
-- Don't want false hope — need realistic options
-- Closing approach: Honest guidance matters more than making a sale today`,
-    openingLine: "",
-  },
 ];
 
 export const getScenarioById = (id: string): Scenario | undefined => {
@@ -1210,4 +1216,18 @@ export const getScenariosByCategory = (category: ScenarioCategory): Scenario[] =
 
 export const getCategoryById = (id: ScenarioCategory): ScenarioCategory_Info | undefined => {
   return scenarioCategories.find((c) => c.id === id);
+};
+
+export const getBuyerTypeById = (id: BuyerType): BuyerType_Info | undefined => {
+  return buyerTypes.find((b) => b.id === id);
+};
+
+export const getScenariosByBuyerType = (category: ScenarioCategory, buyerType: BuyerType): Scenario[] => {
+  return scenarios.filter((s) => s.category === category && s.buyerType === buyerType);
+};
+
+export const getBuyerTypesInCategory = (category: ScenarioCategory): BuyerType[] => {
+  const types = new Set<BuyerType>();
+  scenarios.filter((s) => s.category === category).forEach((s) => types.add(s.buyerType));
+  return Array.from(types);
 };

@@ -7,37 +7,38 @@ import { ScenarioCard } from "@/components/training/ScenarioCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { scenarios, scenarioCategories, getScenariosByCategory, ScenarioCategory } from "@/lib/scenarios";
+import {
+  scenarios,
+  scenarioCategories,
+  getScenariosByCategory,
+  getBuyerTypesInCategory,
+  getBuyerTypeById,
+  getScenariosByBuyerType,
+  ScenarioCategory,
+  BuyerType,
+} from "@/lib/scenarios";
 
 export default function Scenarios() {
   const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<ScenarioCategory>("research-driven");
+  const [activeCategory, setActiveCategory] = useState<ScenarioCategory>("cna");
 
   const handleSelectScenario = (scenarioId: string) => {
     navigate(`/training/${scenarioId}`);
   };
 
   const colorMap: Record<string, string> = {
-    blue: "text-primary",
-    emerald: "text-success",
-    amber: "text-warning",
-    purple: "text-accent-foreground",
-    rose: "text-destructive",
     teal: "text-primary",
-    sky: "text-primary",
     indigo: "text-accent-foreground",
+    sky: "text-primary",
   };
 
   const bgMap: Record<string, string> = {
-    blue: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
-    emerald: "data-[state=active]:border-success/40 data-[state=active]:bg-success/10",
-    amber: "data-[state=active]:border-warning/40 data-[state=active]:bg-warning/10",
-    purple: "data-[state=active]:border-accent-foreground/40 data-[state=active]:bg-accent/50",
-    rose: "data-[state=active]:border-destructive/40 data-[state=active]:bg-destructive/10",
     teal: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
-    sky: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
     indigo: "data-[state=active]:border-accent-foreground/40 data-[state=active]:bg-accent/50",
+    sky: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
   };
+
+  const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 };
 
   return (
     <AuthGuard>
@@ -57,7 +58,7 @@ export default function Scenarios() {
               Practice Center
             </h1>
             <p className="text-muted-foreground">
-              Choose a buyer type and difficulty level to sharpen your skills
+              Choose a skill area, then practice with different buyer types from easy to hard
             </p>
           </div>
 
@@ -67,7 +68,7 @@ export default function Scenarios() {
             onValueChange={(value) => setActiveCategory(value as ScenarioCategory)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 mb-6 h-auto p-1.5 gap-1.5">
+            <TabsList className="grid w-full grid-cols-3 mb-6 h-auto p-1.5 gap-1.5">
               {scenarioCategories.map((category) => (
                 <TabsTrigger
                   key={category.id}
@@ -83,7 +84,7 @@ export default function Scenarios() {
             </TabsList>
 
             {scenarioCategories.map((category) => {
-              const categoryScenarios = getScenariosByCategory(category.id);
+              const buyerTypesInCategory = getBuyerTypesInCategory(category.id);
 
               return (
                 <TabsContent key={category.id} value={category.id} className="mt-0">
@@ -113,25 +114,48 @@ export default function Scenarios() {
                     </div>
                   </div>
 
-                  {/* Scenario Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
-                    {categoryScenarios.map((scenario) => (
-                      <div key={scenario.id} className="relative">
-                        {scenario.isOptional && (
-                          <Badge
-                            variant="outline"
-                            className="absolute -top-2 right-3 z-10 text-[10px] px-2 py-0 h-5 bg-card border-muted-foreground/30 text-muted-foreground gap-1"
-                          >
-                            <Lock className="w-2.5 h-2.5" />
-                            Optional Challenge
-                          </Badge>
-                        )}
-                        <ScenarioCard
-                          scenario={scenario}
-                          onClick={() => handleSelectScenario(scenario.id)}
-                        />
-                      </div>
-                    ))}
+                  {/* Buyer Type Groups */}
+                  <div className="space-y-8">
+                    {buyerTypesInCategory.map((buyerTypeId) => {
+                      const buyerType = getBuyerTypeById(buyerTypeId);
+                      const typeScenarios = getScenariosByBuyerType(category.id, buyerTypeId)
+                        .sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+
+                      if (!buyerType) return null;
+
+                      return (
+                        <div key={buyerTypeId}>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                              <buyerType.icon className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-foreground text-sm">{buyerType.name}</h3>
+                              <p className="text-xs text-muted-foreground">{buyerType.description}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                            {typeScenarios.map((scenario) => (
+                              <div key={scenario.id} className="relative">
+                                {scenario.isOptional && (
+                                  <Badge
+                                    variant="outline"
+                                    className="absolute -top-2 right-3 z-10 text-[10px] px-2 py-0 h-5 bg-card border-muted-foreground/30 text-muted-foreground gap-1"
+                                  >
+                                    <Lock className="w-2.5 h-2.5" />
+                                    Optional Challenge
+                                  </Badge>
+                                )}
+                                <ScenarioCard
+                                  scenario={scenario}
+                                  onClick={() => handleSelectScenario(scenario.id)}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </TabsContent>
               );

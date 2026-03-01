@@ -363,4 +363,20 @@
   .bg-score-good { background-color: hsl(var(--score-good)); }
   .bg-score-needs-work { background-color: hsl(var(--score-needs-work)); }
   .bg-score-practice { background-color: hsl(var(--score-practice)); }
+
+  /* Mobile-responsive learning sections */
+  @media (max-width: 639px) {
+    .space-y-8 > .animate-fade-in h2 {
+      font-size: 1.25rem;
+    }
+
+    /* Hide horizontal scrollbar on progress */
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }

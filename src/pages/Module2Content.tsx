@@ -238,21 +238,21 @@ export default function Module2Content() {
 
       case "practice":
         return (
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-6 md:space-y-8 animate-fade-in">
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Practice Scenario</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Practice Scenario</h2>
+              <p className="text-sm md:text-base text-muted-foreground">
                 Apply what you've learned in a realistic customer interaction. This is optional but recommended before the quiz.
               </p>
             </div>
             <PracticeScenario scenario={module2PracticeScenario} />
-            <div className="flex justify-between pt-6 border-t">
-              <Button variant="outline" onClick={handlePreviousSection} className="gap-2">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t">
+              <Button variant="outline" onClick={handlePreviousSection} className="gap-2 w-full sm:w-auto">
                 <ArrowLeft className="w-4 h-4" />
-                Previous
+                <span>Previous</span>
               </Button>
-              <Button onClick={handleNextSection} className="gap-2">
-                Take Quiz
+              <Button onClick={handleNextSection} className="gap-2 w-full sm:w-auto">
+                <span>Take Quiz</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -263,7 +263,7 @@ export default function Module2Content() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Final Quiz</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Final Quiz</h2>
               <p className="text-muted-foreground">
                 Answer at least 80% correctly to complete this module.
               </p>
@@ -360,23 +360,23 @@ export default function Module2Content() {
 
           {/* Content */}
           <ScrollArea className="flex-1">
-            <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className="max-w-3xl mx-auto px-4 py-6 md:py-8">
               {renderContent()}
 
               {/* Navigation Buttons */}
               {showNavigation && (
-                <div className="flex justify-between mt-12 pt-6 border-t">
+                <div className="flex flex-col sm:flex-row justify-between gap-3 mt-8 md:mt-12 pt-6 border-t">
                   <Button
                     variant="outline"
                     onClick={handlePreviousSection}
                     disabled={stage === "section1"}
-                    className="gap-2"
+                    className="gap-2 w-full sm:w-auto"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Previous
+                    <span>Previous</span>
                   </Button>
-                  <Button onClick={handleNextSection} className="gap-2">
-                    {stage === "section3" ? "Practice Scenario" : "Next Section"}
+                  <Button onClick={handleNextSection} className="gap-2 w-full sm:w-auto">
+                    <span>{stage === "section3" ? "Practice Scenario" : "Next Section"}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>

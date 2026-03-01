@@ -143,6 +143,7 @@ export default function Learn() {
               trainingModules.map((module, index) => {
                 const isCompleted = completedModules.includes(module.id);
                 const isLocked = !checkPrerequisitesMet(module.id, completedModules);
+                const hasProgress = !isCompleted && !!localStorage.getItem(`module_${module.id}_current_stage`);
 
                 return (
                   <div key={module.id} className="stagger-children">
@@ -158,6 +159,7 @@ export default function Learn() {
                       module={module}
                       isCompleted={isCompleted}
                       isLocked={isLocked}
+                      hasProgress={hasProgress}
                       onClick={() => handleModuleClick(module.id, isLocked)}
                     />
                   </div>

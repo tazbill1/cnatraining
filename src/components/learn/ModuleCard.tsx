@@ -1,4 +1,4 @@
-import { Clock, Lock, CheckCircle2 } from "lucide-react";
+import { Clock, Lock, CheckCircle2, Play } from "lucide-react";
 import { TrainingModule } from "@/lib/modules";
 import { cn } from "@/lib/utils";
 
@@ -6,10 +6,11 @@ interface ModuleCardProps {
   module: TrainingModule;
   isCompleted: boolean;
   isLocked: boolean;
+  hasProgress: boolean;
   onClick: () => void;
 }
 
-export function ModuleCard({ module, isCompleted, isLocked, onClick }: ModuleCardProps) {
+export function ModuleCard({ module, isCompleted, isLocked, hasProgress, onClick }: ModuleCardProps) {
   const difficultyClass = {
     beginner: "difficulty-beginner",
     intermediate: "difficulty-intermediate",
@@ -61,6 +62,12 @@ export function ModuleCard({ module, isCompleted, isLocked, onClick }: ModuleCar
             {isCompleted && (
               <span className="text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded-full">
                 Completed
+              </span>
+            )}
+            {!isCompleted && !isLocked && hasProgress && (
+              <span className="flex items-center gap-1 text-xs font-medium text-accent-foreground bg-accent px-2 py-0.5 rounded-full">
+                <Play className="w-3 h-3" />
+                Resume
               </span>
             )}
           </div>

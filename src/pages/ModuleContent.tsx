@@ -23,8 +23,31 @@ import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "quiz" | "saving" | "complete";
+
+const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "quiz"];
+
+const stageFriendlyNames: Record<ModuleStage, string> = {
+  intro: "Introduction",
+  section1: "Vehicle Selection",
+  section2: "ACV vs Trade",
+  section3: "6-Step Process",
+  section4: "Presentation",
+  quiz: "Final Quiz",
+  saving: "Saving",
+  complete: "Complete",
+};
 
 const sectionLabels = ["Intro", "Vehicle Selection", "ACV vs Trade", "6-Step Process", "Presentation", "Quiz"];
 
@@ -35,10 +58,28 @@ export default function ModuleContent() {
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedStage, setSavedStage] = useState<ModuleStage | null>(null);
 
-  // Default to vehicle-selection-fundamentals if no moduleId
   const effectiveModuleId = moduleId || "vehicle-selection-fundamentals";
   const module = getModuleById(effectiveModuleId);
+
+  // Check for saved progress on mount
+  useEffect(() => {
+    if (!module) return;
+    const saved = localStorage.getItem(`module_${effectiveModuleId}_current_stage`) as ModuleStage | null;
+    if (saved && saved !== "intro" && saved !== "complete" && saved !== "saving") {
+      setSavedStage(saved);
+      setShowResumeDialog(true);
+    }
+  }, [effectiveModuleId, module]);
+
+  // Persist stage changes
+  useEffect(() => {
+    if (stage !== "intro" && stage !== "complete" && stage !== "saving") {
+      localStorage.setItem(`module_${effectiveModuleId}_current_stage`, stage);
+    }
+  }, [stage, effectiveModuleId]);
 
   useEffect(() => {
     if (!module) {
@@ -59,7 +100,6 @@ export default function ModuleContent() {
   };
 
   const handleNextSection = () => {
-    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "quiz"];
     const currentIndex = stageOrder.indexOf(stage);
     
     if (currentIndex >= 1 && currentIndex <= 4) {
@@ -73,7 +113,6 @@ export default function ModuleContent() {
   };
 
   const handlePreviousSection = () => {
-    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "quiz"];
     const currentIndex = stageOrder.indexOf(stage);
     if (currentIndex > 0) {
       setStage(stageOrder[currentIndex - 1]);
@@ -106,10 +145,10 @@ export default function ModuleContent() {
           localStorage.setItem(storageKey, JSON.stringify(completed));
         }
 
+        localStorage.removeItem(`module_${effectiveModuleId}_current_stage`);
         setStage("complete");
         toast.success("Module completed! Great job!");
       } catch (error) {
-        // Fallback: save to localStorage only
         const storageKey = `completed_modules_${user.id}`;
         const stored = localStorage.getItem(storageKey);
         const completed = stored ? JSON.parse(stored) : [];
@@ -117,6 +156,7 @@ export default function ModuleContent() {
           completed.push(module.id);
           localStorage.setItem(storageKey, JSON.stringify(completed));
         }
+        localStorage.removeItem(`module_${effectiveModuleId}_current_stage`);
         setStage("complete");
         toast.error("Progress saved locally but couldn't sync to server.");
       }
@@ -253,9 +293,40 @@ export default function ModuleContent() {
 
   const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete";
 
+  const handleResume = () => {
+    if (savedStage) {
+      setStage(savedStage);
+      // Mark all prior sections as completed
+      const idx = stageOrder.indexOf(savedStage);
+      const completed = Array.from({ length: idx - 1 }, (_, i) => i + 1);
+      setCompletedSections(completed);
+    }
+    setShowResumeDialog(false);
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem(`module_${effectiveModuleId}_current_stage`);
+    setSavedStage(null);
+    setShowResumeDialog(false);
+  };
+
   return (
     <AuthGuard>
       <AppLayout>
+        <AlertDialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Resume where you left off?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You were on <strong>{savedStage ? stageFriendlyNames[savedStage] : ""}</strong>. Would you like to pick up where you left off?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleStartOver}>Start Over</AlertDialogCancel>
+              <AlertDialogAction onClick={handleResume}>Resume</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="h-full flex flex-col">
           {/* Header with Progress */}
           <div className="border-b bg-card/50 backdrop-blur sticky top-0 z-10">

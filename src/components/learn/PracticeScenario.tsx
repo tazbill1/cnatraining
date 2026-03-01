@@ -98,12 +98,12 @@ export function PracticeScenario({ scenario, onComplete }: PracticeScenarioProps
   if (completed) {
     return (
       <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent animate-fade-in">
-        <CardContent className="p-8 text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
-            <Trophy className="w-10 h-10 text-primary" />
+        <CardContent className="p-5 md:p-8 text-center space-y-5 md:space-y-6">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+            <Trophy className="w-8 h-8 md:w-10 md:h-10 text-primary" />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-foreground mb-2">Scenario Complete!</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">Scenario Complete!</h3>
             <p className="text-muted-foreground">
               You scored {totalScore} out of {maxScore} points ({scorePercent}%)
             </p>
@@ -143,7 +143,7 @@ export function PracticeScenario({ scenario, onComplete }: PracticeScenarioProps
   const selectedOption = selections[currentDecision.id];
 
   return (
-    <Card className="border-primary/30 bg-primary/5">
+    <Card className="border-primary/30 bg-primary/5 overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -171,12 +171,12 @@ export function PracticeScenario({ scenario, onComplete }: PracticeScenarioProps
           ))}
         </div>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4 md:space-y-5 px-4 md:px-6">
         {/* Scenario context - show on first step */}
         {currentStep === 0 && !showFeedback && (
           <div className="space-y-3 animate-fade-in">
             <p className="text-sm text-muted-foreground">{scenario.customerSetup}</p>
-            <div className="p-4 rounded-lg bg-muted/50 border border-border italic text-foreground">
+            <div className="p-3 md:p-4 rounded-lg bg-muted/50 border border-border italic text-sm md:text-base text-foreground">
               "{scenario.customerQuote}"
             </div>
           </div>

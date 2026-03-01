@@ -136,8 +136,8 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
 
   return (
     <Card className="border-primary/30 bg-primary/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
+      <CardHeader className="pb-2 md:pb-3 px-4 md:px-6">
+        <CardTitle className="text-base md:text-lg flex items-center gap-2">
           <span className="text-primary">Knowledge Check</span>
           {attempts > 0 && !isCorrect && !isMaxAttempts && (
             <span className="text-xs font-normal text-muted-foreground ml-auto">
@@ -146,8 +146,8 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="font-medium text-foreground">{check.question}</p>
+      <CardContent className="space-y-3 md:space-y-4 px-4 md:px-6">
+        <p className="font-medium text-sm md:text-base text-foreground">{check.question}</p>
 
         {check.type === "single" && (
           <RadioGroup
@@ -164,7 +164,7 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
                 <div
                   key={option.id}
                   className={cn(
-                    "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
+                    "flex items-center space-x-3 p-3 md:p-3 rounded-lg border transition-colors min-h-[44px]",
                     !submitted && "border-border bg-background hover:bg-muted/50",
                     !submitted && isSelected && "border-primary/50 bg-primary/5",
                     showOptionCorrect && "bg-green-500/10 border-green-500/50",
@@ -206,7 +206,7 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
                 <div
                   key={option.id}
                   className={cn(
-                    "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
+                    "flex items-center space-x-3 p-3 rounded-lg border transition-colors min-h-[44px]",
                     !submitted && !isSelected && "border-border bg-background hover:bg-muted/50",
                     !submitted && isSelected && "border-primary/50 bg-primary/5",
                     showOptionCorrect && "bg-green-500/10 border-green-500/50",

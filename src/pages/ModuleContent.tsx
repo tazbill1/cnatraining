@@ -21,9 +21,10 @@ import {
 } from "@/lib/moduleContent";
 import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "quiz" | "complete";
+type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "quiz" | "saving" | "complete";
 
 const sectionLabels = ["Intro", "Vehicle Selection", "ACV vs Trade", "6-Step Process", "Presentation", "Quiz"];
 
@@ -80,18 +81,45 @@ export default function ModuleContent() {
     }
   };
 
-  const handleQuizComplete = (passed: boolean, score: number) => {
+  const handleQuizComplete = async (passed: boolean, score: number) => {
     if (passed && user) {
-      // Mark module as complete
-      const storageKey = `completed_modules_${user.id}`;
-      const stored = localStorage.getItem(storageKey);
-      const completed = stored ? JSON.parse(stored) : [];
-      if (!completed.includes(module.id)) {
-        completed.push(module.id);
-        localStorage.setItem(storageKey, JSON.stringify(completed));
+      setStage("saving");
+      try {
+        // Save to Supabase
+        const { error } = await supabase.from("module_completions").upsert(
+          {
+            user_id: user.id,
+            module_id: module.id,
+            quiz_score: score,
+          },
+          { onConflict: "user_id,module_id" }
+        );
+
+        if (error) throw error;
+
+        // Also save to localStorage as fallback cache
+        const storageKey = `completed_modules_${user.id}`;
+        const stored = localStorage.getItem(storageKey);
+        const completed = stored ? JSON.parse(stored) : [];
+        if (!completed.includes(module.id)) {
+          completed.push(module.id);
+          localStorage.setItem(storageKey, JSON.stringify(completed));
+        }
+
+        setStage("complete");
+        toast.success("Module completed! Great job!");
+      } catch (error) {
+        // Fallback: save to localStorage only
+        const storageKey = `completed_modules_${user.id}`;
+        const stored = localStorage.getItem(storageKey);
+        const completed = stored ? JSON.parse(stored) : [];
+        if (!completed.includes(module.id)) {
+          completed.push(module.id);
+          localStorage.setItem(storageKey, JSON.stringify(completed));
+        }
+        setStage("complete");
+        toast.error("Progress saved locally but couldn't sync to server.");
       }
-      setStage("complete");
-      toast.success("Module completed! Great job!");
     }
   };
 
@@ -107,6 +135,7 @@ export default function ModuleContent() {
       section3: 3,
       section4: 4,
       quiz: 5,
+      saving: 5,
       complete: 5,
     };
     return stageMap[stage];
@@ -187,6 +216,16 @@ export default function ModuleContent() {
           </div>
         );
 
+      case "saving":
+        return (
+          <div className="text-center space-y-6 py-12">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto animate-pulse">
+              <span className="text-3xl">💾</span>
+            </div>
+            <p className="text-muted-foreground">Saving your progress...</p>
+          </div>
+        );
+
       case "complete":
         return (
           <div className="text-center space-y-6 py-12">
@@ -212,7 +251,7 @@ export default function ModuleContent() {
     }
   };
 
-  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "complete";
+  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete";
 
   return (
     <AuthGuard>

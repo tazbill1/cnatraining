@@ -21,14 +21,44 @@ export default function Learn() {
       if (!user) return;
 
       try {
-        // For now, we'll track completed modules in localStorage
-        // In the future, this could be stored in the database
+        // Fetch from database
+        const { data, error } = await supabase
+          .from("module_completions")
+          .select("module_id")
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        const dbModules = data?.map((r) => r.module_id) || [];
+
+        // Sync localStorage data to database if any exist that aren't in DB
         const stored = localStorage.getItem(`completed_modules_${user.id}`);
         if (stored) {
-          setCompletedModules(JSON.parse(stored));
+          const localModules: string[] = JSON.parse(stored);
+          const missing = localModules.filter((m) => !dbModules.includes(m));
+          if (missing.length > 0) {
+            const rows = missing.map((module_id) => ({
+              user_id: user.id,
+              module_id,
+            }));
+            await supabase.from("module_completions").upsert(rows, {
+              onConflict: "user_id,module_id",
+            });
+            dbModules.push(...missing);
+          }
+          // Clear localStorage after sync
+          localStorage.removeItem(`completed_modules_${user.id}`);
         }
+
+        setCompletedModules(dbModules);
       } catch (error) {
         logger.error("Error fetching completed modules:", error);
+        // Fallback to localStorage if offline
+        try {
+          const stored = localStorage.getItem(`completed_modules_${user.id}`);
+          if (stored) setCompletedModules(JSON.parse(stored));
+        } catch {}
+        toast.error("Could not load progress from server. Showing cached data.");
       } finally {
         setIsLoading(false);
       }

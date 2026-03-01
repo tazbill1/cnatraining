@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      module_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          module_id: string
+          quiz_score: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          module_id: string
+          quiz_score?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          module_id?: string
+          quiz_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

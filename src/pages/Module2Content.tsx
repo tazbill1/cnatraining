@@ -20,9 +20,34 @@ import {
 } from "@/lib/module2Content";
 import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "complete";
+type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "saving" | "complete";
+
+const MODULE_ID = "trade-appraisal-process";
+
+const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
+
+const stageFriendlyNames: Record<ModuleStage, string> = {
+  intro: "Introduction",
+  section1: "Framing the Conversation",
+  section2: "Vehicle Evaluation",
+  section3: "Purchase Disclosure & AEAIR",
+  quiz: "Final Quiz",
+  saving: "Saving",
+  complete: "Complete",
+};
 
 const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Quiz"];
 
@@ -32,8 +57,27 @@ export default function Module2Content() {
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedStage, setSavedStage] = useState<ModuleStage | null>(null);
 
-  const module = getModuleById("trade-appraisal-process");
+  const module = getModuleById(MODULE_ID);
+
+  // Check for saved progress on mount
+  useEffect(() => {
+    if (!module) return;
+    const saved = localStorage.getItem(`module_${MODULE_ID}_current_stage`) as ModuleStage | null;
+    if (saved && saved !== "intro" && saved !== "complete" && saved !== "saving") {
+      setSavedStage(saved);
+      setShowResumeDialog(true);
+    }
+  }, [module]);
+
+  // Persist stage changes
+  useEffect(() => {
+    if (stage !== "intro" && stage !== "complete" && stage !== "saving") {
+      localStorage.setItem(`module_${MODULE_ID}_current_stage`, stage);
+    }
+  }, [stage]);
 
   useEffect(() => {
     if (!module) {
@@ -54,13 +98,10 @@ export default function Module2Content() {
   };
 
   const handleNextSection = () => {
-    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
     const currentIndex = stageOrder.indexOf(stage);
-    
     if (currentIndex >= 1 && currentIndex <= 3) {
       setCompletedSections([...completedSections, currentIndex]);
     }
-    
     if (currentIndex < stageOrder.length - 1) {
       setStage(stageOrder[currentIndex + 1]);
       window.scrollTo(0, 0);
@@ -68,7 +109,6 @@ export default function Module2Content() {
   };
 
   const handlePreviousSection = () => {
-    const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
     const currentIndex = stageOrder.indexOf(stage);
     if (currentIndex > 0) {
       setStage(stageOrder[currentIndex - 1]);
@@ -76,17 +116,39 @@ export default function Module2Content() {
     }
   };
 
-  const handleQuizComplete = (passed: boolean, score: number) => {
+  const handleQuizComplete = async (passed: boolean, score: number) => {
     if (passed && user) {
-      const storageKey = `completed_modules_${user.id}`;
-      const stored = localStorage.getItem(storageKey);
-      const completed = stored ? JSON.parse(stored) : [];
-      if (!completed.includes(module.id)) {
-        completed.push(module.id);
-        localStorage.setItem(storageKey, JSON.stringify(completed));
+      setStage("saving");
+      try {
+        const { error } = await supabase.from("module_completions").upsert(
+          { user_id: user.id, module_id: module.id, quiz_score: score },
+          { onConflict: "user_id,module_id" }
+        );
+        if (error) throw error;
+
+        const storageKey = `completed_modules_${user.id}`;
+        const stored = localStorage.getItem(storageKey);
+        const completed = stored ? JSON.parse(stored) : [];
+        if (!completed.includes(module.id)) {
+          completed.push(module.id);
+          localStorage.setItem(storageKey, JSON.stringify(completed));
+        }
+
+        localStorage.removeItem(`module_${MODULE_ID}_current_stage`);
+        setStage("complete");
+        toast.success("Module completed! Great job!");
+      } catch (error) {
+        const storageKey = `completed_modules_${user.id}`;
+        const stored = localStorage.getItem(storageKey);
+        const completed = stored ? JSON.parse(stored) : [];
+        if (!completed.includes(module.id)) {
+          completed.push(module.id);
+          localStorage.setItem(storageKey, JSON.stringify(completed));
+        }
+        localStorage.removeItem(`module_${MODULE_ID}_current_stage`);
+        setStage("complete");
+        toast.error("Progress saved locally but couldn't sync to server.");
       }
-      setStage("complete");
-      toast.success("Module completed! Great job!");
     }
   };
 
@@ -101,9 +163,26 @@ export default function Module2Content() {
       section2: 2,
       section3: 3,
       quiz: 4,
+      saving: 4,
       complete: 4,
     };
     return stageMap[stage];
+  };
+
+  const handleResume = () => {
+    if (savedStage) {
+      setStage(savedStage);
+      const idx = stageOrder.indexOf(savedStage);
+      const completed = Array.from({ length: idx - 1 }, (_, i) => i + 1);
+      setCompletedSections(completed);
+    }
+    setShowResumeDialog(false);
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem(`module_${MODULE_ID}_current_stage`);
+    setSavedStage(null);
+    setShowResumeDialog(false);
   };
 
   const renderContent = () => {
@@ -112,7 +191,7 @@ export default function Module2Content() {
         return (
           <ModuleIntro
             title={module.title}
-            welcomeMessage="The trade appraisal isn't a negotiation — it's a process. Learn to set expectations, evaluate consistently, and disclose with confidence."
+            welcomeMessage="Master the complete trade appraisal workflow from initial conversation to final disclosure"
             overview={module2Overview}
             objectives={module2Objectives}
             estimatedTime="12-15 minutes"
@@ -170,10 +249,20 @@ export default function Module2Content() {
           </div>
         );
 
+      case "saving":
+        return (
+          <div className="text-center space-y-6 py-12">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto animate-pulse">
+              <span className="text-3xl">💾</span>
+            </div>
+            <p className="text-muted-foreground">Saving your progress...</p>
+          </div>
+        );
+
       case "complete":
         return (
           <div className="text-center space-y-6 py-12">
-            <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
+            <div className="w-24 h-24 rounded-full bg-success/20 flex items-center justify-center mx-auto">
               <span className="text-5xl">🎉</span>
             </div>
             <div>
@@ -195,11 +284,25 @@ export default function Module2Content() {
     }
   };
 
-  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "complete";
+  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete";
 
   return (
     <AuthGuard>
       <AppLayout>
+        <AlertDialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Resume where you left off?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You were on <strong>{savedStage ? stageFriendlyNames[savedStage] : ""}</strong>. Would you like to pick up where you left off?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleStartOver}>Start Over</AlertDialogCancel>
+              <AlertDialogAction onClick={handleResume}>Resume</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="h-full flex flex-col">
           {/* Header with Progress */}
           <div className="border-b bg-card/50 backdrop-blur sticky top-0 z-10">
@@ -218,7 +321,7 @@ export default function Module2Content() {
                   {module.title}
                 </span>
               </div>
-              {stage !== "intro" && stage !== "complete" && (
+              {stage !== "intro" && stage !== "complete" && stage !== "saving" && (
                 <ModuleProgress
                   sections={sectionLabels}
                   currentSection={getCurrentSectionIndex()}

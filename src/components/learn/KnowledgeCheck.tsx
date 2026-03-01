@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, GripVertical } from "lucide-react";
+import { CheckCircle2, XCircle, GripVertical, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,13 +19,15 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [attempts, setAttempts] = useState(0);
 
-  // Reset state whenever the check changes (e.g., navigating between sections)
+  // Reset state whenever the check changes
   useEffect(() => {
     setSelectedAnswers([]);
     setSubmitted(false);
     setIsCorrect(false);
     setDraggedIndex(null);
+    setAttempts(0);
     if (check.type === "reorder") {
       const shuffled = [...check.options].sort(() => Math.random() - 0.5);
       setReorderItems(shuffled);
@@ -56,7 +58,6 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
-
     const newItems = [...reorderItems];
     const draggedItem = newItems[draggedIndex];
     newItems.splice(draggedIndex, 1);
@@ -69,8 +70,23 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
     setDraggedIndex(null);
   };
 
+  const getCorrectAnswerText = () => {
+    if (check.type === "single") {
+      return check.options.find((o) => o.isCorrect)?.text || "";
+    }
+    if (check.type === "multiple") {
+      return check.options
+        .filter((o) => o.isCorrect)
+        .map((o) => o.text)
+        .join(", ");
+    }
+    return check.options.map((o) => o.text).join(" → ");
+  };
+
   const checkAnswer = () => {
     let correct = false;
+    const newAttempts = attempts + 1;
+    setAttempts(newAttempts);
 
     if (check.type === "single") {
       const correctOption = check.options.find((o) => o.isCorrect);
@@ -90,8 +106,12 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
 
     setIsCorrect(correct);
     setSubmitted(true);
+
     if (correct) {
       onComplete(true);
+    } else if (newAttempts >= 2) {
+      // Failed both attempts
+      onComplete(false);
     }
   };
 
@@ -105,6 +125,10 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
     }
   };
 
+  const isMaxAttempts = attempts >= 2;
+  const showCorrectAnswer = submitted && !isCorrect && isMaxAttempts;
+  const canRetry = submitted && !isCorrect && !isMaxAttempts;
+
   const canSubmit =
     check.type === "reorder" ||
     (check.type === "single" && selectedAnswers.length === 1) ||
@@ -115,6 +139,11 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <span className="text-primary">Knowledge Check</span>
+          {attempts > 0 && !isCorrect && !isMaxAttempts && (
+            <span className="text-xs font-normal text-muted-foreground ml-auto">
+              Attempt {attempts} of 2
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -128,25 +157,19 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
           >
             {check.options.map((option) => {
               const isSelected = selectedAnswers.includes(option.id);
-              // Only show correct/incorrect AFTER user submits
-              const showCorrect = submitted && option.isCorrect;
-              const showIncorrect = submitted && isSelected && !option.isCorrect;
-              
+              const showOptionCorrect = submitted && option.isCorrect && (isCorrect || showCorrectAnswer);
+              const showOptionIncorrect = submitted && isSelected && !option.isCorrect;
+
               return (
                 <div
                   key={option.id}
                   className={cn(
                     "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                    // Before submission: all options look the same (neutral)
                     !submitted && "border-border bg-background hover:bg-muted/50",
-                    // Selected state before submission - subtle highlight only
                     !submitted && isSelected && "border-primary/50 bg-primary/5",
-                    // ONLY AFTER SUBMISSION: show correct answer in green
-                    showCorrect && "bg-green-500/10 border-green-500/50",
-                    // ONLY AFTER SUBMISSION: show incorrect selection in red
-                    showIncorrect && "bg-red-500/10 border-red-500/50",
-                    // ONLY AFTER SUBMISSION: dim unselected wrong answers
-                    submitted && !showCorrect && !showIncorrect && "border-border bg-background opacity-60"
+                    showOptionCorrect && "bg-green-500/10 border-green-500/50",
+                    showOptionIncorrect && "bg-red-500/10 border-red-500/50",
+                    submitted && !showOptionCorrect && !showOptionIncorrect && "border-border bg-background opacity-60"
                   )}
                 >
                   <RadioGroupItem
@@ -160,6 +183,12 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
                   >
                     {option.text}
                   </Label>
+                  {showOptionCorrect && (
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                  )}
+                  {showOptionIncorrect && (
+                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                  )}
                 </div>
               );
             })}
@@ -170,24 +199,19 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
           <div className="space-y-2">
             {check.options.map((option) => {
               const isSelected = selectedAnswers.includes(option.id);
-              const showCorrect = submitted && option.isCorrect;
-              const showIncorrect = submitted && isSelected && !option.isCorrect;
-              
+              const showOptionCorrect = submitted && option.isCorrect && (isCorrect || showCorrectAnswer);
+              const showOptionIncorrect = submitted && isSelected && !option.isCorrect;
+
               return (
                 <div
                   key={option.id}
                   className={cn(
                     "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                    // Default neutral state
                     !submitted && !isSelected && "border-border bg-background hover:bg-muted/50",
-                    // Selected but not submitted
                     !submitted && isSelected && "border-primary/50 bg-primary/5",
-                    // After submission - correct answer
-                    showCorrect && "bg-green-500/10 border-green-500/50",
-                    // After submission - incorrect selection
-                    showIncorrect && "bg-red-500/10 border-red-500/50",
-                    // After submission - not selected and not correct (neutral)
-                    submitted && !showCorrect && !showIncorrect && "border-border bg-background opacity-60"
+                    showOptionCorrect && "bg-green-500/10 border-green-500/50",
+                    showOptionIncorrect && "bg-red-500/10 border-red-500/50",
+                    submitted && !showOptionCorrect && !showOptionIncorrect && "border-border bg-background opacity-60"
                   )}
                 >
                   <Checkbox
@@ -204,6 +228,12 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
                   >
                     {option.text}
                   </Label>
+                  {showOptionCorrect && (
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                  )}
+                  {showOptionIncorrect && (
+                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                  )}
                 </div>
               );
             })}
@@ -237,26 +267,69 @@ export function KnowledgeCheck({ check, onComplete }: KnowledgeCheckProps) {
           </div>
         )}
 
-        {submitted && (
-          <div
-            className={cn(
-              "p-4 rounded-lg flex items-start gap-3",
-              isCorrect ? "bg-green-500/10" : "bg-amber-500/10"
-            )}
-          >
-            {isCorrect ? (
-              <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-            ) : (
-              <XCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            )}
-            <p className={cn("text-sm", isCorrect ? "text-green-700" : "text-amber-700")}>
-              {isCorrect ? check.feedback.correct : check.feedback.incorrect}
-            </p>
+        {/* Feedback area */}
+        {submitted && isCorrect && (
+          <div className="p-4 rounded-lg bg-green-500/10 flex items-start gap-3 animate-fade-in">
+            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5 animate-scale-in" />
+            <div>
+              <p className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1">
+                Correct!
+              </p>
+              <p className="text-sm text-green-700 dark:text-green-400">
+                {check.feedback.correct}
+              </p>
+            </div>
           </div>
         )}
 
-        {submitted && !isCorrect && (
-          <Button onClick={handleRetry} variant="outline" className="w-full">
+        {submitted && !isCorrect && !isMaxAttempts && (
+          <div className="p-4 rounded-lg bg-amber-500/10 flex items-start gap-3 animate-fade-in">
+            <XCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">
+                Not quite.
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                {check.feedback.incorrect} You have one more attempt.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {submitted && !isCorrect && isMaxAttempts && (
+          <div className="space-y-3 animate-fade-in">
+            <div className="p-4 rounded-lg bg-red-500/10 flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">
+                  Incorrect
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-400">
+                  {check.feedback.incorrect}
+                </p>
+              </div>
+            </div>
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-1">
+                  The correct answer:
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {getCorrectAnswerText()}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {check.feedback.correct}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {canRetry && (
+          <Button onClick={handleRetry} variant="outline" className="w-full gap-2">
+            <RotateCcw className="w-4 h-4" />
             Try Again
           </Button>
         )}

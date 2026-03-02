@@ -1,4 +1,4 @@
-import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, LucideIcon } from "lucide-react";
+import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, PlayCircle, LucideIcon } from "lucide-react";
 
 export type ModuleDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -20,6 +20,18 @@ export interface TrainingModule {
 
 export const trainingModules: TrainingModule[] = [
   {
+    id: "buyer-types-video",
+    title: "Module 1: The Trust-Building Script",
+    description: "Watch the foundational video on building trust with every customer interaction. This sets the stage for understanding buyer types.",
+    icon: PlayCircle,
+    estimatedTime: "6 min",
+    difficulty: "beginner",
+    sections: [
+      { title: "Watch Video" },
+    ],
+    prerequisiteIds: [],
+  },
+  {
     id: "buyer-types",
     title: "Module 1: Understanding Buyer Types",
     description: "Learn to identify the five behavioral buyer types — Analyst, Negotiator, Emotional, Loyal, and Urgent — and adapt your approach to close more deals with better customer experiences.",
@@ -34,7 +46,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "The Repeat Customer" },
       { title: "The Life-Event Buyer" },
     ],
-    prerequisiteIds: [],
+    prerequisiteIds: ["buyer-types-video"],
   },
   {
     id: "base-statement",

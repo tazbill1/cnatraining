@@ -175,7 +175,7 @@ export default function Learn() {
       toast.info("Dev mode: bypassing prerequisite lock");
     }
 
-    const implementedModules = ["base-statement", "vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework", "phone-sales-fundamentals", "buyer-types"];
+    const implementedModules = ["base-statement", "vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework", "phone-sales-fundamentals", "buyer-types", "buyer-types-video"];
     if (implementedModules.includes(moduleId)) {
       navigate(`/learn/${moduleId}`);
     } else {

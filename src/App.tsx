@@ -13,6 +13,7 @@ import Module2Content from "./pages/Module2Content";
 import Module3Content from "./pages/Module3Content";
 import Module4Content from "./pages/Module4Content";
 import BuyerTypesContent from "./pages/BuyerTypesContent";
+import BuyerTypesVideo from "./pages/BuyerTypesVideo";
 import BaseStatementContent from "./pages/BaseStatementContent";
 import Toolbox from "./pages/Toolbox";
 import CNAForm from "./pages/CNAForm";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/learn/objection-handling-framework" element={<Module3Content />} />
             <Route path="/learn/phone-sales-fundamentals" element={<Module4Content />} />
             <Route path="/learn/buyer-types" element={<BuyerTypesContent />} />
+            <Route path="/learn/buyer-types-video" element={<BuyerTypesVideo />} />
             <Route path="/learn/:moduleId" element={<ModuleContent />} />
             <Route path="/toolbox" element={<Toolbox />} />
             <Route path="/toolbox/cna-form" element={<CNAForm />} />

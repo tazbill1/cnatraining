@@ -52,7 +52,7 @@ const App = () => (
             <Route path="/learn/objection-handling-framework" element={<Module3Content />} />
             <Route path="/learn/phone-sales-fundamentals" element={<Module4Content />} />
             <Route path="/learn/buyer-types" element={<BuyerTypesContent />} />
-            <Route path="/learn/buyer-types-video" element={<BuyerTypesVideo />} />
+            <Route path="/learn/base-statement-video" element={<BuyerTypesVideo />} />
             <Route path="/learn/:moduleId" element={<ModuleContent />} />
             <Route path="/toolbox" element={<Toolbox />} />
             <Route path="/toolbox/cna-form" element={<CNAForm />} />

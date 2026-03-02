@@ -38,7 +38,7 @@ export const trainingModules: TrainingModule[] = [
   },
   {
     id: "base-statement-video",
-    title: "Module 2: The Trust-Building Script",
+    title: "Module 2: Introducing the Base Statement",
     description: "Watch the foundational video on building trust with every customer interaction. This sets the stage for mastering the Base Statement.",
     icon: PlayCircle,
     estimatedTime: "6 min",

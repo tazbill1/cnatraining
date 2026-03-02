@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     // Send invite via Supabase Auth admin API
     const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
       trimmedEmail,
-      { redirectTo: `${req.headers.get("origin") || supabaseUrl}` }
+      { redirectTo: "https://cnatraining.lovable.app" }
     );
 
     if (inviteError) {

@@ -76,7 +76,7 @@ export default function BuyerTypesVideo() {
                   Back to Learn
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Module 2: The Trust-Building Script
+                  Module 2: Introducing the Base Statement
                 </span>
               </div>
             </div>

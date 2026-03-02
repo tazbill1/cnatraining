@@ -120,18 +120,6 @@ export default function BuyerTypesContent() {
     switch (stage) {
       case "intro":
         return (
-          <ModuleIntro
-            title={module?.title || "Module 1: Understanding Buyer Types"}
-            welcomeMessage="Not every customer shops the same way. Learning to read buyer behavior and adapt your approach is one of the most powerful skills you can develop on the sales floor."
-            overview={buyerTypesOverview}
-            objectives={buyerTypesObjectives}
-            estimatedTime="15-18 minutes"
-            onStart={handleStart}
-          />
-        );
-
-      case "section1":
-        return (
           <div className="space-y-8">
             {videoUrl && (
               <VideoPlayer
@@ -139,9 +127,19 @@ export default function BuyerTypesContent() {
                 title="The Trust-Building Script"
               />
             )}
-            <BuyerTypeIntroSection />
+            <ModuleIntro
+              title={module?.title || "Module 1: Understanding Buyer Types"}
+              welcomeMessage="Not every customer shops the same way. Learning to read buyer behavior and adapt your approach is one of the most powerful skills you can develop on the sales floor."
+              overview={buyerTypesOverview}
+              objectives={buyerTypesObjectives}
+              estimatedTime="15-18 minutes"
+              onStart={handleStart}
+            />
           </div>
         );
+
+      case "section1":
+        return <BuyerTypeIntroSection />;
 
       case "section2":
         return (
@@ -224,12 +222,21 @@ export default function BuyerTypesContent() {
             <div>
               <h2 className="text-3xl font-bold text-foreground mb-2">Module Complete!</h2>
               <p className="text-muted-foreground">
-                You now understand the 5 buyer types. Head to Practice to test your skills with each one!
+                You now understand the 5 buyer types. Ready to put your knowledge to the test?
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Practice with realistic customer scenarios to sharpen your skills.
               </p>
             </div>
-            <Button size="lg" onClick={handleFinish}>
-              Return to Learn
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button size="lg" onClick={() => navigate("/scenarios")} className="gap-2">
+                Go to Practice
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+              <Button size="lg" variant="outline" onClick={handleFinish}>
+                Return to Learn
+              </Button>
+            </div>
           </div>
         );
 

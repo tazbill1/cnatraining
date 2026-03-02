@@ -150,9 +150,14 @@ export default function VideoPlayer({
             ref={videoRef}
             src={videoUrl}
             controls
+            playsInline
+            preload="auto"
+            crossOrigin="anonymous"
             className="h-full w-full object-contain"
             onCanPlay={() => setIsLoading(false)}
-            onError={() => {
+            onLoadedData={() => setIsLoading(false)}
+            onError={(e) => {
+              console.error("Video load error:", e);
               setIsLoading(false);
               setHasError(true);
             }}

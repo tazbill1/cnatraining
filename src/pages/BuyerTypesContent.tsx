@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -9,7 +9,9 @@ import { ModuleIntro } from "@/components/learn/ModuleIntro";
 import { ModuleProgress } from "@/components/learn/ModuleProgress";
 import { KnowledgeCheck } from "@/components/learn/KnowledgeCheck";
 import { ModuleQuiz } from "@/components/learn/ModuleQuiz";
+import VideoPlayer from "@/components/learn/VideoPlayer";
 import { BuyerTypeIntroSection } from "@/components/learn/sections/BuyerTypeIntroSection";
+import { supabase } from "@/integrations/supabase/client";
 import { AnalystBuyerSection } from "@/components/learn/sections/AnalystBuyerSection";
 import { NegotiatorBuyerSection } from "@/components/learn/sections/NegotiatorBuyerSection";
 import { EmotionalBuyerSection } from "@/components/learn/sections/EmotionalBuyerSection";
@@ -35,8 +37,22 @@ export default function BuyerTypesContent() {
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const module = getModuleById("buyer-types");
+
+  // Generate signed URL for the module video
+  useEffect(() => {
+    const getVideoUrl = async () => {
+      const { data } = await supabase.storage
+        .from("training-videos")
+        .createSignedUrl("The_Trust-Building_Script.mp4", 3600);
+      if (data?.signedUrl) {
+        setVideoUrl(data.signedUrl);
+      }
+    };
+    getVideoUrl();
+  }, []);
 
   const handleStart = () => {
     setStage("section1");
@@ -115,7 +131,17 @@ export default function BuyerTypesContent() {
         );
 
       case "section1":
-        return <BuyerTypeIntroSection />;
+        return (
+          <div className="space-y-8">
+            {videoUrl && (
+              <VideoPlayer
+                videoUrl={videoUrl}
+                title="The Trust-Building Script"
+              />
+            )}
+            <BuyerTypeIntroSection />
+          </div>
+        );
 
       case "section2":
         return (

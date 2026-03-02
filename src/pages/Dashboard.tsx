@@ -95,7 +95,7 @@ export default function Dashboard() {
               {getGreeting()}, {firstName}! 👋
             </h1>
             <p className="text-muted-foreground">
-              Ready to sharpen your CNA skills today?
+              Ready to sharpen your sales skills today?
             </p>
           </div>
 

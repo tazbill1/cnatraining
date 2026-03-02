@@ -36,7 +36,7 @@ export default function BuyerTypesVideo() {
         .from("module_completions")
         .select("id")
         .eq("user_id", user.id)
-        .eq("module_id", "buyer-types-video")
+        .eq("module_id", "base-statement-video")
         .maybeSingle();
       if (data) {
         setAlreadyCompleted(true);
@@ -54,10 +54,10 @@ export default function BuyerTypesVideo() {
     if (!user) return;
     try {
       await supabase.from("module_completions").upsert(
-        { user_id: user.id, module_id: "buyer-types-video" },
+        { user_id: user.id, module_id: "base-statement-video" },
         { onConflict: "user_id,module_id" }
       );
-      toast.success("Video complete! You've unlocked the Buyer Types module.");
+      toast.success("Video complete! You've unlocked the Base Statement module.");
       navigate("/learn");
     } catch {
       toast.error("Could not save progress. Please try again.");
@@ -76,7 +76,7 @@ export default function BuyerTypesVideo() {
                   Back to Learn
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Module 1: The Trust-Building Script
+                  Module 2: The Trust-Building Script
                 </span>
               </div>
             </div>
@@ -117,9 +117,9 @@ export default function BuyerTypesVideo() {
                     </Button>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Button size="lg" onClick={() => navigate("/learn/buyer-types")}>
-                        Continue to Buyer Types Module
-                      </Button>
+                    <Button size="lg" onClick={() => navigate("/learn/base-statement")}>
+                      Continue to Base Statement Module
+                    </Button>
                       <Button size="lg" variant="outline" onClick={() => navigate("/learn")}>
                         Return to Learn
                       </Button>

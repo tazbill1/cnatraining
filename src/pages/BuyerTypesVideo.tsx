@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Lock } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -9,23 +9,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const VIDEO_FILES = [
+  { key: "trust-building-part1.mp4", title: "The Trust-Building Script — Part 1" },
+  { key: "trust-building-part2.mp4", title: "The Trust-Building Script — Part 2" },
+];
+
 export default function BuyerTypesVideo() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [videoWatched, setVideoWatched] = useState(false);
+  const [videoUrls, setVideoUrls] = useState<(string | null)[]>(VIDEO_FILES.map(() => null));
+  const [watchedParts, setWatchedParts] = useState<boolean[]>(VIDEO_FILES.map(() => false));
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
 
+  // Generate signed URLs
   useEffect(() => {
-    const getVideoUrl = async () => {
-      const { data } = await supabase.storage
-        .from("training-videos")
-        .createSignedUrl("The_Trust-Building_Script.mp4", 3600);
-      if (data?.signedUrl) {
-        setVideoUrl(data.signedUrl);
-      }
+    const getUrls = async () => {
+      const results = await Promise.all(
+        VIDEO_FILES.map((v) =>
+          supabase.storage.from("training-videos").createSignedUrl(v.key, 3600)
+        )
+      );
+      setVideoUrls(results.map((r) => r.data?.signedUrl || null));
     };
-    getVideoUrl();
+    getUrls();
   }, []);
 
   // Check if already completed
@@ -40,15 +46,21 @@ export default function BuyerTypesVideo() {
         .maybeSingle();
       if (data) {
         setAlreadyCompleted(true);
-        setVideoWatched(true);
+        setWatchedParts(VIDEO_FILES.map(() => true));
       }
     };
     checkCompletion();
   }, [user]);
 
-  const handleVideoComplete = () => {
-    setVideoWatched(true);
+  const handlePartComplete = (index: number) => {
+    setWatchedParts((prev) => {
+      const next = [...prev];
+      next[index] = true;
+      return next;
+    });
   };
+
+  const allWatched = watchedParts.every(Boolean);
 
   const handleMarkComplete = async () => {
     if (!user) return;
@@ -89,37 +101,73 @@ export default function BuyerTypesVideo() {
                   The Trust-Building Script
                 </h1>
                 <p className="text-muted-foreground max-w-lg mx-auto">
-                  Watch this video to understand how building trust from the first interaction sets the foundation for every buyer conversation.
+                  Watch both parts to understand how building trust from the first interaction sets the foundation for every buyer conversation.
                 </p>
+                {/* Progress indicator */}
+                <div className="flex items-center justify-center gap-2">
+                  {VIDEO_FILES.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 w-16 rounded-full transition-colors ${
+                        watchedParts[i] ? "bg-primary" : "bg-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
 
-              {videoUrl ? (
-                <VideoPlayer
-                  videoUrl={videoUrl}
-                  title="The Trust-Building Script"
-                  onComplete={handleVideoComplete}
-                />
-              ) : (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                  <p className="text-muted-foreground">Loading video...</p>
-                </div>
-              )}
+              {VIDEO_FILES.map((video, index) => {
+                const isUnlocked = index === 0 || watchedParts[index - 1];
+                const url = videoUrls[index];
 
-              {videoWatched && (
+                return (
+                  <div key={video.key} className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <span>Part {index + 1} of {VIDEO_FILES.length}</span>
+                      {watchedParts[index] && (
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+
+                    {isUnlocked ? (
+                      url ? (
+                        <VideoPlayer
+                          videoUrl={url}
+                          title={video.title}
+                          onComplete={() => handlePartComplete(index)}
+                        />
+                      ) : (
+                        <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                          <p className="text-muted-foreground">Loading video...</p>
+                        </div>
+                      )
+                    ) : (
+                      <div className="aspect-video bg-muted/50 rounded-lg border border-border flex flex-col items-center justify-center gap-2">
+                        <Lock className="w-8 h-8 text-muted-foreground/50" />
+                        <p className="text-sm text-muted-foreground">
+                          Watch Part {index} to unlock
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {allWatched && (
                 <div className="text-center space-y-4 animate-fade-in">
                   <div className="flex items-center justify-center gap-2 text-primary">
                     <CheckCircle2 className="w-5 h-5" />
-                    <span className="font-medium">Video watched</span>
+                    <span className="font-medium">All parts watched</span>
                   </div>
                   {!alreadyCompleted ? (
                     <Button size="lg" onClick={handleMarkComplete} className="px-8">
-                      Complete & Unlock Buyer Types Module
+                      Complete & Unlock Base Statement Module
                     </Button>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button size="lg" onClick={() => navigate("/learn/base-statement")}>
-                      Continue to Base Statement Module
-                    </Button>
+                      <Button size="lg" onClick={() => navigate("/learn/base-statement")}>
+                        Continue to Base Statement Module
+                      </Button>
                       <Button size="lg" variant="outline" onClick={() => navigate("/learn")}>
                         Return to Learn
                       </Button>

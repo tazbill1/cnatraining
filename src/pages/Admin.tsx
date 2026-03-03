@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Shield, Plus, Building2, Users, Activity, Loader2, AlertTriangle } from "lucide-react";
+import { Shield, Plus, Building2, Users, Activity, Loader2, AlertTriangle, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { DealershipDetail } from "@/components/admin/DealershipDetail";
 
 interface Dealership {
   id: string;
@@ -35,6 +36,7 @@ export default function Admin() {
   const [newName, setNewName] = useState("");
   const [newSlug, setNewSlug] = useState("");
   const [saving, setSaving] = useState(false);
+  const [selectedDealership, setSelectedDealership] = useState<Dealership | null>(null);
 
   useEffect(() => {
     if (user && isSuperAdmin) {
@@ -131,110 +133,132 @@ export default function Admin() {
     <AuthGuard>
       <AppLayout>
         <div className="p-4 md:p-8 max-w-6xl mx-auto">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
-                <Shield className="w-7 h-7" /> Admin Dashboard
-              </h1>
-              <p className="text-muted-foreground mt-1">Manage dealerships across the platform</p>
-            </div>
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Add Dealership
-            </Button>
-          </div>
-
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Dealerships</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{dealerships.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {dealerships.reduce((sum, d) => sum + (d.userCount || 0), 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {dealerships.reduce((sum, d) => sum + (d.sessionCount || 0), 0)}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Dealerships table */}
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-            </div>
+          {selectedDealership ? (
+            <DealershipDetail
+              dealershipId={selectedDealership.id}
+              dealershipName={selectedDealership.name}
+              onBack={() => setSelectedDealership(null)}
+            />
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>All Dealerships</CardTitle>
-                <CardDescription>Manage dealerships and view their metrics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Slug</TableHead>
-                      <TableHead>Users</TableHead>
-                      <TableHead>Sessions</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dealerships.map((d) => (
-                      <TableRow key={d.id}>
-                        <TableCell className="font-medium">{d.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{d.slug}</TableCell>
-                        <TableCell>{d.userCount || 0}</TableCell>
-                        <TableCell>{d.sessionCount || 0}</TableCell>
-                        <TableCell>
-                          <Badge variant={d.is_active ? "default" : "secondary"}>
-                            {d.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => toggleActive(d)}>
-                            {d.is_active ? "Deactivate" : "Activate"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {dealerships.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                          No dealerships yet. Add one to get started.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <>
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
+                    <Shield className="w-7 h-7" /> Admin Dashboard
+                  </h1>
+                  <p className="text-muted-foreground mt-1">Manage dealerships across the platform</p>
+                </div>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> Add Dealership
+                </Button>
+              </div>
+
+              {/* Summary cards */}
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Dealerships</CardTitle>
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dealerships.length}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {dealerships.reduce((sum, d) => sum + (d.userCount || 0), 0)}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {dealerships.reduce((sum, d) => sum + (d.sessionCount || 0), 0)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Dealerships table */}
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Dealerships</CardTitle>
+                    <CardDescription>Click a dealership to view details</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Slug</TableHead>
+                          <TableHead>Users</TableHead>
+                          <TableHead>Sessions</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead></TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {dealerships.map((d) => (
+                          <TableRow
+                            key={d.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => setSelectedDealership(d)}
+                          >
+                            <TableCell className="font-medium">{d.name}</TableCell>
+                            <TableCell className="text-muted-foreground">{d.slug}</TableCell>
+                            <TableCell>{d.userCount || 0}</TableCell>
+                            <TableCell>{d.sessionCount || 0}</TableCell>
+                            <TableCell>
+                              <Badge variant={d.is_active ? "default" : "secondary"}>
+                                {d.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); toggleActive(d); }}
+                              >
+                                {d.is_active ? "Deactivate" : "Activate"}
+                              </Button>
+                            </TableCell>
+                            <TableCell>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {dealerships.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                              No dealerships yet. Add one to get started.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </div>
 

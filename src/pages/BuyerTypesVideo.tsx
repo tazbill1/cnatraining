@@ -10,29 +10,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const VIDEO_FILES = [
-  { key: "trust-building-part1.mp4", title: "The Trust-Building Script — Part 1" },
-  { key: "trust-building-part2.mp4", title: "The Trust-Building Script — Part 2" },
+  { url: "/videos/The_Base_Statement1-2.mp4", title: "The Base Statement — The Why" },
+  { url: "/videos/basestatementhow.mp4", title: "The Base Statement — The How" },
 ];
 
 export default function BuyerTypesVideo() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [videoUrls, setVideoUrls] = useState<(string | null)[]>(VIDEO_FILES.map(() => null));
   const [watchedParts, setWatchedParts] = useState<boolean[]>(VIDEO_FILES.map(() => false));
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
-
-  // Generate signed URLs
-  useEffect(() => {
-    const getUrls = async () => {
-      const results = await Promise.all(
-        VIDEO_FILES.map((v) =>
-          supabase.storage.from("training-videos").createSignedUrl(v.key, 3600)
-        )
-      );
-      setVideoUrls(results.map((r) => r.data?.signedUrl || null));
-    };
-    getUrls();
-  }, []);
 
   // Check if already completed
   useEffect(() => {
@@ -118,10 +104,9 @@ export default function BuyerTypesVideo() {
 
               {VIDEO_FILES.map((video, index) => {
                 const isUnlocked = index === 0 || watchedParts[index - 1];
-                const url = videoUrls[index];
 
                 return (
-                  <div key={video.key} className="space-y-2">
+                  <div key={video.url} className="space-y-2">
                     <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                       <span>Part {index + 1} of {VIDEO_FILES.length}</span>
                       {watchedParts[index] && (
@@ -130,17 +115,11 @@ export default function BuyerTypesVideo() {
                     </div>
 
                     {isUnlocked ? (
-                      url ? (
-                        <VideoPlayer
-                          videoUrl={url}
-                          title={video.title}
-                          onComplete={() => handlePartComplete(index)}
-                        />
-                      ) : (
-                        <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                          <p className="text-muted-foreground">Loading video...</p>
-                        </div>
-                      )
+                      <VideoPlayer
+                        videoUrl={video.url}
+                        title={video.title}
+                        onComplete={() => handlePartComplete(index)}
+                      />
                     ) : (
                       <div className="aspect-video bg-muted/50 rounded-lg border border-border flex flex-col items-center justify-center gap-2">
                         <Lock className="w-8 h-8 text-muted-foreground/50" />

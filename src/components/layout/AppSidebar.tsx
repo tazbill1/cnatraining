@@ -3,6 +3,7 @@ import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, Gr
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
+import { DealershipSwitcher } from "./DealershipSwitcher";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -41,6 +42,9 @@ export function AppSidebar() {
           />
         </div>
       </div>
+
+      {/* Dealership Switcher (super admin only) */}
+      <DealershipSwitcher />
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">

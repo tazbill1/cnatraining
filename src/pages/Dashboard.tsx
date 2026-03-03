@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
+import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
 
 interface SessionData {
   id: string;
@@ -219,6 +220,11 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Achievements */}
+          <div className="mt-6">
+            <AchievementsSection />
           </div>
         </div>
       </AppLayout>

@@ -30,6 +30,7 @@ import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import Admin from "./pages/Admin";
+import Certificates from "./pages/Certificates";
 import NotFound from "./pages/NotFound";
 import { CrashReporter } from "@/components/debug/CrashReporter";
 
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="/team" element={<Team />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/certificates" element={<Certificates />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </DealershipProvider>

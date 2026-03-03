@@ -25,7 +25,7 @@ interface SessionState {
 }
 
 export function useTrainingSession() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [sessionState, setSessionState] = useState<SessionState>({
     id: null,
@@ -71,6 +71,7 @@ export function useTrainingSession() {
           .from("training_sessions")
           .insert({
             user_id: user.id,
+            dealership_id: profile?.dealership_id || null,
             scenario_type: scenario.id,
             status: "in_progress",
             conversation: [],

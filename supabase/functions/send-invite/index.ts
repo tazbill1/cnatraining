@@ -39,22 +39,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check manager role
+    // Check manager or super_admin role
     const { data: roleData } = await userClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "manager")
-      .maybeSingle();
+      .eq("user_id", user.id);
 
-    if (!roleData) {
+    const roles = (roleData || []).map((r: any) => r.role);
+    const isManager = roles.includes("manager");
+    const isSuperAdmin = roles.includes("super_admin");
+
+    if (!isManager && !isSuperAdmin) {
       return new Response(JSON.stringify({ error: "Not authorized" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { email, resend } = await req.json();
+    // Get manager's dealership_id from profile
+    const { data: profileData } = await userClient
+      .from("profiles")
+      .select("dealership_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const managerDealershipId = profileData?.dealership_id;
+
+    const { email, resend, dealership_id } = await req.json();
+    const inviteDealershipId = isSuperAdmin && dealership_id ? dealership_id : managerDealershipId;
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email required" }), {
         status: 400,
@@ -98,7 +110,7 @@ Deno.serve(async (req) => {
     if (!existing) {
       const { error: insertError } = await adminClient
         .from("invitations")
-        .insert({ email: trimmedEmail, invited_by: user.id });
+        .insert({ email: trimmedEmail, invited_by: user.id, dealership_id: inviteDealershipId });
       if (insertError) throw insertError;
     }
 

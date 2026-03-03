@@ -9,6 +9,7 @@ interface Profile {
   full_name: string;
   email: string;
   dealership_name: string | null;
+  dealership_id: string | null;
   voice_enabled: boolean;
   difficulty_default: string;
   coaching_intensity: string;
@@ -20,6 +21,7 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   isManager: boolean;
+  isSuperAdmin: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isManager, setIsManager] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
@@ -54,10 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("role")
       .eq("user_id", userId);
 
-    if (roleData && roleData.some((r) => r.role === "manager")) {
-      setIsManager(true);
+    if (roleData) {
+      setIsManager(roleData.some((r) => r.role === "manager"));
+      setIsSuperAdmin(roleData.some((r) => r.role === "super_admin"));
     } else {
       setIsManager(false);
+      setIsSuperAdmin(false);
     }
   };
 
@@ -80,8 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id);
           }, 0);
         } else {
-          setProfile(null);
+        setProfile(null);
           setIsManager(false);
+          setIsSuperAdmin(false);
         }
         setIsLoading(false);
       }
@@ -147,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setIsManager(false);
+    setIsSuperAdmin(false);
   };
 
   return (
@@ -157,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isManager,
+        isSuperAdmin,
         error,
         signIn,
         signUp,

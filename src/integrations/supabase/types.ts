@@ -14,9 +14,37 @@ export type Database = {
   }
   public: {
     Tables: {
+      dealerships: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           created_at: string
+          dealership_id: string | null
           email: string
           id: string
           invited_by: string
@@ -25,6 +53,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dealership_id?: string | null
           email: string
           id?: string
           invited_by: string
@@ -33,17 +62,27 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dealership_id?: string | null
           email?: string
           id?: string
           invited_by?: string
           status?: string
           used_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invitations_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       module_completions: {
         Row: {
           completed_at: string
+          dealership_id: string | null
           id: string
           module_id: string
           quiz_score: number | null
@@ -51,6 +90,7 @@ export type Database = {
         }
         Insert: {
           completed_at?: string
+          dealership_id?: string | null
           id?: string
           module_id: string
           quiz_score?: number | null
@@ -58,18 +98,28 @@ export type Database = {
         }
         Update: {
           completed_at?: string
+          dealership_id?: string | null
           id?: string
           module_id?: string
           quiz_score?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "module_completions_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
           coaching_intensity: string | null
           created_at: string
+          dealership_id: string | null
           dealership_name: string | null
           difficulty_default: string | null
           email: string
@@ -84,6 +134,7 @@ export type Database = {
           avatar_url?: string | null
           coaching_intensity?: string | null
           created_at?: string
+          dealership_id?: string | null
           dealership_name?: string | null
           difficulty_default?: string | null
           email?: string
@@ -98,6 +149,7 @@ export type Database = {
           avatar_url?: string | null
           coaching_intensity?: string | null
           created_at?: string
+          dealership_id?: string | null
           dealership_name?: string | null
           difficulty_default?: string | null
           email?: string
@@ -108,7 +160,15 @@ export type Database = {
           user_id?: string
           voice_enabled?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       training_sessions: {
         Row: {
@@ -117,6 +177,7 @@ export type Database = {
           cna_completion_score: number | null
           completed_at: string | null
           conversation: Json | null
+          dealership_id: string | null
           duration_seconds: number | null
           id: string
           info_gathering_score: number | null
@@ -134,6 +195,7 @@ export type Database = {
           cna_completion_score?: number | null
           completed_at?: string | null
           conversation?: Json | null
+          dealership_id?: string | null
           duration_seconds?: number | null
           id?: string
           info_gathering_score?: number | null
@@ -151,6 +213,7 @@ export type Database = {
           cna_completion_score?: number | null
           completed_at?: string | null
           conversation?: Json | null
+          dealership_id?: string | null
           duration_seconds?: number | null
           id?: string
           info_gathering_score?: number | null
@@ -162,7 +225,15 @@ export type Database = {
           status?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "training_sessions_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -187,6 +258,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_dealership_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -57,7 +57,7 @@ const sectionLabels = ["Intro", "Vehicle Selection", "ACV vs Trade", "6-Step Pro
 export default function ModuleContent() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
@@ -133,6 +133,7 @@ export default function ModuleContent() {
             user_id: user.id,
             module_id: module.id,
             quiz_score: score,
+            dealership_id: profile?.dealership_id || null,
           },
           { onConflict: "user_id,module_id" }
         );

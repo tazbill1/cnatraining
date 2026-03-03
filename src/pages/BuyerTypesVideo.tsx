@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export default function BuyerTypesVideo() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoWatched, setVideoWatched] = useState(false);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
@@ -54,7 +54,7 @@ export default function BuyerTypesVideo() {
     if (!user) return;
     try {
       await supabase.from("module_completions").upsert(
-        { user_id: user.id, module_id: "base-statement-video" },
+        { user_id: user.id, module_id: "base-statement-video", dealership_id: profile?.dealership_id || null },
         { onConflict: "user_id,module_id" }
       );
       toast.success("Video complete! You've unlocked the Base Statement module.");

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, Trophy, History } from "lucide-react";
+import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, Trophy, History, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
@@ -19,8 +19,12 @@ const managerItems = [
   { icon: Users, label: "Team", path: "/team" },
 ];
 
+const adminItems = [
+  { icon: Shield, label: "Admin", path: "/admin" },
+];
+
 export function AppSidebar() {
-  const { profile, isManager, signOut } = useAuth();
+  const { profile, isManager, isSuperAdmin, signOut } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -64,6 +68,31 @@ export function AppSidebar() {
               </span>
             </div>
             {managerItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                  isActive(item.path)
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                )}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </NavLink>
+            ))}
+          </>
+        )}
+
+        {isSuperAdmin && (
+          <>
+            <div className="pt-4 pb-2 px-4">
+              <span className="text-xs uppercase tracking-wider text-sidebar-foreground/40">
+                Admin
+              </span>
+            </div>
+            {adminItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}

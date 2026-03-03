@@ -30,7 +30,7 @@ const difficultyOrder: Record<ModuleDifficulty, number> = {
 export default function Learn() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -74,6 +74,7 @@ export default function Learn() {
             const rows = missing.map((module_id) => ({
               user_id: user.id,
               module_id,
+              dealership_id: profile?.dealership_id || null,
             }));
             await supabase.from("module_completions").upsert(rows, {
               onConflict: "user_id,module_id",

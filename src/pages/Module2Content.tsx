@@ -56,7 +56,7 @@ const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Practice
 
 export default function Module2Content() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
@@ -124,7 +124,7 @@ export default function Module2Content() {
       setStage("saving");
       try {
         const { error } = await supabase.from("module_completions").upsert(
-          { user_id: user.id, module_id: module.id, quiz_score: score },
+          { user_id: user.id, module_id: module.id, quiz_score: score, dealership_id: profile?.dealership_id || null },
           { onConflict: "user_id,module_id" }
         );
         if (error) throw error;

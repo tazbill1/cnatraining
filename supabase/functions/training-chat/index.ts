@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SCENARIO_PROMPTS, VALID_SCENARIO_IDS } from "../_shared/scenarioPrompts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,6 @@ const corsHeaders = {
 // Input validation constants
 const MAX_MESSAGES = 50;
 const MAX_MESSAGE_LENGTH = 2000;
-const MAX_SYSTEM_PROMPT_LENGTH = 5000;
 
 // Lovable AI Gateway endpoint
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -47,7 +47,7 @@ serve(async (req) => {
 
     // Parse and validate input
     const body = await req.json();
-    const { messages, scenario } = body;
+    const { messages, scenarioId } = body;
 
     // Validate messages array
     if (!Array.isArray(messages)) {
@@ -80,17 +80,10 @@ serve(async (req) => {
       }
     }
 
-    // Validate scenario
-    if (!scenario || !scenario.systemPrompt) {
+    // Validate scenario ID against server-side allowlist
+    if (!scenarioId || typeof scenarioId !== "string" || !VALID_SCENARIO_IDS.has(scenarioId)) {
       return new Response(
-        JSON.stringify({ error: "Invalid scenario format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (typeof scenario.systemPrompt !== "string" || scenario.systemPrompt.length > MAX_SYSTEM_PROMPT_LENGTH) {
-      return new Response(
-        JSON.stringify({ error: `System prompt too long. Maximum: ${MAX_SYSTEM_PROMPT_LENGTH} characters` }),
+        JSON.stringify({ error: "Invalid or unknown scenario identifier" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -101,7 +94,9 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `${scenario.systemPrompt}
+    // Use server-side system prompt — never trust client-provided prompts
+    const basePrompt = SCENARIO_PROMPTS[scenarioId];
+    const systemPrompt = `${basePrompt}
 
 IMPORTANT: Stay in character as the customer. Respond naturally based on the salesperson's questions. Keep responses concise (1-3 sentences typically). Show emotional reactions appropriate to your character. Speak conversationally like a real person would - use contractions, filler words occasionally, and natural speech patterns.`;
 
@@ -114,7 +109,7 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
       })),
     ];
 
-    console.log("Calling Lovable AI with", messages.length, "messages for user:", claimsData.claims.sub);
+    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId);
 
     const response = await fetch(LOVABLE_AI_URL, {
       method: "POST",
@@ -153,9 +148,8 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
     });
   } catch (error) {
     console.error("Training chat error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

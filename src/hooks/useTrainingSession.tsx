@@ -132,7 +132,7 @@ export function useTrainingSession() {
               role: m.role,
               content: m.content,
             })),
-            scenario: sessionState.scenario,
+            scenarioId: sessionState.scenario.id,
           },
         });
 

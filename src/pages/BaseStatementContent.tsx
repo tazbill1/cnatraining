@@ -5,6 +5,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { ModuleIntro } from "@/components/learn/ModuleIntro";
 import { ModuleProgress } from "@/components/learn/ModuleProgress";
 import { KnowledgeCheck } from "@/components/learn/KnowledgeCheck";
@@ -20,20 +22,64 @@ import {
 } from "@/lib/baseStatementContent";
 import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { toast } from "sonner";
 
 type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "complete";
 
 const sectionLabels = ["Intro", "Purpose & Context", "Script Part 1", "Pillars & Close", "Quiz"];
 
+function CustomScriptSection({ scriptText, dealershipName, part }: { scriptText: string; dealershipName?: string | null; part: "1" | "2" }) {
+  // Split the script roughly in half by paragraphs for the two section views
+  const paragraphs = scriptText.split(/\n\n+/).filter(p => p.trim());
+  const mid = Math.ceil(paragraphs.length / 2);
+  const displayParagraphs = part === "1" ? paragraphs.slice(0, mid) : paragraphs.slice(mid);
+  // If only one part has content, show all in part 1
+  const finalParagraphs = displayParagraphs.length > 0 ? displayParagraphs : (part === "1" ? paragraphs : []);
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <h2 className="text-2xl font-bold text-foreground">
+            {part === "1" ? "Your Dealership Script" : "Your Dealership Script (continued)"}
+          </h2>
+        </div>
+        <Badge variant="secondary" className="mb-3">
+          {dealershipName || "Your Dealership"} Custom Script
+        </Badge>
+        <p className="text-muted-foreground leading-relaxed">
+          {part === "1"
+            ? "This is the customized base statement script for your store. Learn it, practice it, and make it yours."
+            : "Continue with the second half of your dealership's custom script."}
+        </p>
+      </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-6 space-y-3">
+          <h3 className="font-semibold text-foreground text-lg">📝 {part === "1" ? "Script" : "Script (continued)"}</h3>
+          <div className="bg-card rounded-lg p-5 border">
+            {finalParagraphs.map((p, i) => (
+              <p key={i} className="text-foreground italic leading-relaxed mb-3 last:mb-0">{p}</p>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function BaseStatementContent() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { settings } = useDealershipSettings();
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
 
   const module = getModuleById("base-statement");
+  const hasCustomScript = !!(settings?.custom_base_statement && settings.custom_base_statement.trim());
+  const dealershipName = profile?.dealership_name;
 
   const handleStart = () => {
     setStage("section1");
@@ -124,7 +170,15 @@ export default function BaseStatementContent() {
       case "section2":
         return (
           <div className="space-y-8">
-            <BaseStatementScriptSection />
+            {hasCustomScript ? (
+              <CustomScriptSection
+                scriptText={settings!.custom_base_statement!}
+                dealershipName={dealershipName}
+                part="1"
+              />
+            ) : (
+              <BaseStatementScriptSection />
+            )}
             <KnowledgeCheck
               check={baseStatementKnowledgeChecks.section2}
               onComplete={(passed) => handleKnowledgeCheckComplete("section2", passed)}
@@ -135,7 +189,15 @@ export default function BaseStatementContent() {
       case "section3":
         return (
           <div className="space-y-8">
-            <BaseStatementPillarsSection />
+            {hasCustomScript ? (
+              <CustomScriptSection
+                scriptText={settings!.custom_base_statement!}
+                dealershipName={dealershipName}
+                part="2"
+              />
+            ) : (
+              <BaseStatementPillarsSection />
+            )}
             <KnowledgeCheck
               check={baseStatementKnowledgeChecks.section3}
               onComplete={(passed) => handleKnowledgeCheckComplete("section3", passed)}

@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { MobileNav } from "./MobileNav";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,9 +11,15 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { settings } = useDealershipSettings();
+
+  // Set --dealership-color CSS variable for downstream use
+  const dealershipStyle = settings?.primary_color
+    ? { "--dealership-color": settings.primary_color } as React.CSSProperties
+    : undefined;
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-background" style={dealershipStyle}>
       {/* Desktop: Fixed sidebar */}
       {!isMobile && <AppSidebar />}
       

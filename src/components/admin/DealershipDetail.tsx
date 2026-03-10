@@ -133,6 +133,41 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
   );
 }
 
+/* ─── Settings Guard (initialize if no row exists) ─── */
+function SettingsGuard({ dealershipId, settings, onInitialized, children }: { dealershipId: string; settings: DealershipSettings | null; onInitialized: () => void; children: React.ReactNode }) {
+  const [initializing, setInitializing] = useState(false);
+
+  // Settings row exists if it has a real id
+  if (settings && settings.id) return <>{children}</>;
+
+  const handleInit = async () => {
+    setInitializing(true);
+    const { error } = await supabase
+      .from("dealership_settings" as any)
+      .insert({ dealership_id: dealershipId });
+    setInitializing(false);
+    if (error) {
+      toast({ title: "Failed to initialize settings", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Settings initialized with defaults" });
+      onInitialized();
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="py-12 text-center space-y-4">
+        <Settings className="w-12 h-12 text-muted-foreground/40 mx-auto" />
+        <p className="text-muted-foreground">No settings have been configured for this dealership yet.</p>
+        <Button onClick={handleInit} disabled={initializing}>
+          {initializing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Settings className="w-4 h-4 mr-2" />}
+          Initialize Settings
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ─── Overview Tab (existing content) ─── */
 function OverviewTab({ users, sessions, invitations }: { users: ProfileRow[]; sessions: SessionRow[]; invitations: InvitationRow[] }) {
   return (

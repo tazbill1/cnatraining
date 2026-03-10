@@ -83,13 +83,25 @@ export default function Admin() {
     setSaving(true);
     try {
       const slug = newSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("dealerships")
-        .insert({ name: newName.trim(), slug });
+        .insert({ name: newName.trim(), slug })
+        .select("id")
+        .single();
 
       if (error) throw error;
 
-      toast({ title: "Dealership created", description: `${newName.trim()} has been added.` });
+      // Auto-create default settings row
+      const { error: settingsError } = await supabase
+        .from("dealership_settings" as any)
+        .insert({ dealership_id: data.id });
+
+      if (settingsError) {
+        toast({ variant: "default", title: "Dealership created", description: `${newName.trim()} added, but default settings could not be initialized. You can set them up from the detail view.` });
+      } else {
+        toast({ title: "Dealership created", description: `${newName.trim()} has been added.` });
+      }
+
       setNewName("");
       setNewSlug("");
       setShowAddModal(false);

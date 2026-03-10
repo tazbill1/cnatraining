@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, Activity, Mail, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Users, Activity, Mail, Loader2, Save, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";
@@ -112,18 +112,59 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
         </TabsContent>
 
         <TabsContent value="training" className="mt-6">
-          <TrainingConfigTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
+            <TrainingConfigTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          </SettingsGuard>
         </TabsContent>
 
         <TabsContent value="branding" className="mt-6">
-          <BrandingTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
+            <BrandingTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          </SettingsGuard>
         </TabsContent>
 
         <TabsContent value="features" className="mt-6">
-          <FeaturesTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
+            <FeaturesTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          </SettingsGuard>
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/* ─── Settings Guard (initialize if no row exists) ─── */
+function SettingsGuard({ dealershipId, settings, onInitialized, children }: { dealershipId: string; settings: DealershipSettings | null; onInitialized: () => void; children: React.ReactNode }) {
+  const [initializing, setInitializing] = useState(false);
+
+  // Settings row exists if it has a real id
+  if (settings && settings.id) return <>{children}</>;
+
+  const handleInit = async () => {
+    setInitializing(true);
+    const { error } = await supabase
+      .from("dealership_settings" as any)
+      .insert({ dealership_id: dealershipId });
+    setInitializing(false);
+    if (error) {
+      toast({ title: "Failed to initialize settings", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Settings initialized with defaults" });
+      onInitialized();
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="py-12 text-center space-y-4">
+        <Settings className="w-12 h-12 text-muted-foreground/40 mx-auto" />
+        <p className="text-muted-foreground">No settings have been configured for this dealership yet.</p>
+        <Button onClick={handleInit} disabled={initializing}>
+          {initializing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Settings className="w-4 h-4 mr-2" />}
+          Initialize Settings
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

@@ -6,6 +6,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ModuleCard } from "@/components/learn/ModuleCard";
 import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export default function Learn() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useAuth();
+  const { settings, isLoading: settingsLoading } = useDealershipSettings();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -106,8 +108,14 @@ export default function Learn() {
     return "not-started";
   };
 
+  // Modules filtered by dealership settings
+  const enabledModules = useMemo(() => {
+    if (!settings || !settings.enabled_module_ids) return trainingModules;
+    return trainingModules.filter(m => settings.enabled_module_ids.includes(m.id));
+  }, [settings]);
+
   const filteredModules = useMemo(() => {
-    let modules = trainingModules.map((m, i) => ({ ...m, originalIndex: i }));
+    let modules = enabledModules.map((m, i) => ({ ...m, originalIndex: i }));
 
     // Search
     if (search) {
@@ -140,24 +148,24 @@ export default function Learn() {
     }
 
     return modules;
-  }, [search, difficultyFilter, completionFilter, sortOption, completedModules]);
+  }, [search, difficultyFilter, completionFilter, sortOption, completedModules, enabledModules]);
 
   // Counts for filter badges
   const difficultyCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: trainingModules.length };
-    trainingModules.forEach((m) => {
+    const counts: Record<string, number> = { all: enabledModules.length };
+    enabledModules.forEach((m) => {
       counts[m.difficulty] = (counts[m.difficulty] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [enabledModules]);
 
   const completionCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: trainingModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
-    trainingModules.forEach((m) => {
+    const counts: Record<string, number> = { all: enabledModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
+    enabledModules.forEach((m) => {
       counts[getModuleStatus(m.id)]++;
     });
     return counts;
-  }, [completedModules]);
+  }, [completedModules, enabledModules]);
 
   const handleModuleClick = (moduleId: string, isLocked: boolean) => {
     const bypassLock = window.event && (window.event as MouseEvent).shiftKey;
@@ -179,9 +187,9 @@ export default function Learn() {
     }
   };
 
-  const completedCount = completedModules.length;
-  const totalModules = trainingModules.length;
-  const progressPercent = Math.round((completedCount / totalModules) * 100);
+  const totalModules = enabledModules.length;
+  const completedCount = completedModules.filter(id => enabledModules.some(m => m.id === id)).length;
+  const progressPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
   const hasActiveFilters = search || difficultyFilter !== "all" || completionFilter !== "all" || sortOption !== "recommended";
 
   return (

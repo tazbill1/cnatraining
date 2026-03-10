@@ -32,6 +32,7 @@ export default function Learn() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useAuth();
+  const { settings, isLoading: settingsLoading } = useDealershipSettings();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

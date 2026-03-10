@@ -135,13 +135,8 @@ export default function Learn() {
     } else if (sortOption === "title") {
       modules.sort((a, b) => a.title.localeCompare(b.title));
     } else {
-      // Recommended: prerequisite order, incomplete first
-      modules.sort((a, b) => {
-        const aComplete = completedModules.includes(a.id) ? 1 : 0;
-        const bComplete = completedModules.includes(b.id) ? 1 : 0;
-        if (aComplete !== bComplete) return aComplete - bComplete;
-        return a.originalIndex - b.originalIndex;
-      });
+      // Recommended: curriculum order
+      modules.sort((a, b) => a.originalIndex - b.originalIndex);
     }
 
     return modules;

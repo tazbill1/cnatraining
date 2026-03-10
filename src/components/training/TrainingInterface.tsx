@@ -241,18 +241,20 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Hands-free mode toggle - hidden on mobile for space */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
-              <Switch
-                id="hands-free"
-                checked={handsFreeModeEnabled}
-                onCheckedChange={setHandsFreeModeEnabled}
-                className="scale-90"
-              />
-              <Label htmlFor="hands-free" className="text-xs cursor-pointer">
-                Hands-free
-              </Label>
-            </div>
+            {/* Hands-free mode toggle - hidden on mobile for space, hidden if voice disabled */}
+            {voiceEnabled && (
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted/50">
+                <Switch
+                  id="hands-free"
+                  checked={handsFreeModeEnabled}
+                  onCheckedChange={setHandsFreeModeEnabled}
+                  className="scale-90"
+                />
+                <Label htmlFor="hands-free" className="text-xs cursor-pointer">
+                  Hands-free
+                </Label>
+              </div>
+            )}
 
             <Button
               variant="outline"
@@ -264,22 +266,24 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               <RotateCcw className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Restart</span>
             </Button>
-            <Button
-              variant={autoSpeak ? "default" : "outline"}
-              size="sm"
-              onClick={() => setAutoSpeak(!autoSpeak)}
-              title={autoSpeak ? "Auto-speak enabled" : "Auto-speak disabled"}
-              className="px-2 sm:px-3"
-            >
-              {autoSpeak ? (
-                <Volume2 className="w-4 h-4" />
-              ) : (
-                <VolumeX className="w-4 h-4" />
-              )}
-              <span className="ml-2 hidden sm:inline">
-                {autoSpeak ? "Voice On" : "Voice Off"}
-              </span>
-            </Button>
+            {voiceEnabled && (
+              <Button
+                variant={autoSpeak ? "default" : "outline"}
+                size="sm"
+                onClick={() => setAutoSpeak(!autoSpeak)}
+                title={autoSpeak ? "Auto-speak enabled" : "Auto-speak disabled"}
+                className="px-2 sm:px-3"
+              >
+                {autoSpeak ? (
+                  <Volume2 className="w-4 h-4" />
+                ) : (
+                  <VolumeX className="w-4 h-4" />
+                )}
+                <span className="ml-2 hidden sm:inline">
+                  {autoSpeak ? "Voice On" : "Voice Off"}
+                </span>
+              </Button>
+            )}
           </div>
         </header>
 

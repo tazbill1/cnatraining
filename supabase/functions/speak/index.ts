@@ -77,7 +77,7 @@ serve(async (req) => {
     // Map voice name to ElevenLabs voice ID
     const voiceId = (voice && VOICE_MAP[voice]) ? VOICE_MAP[voice] : DEFAULT_VOICE_ID;
 
-    console.log("Generating speech via ElevenLabs for text:", text.substring(0, 50) + "...", "user:", claimsData.claims.sub);
+    console.log("Generating speech via ElevenLabs for text:", text.substring(0, 50) + "...", "user:", user.id);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,

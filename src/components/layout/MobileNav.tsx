@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, Trophy, X, History, Shield, Award } from "lucide-react";
+import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
@@ -13,7 +13,6 @@ const navItems = [
   { icon: Wrench, label: "Toolbox", path: "/toolbox" },
   { icon: TrendingUp, label: "Training Progress", path: "/progress" },
   { icon: History, label: "Session History", path: "/history" },
-  { icon: Trophy, label: "Performance", path: "/performance" },
   { icon: Award, label: "Certificates", path: "/certificates" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];

@@ -322,7 +322,6 @@ function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: 
   const handleSave = async () => {
     setSaving(true);
     const payload = {
-      dealership_id: dealershipId,
       enabled_module_ids: enabledModules,
       required_module_ids: requiredModules.filter(id => enabledModules.includes(id)),
       enabled_scenario_categories: enabledCategories,
@@ -330,7 +329,7 @@ function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: 
       completion_deadline_days: deadlineDays ? parseInt(deadlineDays) : null,
       custom_base_statement: customBaseStatement || null,
     };
-    const { error } = await supabase.from("dealership_settings" as any).upsert(payload, { onConflict: "dealership_id" });
+    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving settings", description: error.message, variant: "destructive" });
@@ -461,13 +460,12 @@ function BrandingTab({ dealershipId, settings, onSaved }: { dealershipId: string
   const handleSave = async () => {
     setSaving(true);
     const payload = {
-      dealership_id: dealershipId,
       logo_url: logoUrl || null,
       primary_color: primaryColor,
       dealership_tagline: tagline,
       custom_welcome_message: welcomeMessage || null,
     };
-    const { error } = await supabase.from("dealership_settings" as any).upsert(payload, { onConflict: "dealership_id" });
+    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving branding", description: error.message, variant: "destructive" });
@@ -529,12 +527,11 @@ function FeaturesTab({ dealershipId, settings, onSaved }: { dealershipId: string
   const handleSave = async () => {
     setSaving(true);
     const payload = {
-      dealership_id: dealershipId,
       voice_training_enabled: voiceEnabled,
       certificates_enabled: certificatesEnabled,
       leaderboard_enabled: leaderboardEnabled,
     };
-    const { error } = await supabase.from("dealership_settings" as any).upsert(payload, { onConflict: "dealership_id" });
+    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving features", description: error.message, variant: "destructive" });

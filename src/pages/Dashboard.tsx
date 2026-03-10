@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play, Trophy, Clock, Target, TrendingUp, Award } from "lucide-react";
+import { Play, Trophy, Clock, Target, TrendingUp, Award, Megaphone } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -8,6 +8,7 @@ import { ProgressRing } from "@/components/dashboard/ProgressRing";
 import { RecentSessionCard } from "@/components/dashboard/RecentSessionCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
@@ -23,6 +24,7 @@ interface SessionData {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const { settings } = useDealershipSettings();
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [stats, setStats] = useState({
     totalSessions: 0,
@@ -50,7 +52,6 @@ export default function Dashboard() {
         const sessionsData = (data || []) as SessionData[];
         setSessions(sessionsData);
 
-        // Calculate stats
         const totalSessions = sessionsData.length;
         const averageScore = totalSessions > 0
           ? Math.round(sessionsData.reduce((sum, s) => sum + s.score, 0) / totalSessions)
@@ -58,7 +59,6 @@ export default function Dashboard() {
         const totalMinutes = sessionsData.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60;
         const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
 
-        // Certification progress (example: need 10 sessions with avg 80+ score)
         const certProgress = Math.min(100, Math.round((totalSessions / 10) * 50 + (averageScore >= 80 ? 50 : averageScore * 0.5)));
 
         setStats({
@@ -85,18 +85,45 @@ export default function Dashboard() {
   };
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
+  const dealershipName = profile?.dealership_name;
+  const hasWelcome = !!(settings?.custom_welcome_message?.trim());
+  const hasTagline = !!(settings?.dealership_tagline?.trim());
 
   return (
     <AuthGuard>
       <AppLayout>
         <div className="p-4 sm:p-8 max-w-6xl mx-auto">
+          {/* Custom Welcome Banner */}
+          {hasWelcome && (
+            <div
+              className="mb-6 rounded-xl border p-4 flex items-start gap-3"
+              style={{
+                borderColor: settings?.primary_color ? `${settings.primary_color}40` : undefined,
+                backgroundColor: settings?.primary_color ? `${settings.primary_color}08` : undefined,
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                style={{ backgroundColor: settings?.primary_color ? `${settings.primary_color}20` : undefined }}
+              >
+                <Megaphone className="w-4 h-4" style={{ color: settings?.primary_color || undefined }} />
+              </div>
+              <div>
+                {dealershipName && (
+                  <p className="text-sm font-semibold text-foreground">{dealershipName}</p>
+                )}
+                <p className="text-sm text-muted-foreground">{settings!.custom_welcome_message}</p>
+              </div>
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
               {getGreeting()}, {firstName}! 👋
             </h1>
             <p className="text-muted-foreground">
-              Ready to sharpen your sales skills today?
+              {hasTagline ? settings!.dealership_tagline : "Ready to sharpen your sales skills today?"}
             </p>
           </div>
 

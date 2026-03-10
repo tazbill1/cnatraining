@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, History, Shield, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
@@ -26,20 +27,40 @@ const adminItems = [
 
 export function AppSidebar() {
   const { profile, isManager, isSuperAdmin, signOut } = useAuth();
+  const { settings } = useDealershipSettings();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
+  const hasDealershipLogo = !!(settings?.logo_url?.trim());
 
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center justify-center">
-          <img 
-            src={werkandmeLogo} 
-            alt="Werkandme" 
-            className="h-10 w-auto"
-          />
+        <div className="flex flex-col items-center gap-2">
+          {hasDealershipLogo ? (
+            <>
+              <img
+                src={settings!.logo_url!}
+                alt={profile?.dealership_name || "Dealership"}
+                className="h-12 w-auto max-w-[180px] object-contain"
+              />
+              <div className="flex items-center gap-1.5 opacity-50">
+                <span className="text-[10px] text-sidebar-foreground/50">powered by</span>
+                <img
+                  src={werkandmeLogo}
+                  alt="Werkandme"
+                  className="h-4 w-auto"
+                />
+              </div>
+            </>
+          ) : (
+            <img
+              src={werkandmeLogo}
+              alt="Werkandme"
+              className="h-10 w-auto"
+            />
+          )}
         </div>
       </div>
 

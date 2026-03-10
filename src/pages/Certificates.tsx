@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { CertificateCard } from "@/components/certificates/CertificateCard";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { trainingModules } from "@/lib/modules";
 

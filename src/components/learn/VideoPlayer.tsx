@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +27,7 @@ export default function VideoPlayer({
   title,
   onComplete,
 }: VideoPlayerProps) {
+  const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -151,7 +153,7 @@ export default function VideoPlayer({
             src={videoUrl}
             controls
             playsInline
-            preload="metadata"
+            preload={isMobile ? "none" : "metadata"}
             crossOrigin="anonymous"
             className="h-full w-full object-contain"
             onCanPlay={() => setIsLoading(false)}

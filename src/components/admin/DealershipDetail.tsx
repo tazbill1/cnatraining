@@ -112,15 +112,21 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
         </TabsContent>
 
         <TabsContent value="training" className="mt-6">
-          <TrainingConfigTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
+            <TrainingConfigTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          </SettingsGuard>
         </TabsContent>
 
         <TabsContent value="branding" className="mt-6">
-          <BrandingTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
+            <BrandingTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          </SettingsGuard>
         </TabsContent>
 
         <TabsContent value="features" className="mt-6">
-          <FeaturesTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
+            <FeaturesTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
+          </SettingsGuard>
         </TabsContent>
       </Tabs>
     </div>

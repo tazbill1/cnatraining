@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      dealership_settings: {
+        Row: {
+          certificates_enabled: boolean | null
+          completion_deadline_days: number | null
+          created_at: string
+          custom_base_statement: string | null
+          custom_welcome_message: string | null
+          dealership_id: string
+          dealership_tagline: string | null
+          enabled_difficulty_levels: string[] | null
+          enabled_module_ids: string[] | null
+          enabled_scenario_categories: string[] | null
+          id: string
+          leaderboard_enabled: boolean | null
+          logo_url: string | null
+          primary_color: string | null
+          required_module_ids: string[] | null
+          updated_at: string
+          voice_training_enabled: boolean | null
+        }
+        Insert: {
+          certificates_enabled?: boolean | null
+          completion_deadline_days?: number | null
+          created_at?: string
+          custom_base_statement?: string | null
+          custom_welcome_message?: string | null
+          dealership_id: string
+          dealership_tagline?: string | null
+          enabled_difficulty_levels?: string[] | null
+          enabled_module_ids?: string[] | null
+          enabled_scenario_categories?: string[] | null
+          id?: string
+          leaderboard_enabled?: boolean | null
+          logo_url?: string | null
+          primary_color?: string | null
+          required_module_ids?: string[] | null
+          updated_at?: string
+          voice_training_enabled?: boolean | null
+        }
+        Update: {
+          certificates_enabled?: boolean | null
+          completion_deadline_days?: number | null
+          created_at?: string
+          custom_base_statement?: string | null
+          custom_welcome_message?: string | null
+          dealership_id?: string
+          dealership_tagline?: string | null
+          enabled_difficulty_levels?: string[] | null
+          enabled_module_ids?: string[] | null
+          enabled_scenario_categories?: string[] | null
+          id?: string
+          leaderboard_enabled?: boolean | null
+          logo_url?: string | null
+          primary_color?: string | null
+          required_module_ids?: string[] | null
+          updated_at?: string
+          voice_training_enabled?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_settings_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: true
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealerships: {
         Row: {
           created_at: string

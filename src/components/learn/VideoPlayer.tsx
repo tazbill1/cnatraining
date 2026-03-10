@@ -27,6 +27,7 @@ export default function VideoPlayer({
   title,
   onComplete,
 }: VideoPlayerProps) {
+  const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);

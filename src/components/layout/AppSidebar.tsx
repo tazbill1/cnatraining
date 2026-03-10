@@ -6,15 +6,15 @@ import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: GraduationCap, label: "Learn", path: "/learn" },
-  { icon: MessageSquare, label: "Practice", path: "/scenarios" },
-  { icon: Wrench, label: "Toolbox", path: "/toolbox" },
-  { icon: TrendingUp, label: "Training Progress", path: "/progress" },
-  { icon: History, label: "Session History", path: "/history" },
-  { icon: Award, label: "Certificates", path: "/certificates" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+const baseNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: null },
+  { icon: GraduationCap, label: "Learn", path: "/learn", featureKey: null },
+  { icon: MessageSquare, label: "Practice", path: "/scenarios", featureKey: null },
+  { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
+  { icon: TrendingUp, label: "Training Progress", path: "/progress", featureKey: null },
+  { icon: History, label: "Session History", path: "/history", featureKey: null },
+  { icon: Award, label: "Certificates", path: "/certificates", featureKey: "certificates_enabled" as const },
+  { icon: Settings, label: "Settings", path: "/settings", featureKey: null },
 ];
 
 const managerItems = [
@@ -32,6 +32,12 @@ export function AppSidebar() {
 
   const isActive = (path: string) => location.pathname === path;
   const hasDealershipLogo = !!(settings?.logo_url?.trim());
+
+  const navItems = baseNavItems.filter(item => {
+    if (!item.featureKey) return true;
+    if (!settings) return true; // default: show all
+    return (settings as any)[item.featureKey] !== false;
+  });
 
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">

@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { CertificateCard } from "@/components/certificates/CertificateCard";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { trainingModules } from "@/lib/modules";
 
@@ -15,8 +16,11 @@ interface CompletionRecord {
 
 export default function Certificates() {
   const { user, profile } = useAuth();
+  const { settings } = useDealershipSettings();
   const [completions, setCompletions] = useState<CompletionRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const certificatesDisabled = settings?.certificates_enabled === false;
 
   useEffect(() => {
     if (!user) return;
@@ -45,6 +49,16 @@ export default function Certificates() {
     <AuthGuard>
       <AppLayout>
         <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+          {certificatesDisabled ? (
+            <div className="text-center py-16">
+              <Award className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-lg font-medium text-muted-foreground mb-2">Certificates are not enabled</p>
+              <p className="text-sm text-muted-foreground">
+                Certificates are not enabled for your dealership. Contact your manager for more information.
+              </p>
+            </div>
+          ) : (
+          <>
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -85,6 +99,8 @@ export default function Certificates() {
                 );
               })}
             </div>
+          )}
+          </>
           )}
         </div>
       </AppLayout>

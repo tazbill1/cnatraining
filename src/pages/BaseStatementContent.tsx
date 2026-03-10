@@ -5,6 +5,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { ModuleIntro } from "@/components/learn/ModuleIntro";
 import { ModuleProgress } from "@/components/learn/ModuleProgress";
 import { KnowledgeCheck } from "@/components/learn/KnowledgeCheck";
@@ -20,6 +22,7 @@ import {
 } from "@/lib/baseStatementContent";
 import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { toast } from "sonner";
 
 type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "complete";

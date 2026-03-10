@@ -2,19 +2,20 @@ import { NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: GraduationCap, label: "Learn", path: "/learn" },
-  { icon: MessageSquare, label: "Practice", path: "/scenarios" },
-  { icon: Wrench, label: "Toolbox", path: "/toolbox" },
-  { icon: TrendingUp, label: "Training Progress", path: "/progress" },
-  { icon: History, label: "Session History", path: "/history" },
-  { icon: Award, label: "Certificates", path: "/certificates" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+const baseNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: null },
+  { icon: GraduationCap, label: "Learn", path: "/learn", featureKey: null },
+  { icon: MessageSquare, label: "Practice", path: "/scenarios", featureKey: null },
+  { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
+  { icon: TrendingUp, label: "Training Progress", path: "/progress", featureKey: null },
+  { icon: History, label: "Session History", path: "/history", featureKey: null },
+  { icon: Award, label: "Certificates", path: "/certificates", featureKey: "certificates_enabled" as const },
+  { icon: Settings, label: "Settings", path: "/settings", featureKey: null },
 ];
 
 const managerItems = [

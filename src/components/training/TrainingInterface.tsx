@@ -49,6 +49,8 @@ function AudioLevelIndicator({ level }: { level: number }) {
 export function TrainingInterface({ scenario, onComplete }: TrainingInterfaceProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { settings } = useDealershipSettings();
+  const voiceEnabled = settings?.voice_training_enabled !== false;
   const [inputValue, setInputValue] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);

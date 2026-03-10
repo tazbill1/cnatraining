@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, Activity, Mail, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Users, Activity, Mail, Loader2, Save, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";

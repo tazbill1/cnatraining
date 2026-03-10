@@ -153,7 +153,7 @@ export default function VideoPlayer({
             src={videoUrl}
             controls
             playsInline
-            preload="metadata"
+            preload={isMobile ? "none" : "metadata"}
             crossOrigin="anonymous"
             className="h-full w-full object-contain"
             onCanPlay={() => setIsLoading(false)}

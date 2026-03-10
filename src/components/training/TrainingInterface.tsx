@@ -346,7 +346,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         </div>
 
         {/* Mic Permission Warning */}
-        {isMicUnavailable && (
+        {voiceEnabled && isMicUnavailable && (
           <div className="border-t border-border px-4 py-3 bg-muted/50">
             <Alert variant="default" className="max-w-2xl mx-auto border-amber-500/50 bg-amber-500/10">
               <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -373,7 +373,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         )}
 
         {/* Voice Status Indicator */}
-        {(voiceStatus === "listening" || voiceStatus === "countdown" || voiceStatus === "sending") && (
+        {voiceEnabled && (voiceStatus === "listening" || voiceStatus === "countdown" || voiceStatus === "sending") && (
           <div className="border-t border-border px-4 py-3 bg-primary/5">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -422,7 +422,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         )}
 
         {/* Live transcript display */}
-        {isRecording && interimTranscript && (
+        {voiceEnabled && isRecording && interimTranscript && (
           <div className="border-t border-primary/20 px-4 py-3 bg-muted/30">
             <div className="max-w-2xl mx-auto">
               <p className="text-foreground">{interimTranscript}</p>

@@ -460,13 +460,12 @@ function BrandingTab({ dealershipId, settings, onSaved }: { dealershipId: string
   const handleSave = async () => {
     setSaving(true);
     const payload = {
-      dealership_id: dealershipId,
       logo_url: logoUrl || null,
       primary_color: primaryColor,
       dealership_tagline: tagline,
       custom_welcome_message: welcomeMessage || null,
     };
-    const { error } = await supabase.from("dealership_settings" as any).upsert(payload, { onConflict: "dealership_id" });
+    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving branding", description: error.message, variant: "destructive" });

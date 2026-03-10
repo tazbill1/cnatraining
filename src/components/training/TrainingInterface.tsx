@@ -456,50 +456,54 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 </DrawerContent>
               </Drawer>
             )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={toggleRecording}
-                  disabled={isProcessing || isMicUnavailable || voiceStatus === "sending"}
-                  className={`p-3 sm:p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${
-                    isRecording
-                      ? "bg-destructive text-destructive-foreground recording-pulse"
-                      : isProcessing || voiceStatus === "sending"
-                      ? "bg-muted text-muted-foreground"
-                      : isMicUnavailable
-                      ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
-                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                  }`}
-                >
-                  {isProcessing || voiceStatus === "sending" ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : isRecording ? (
-                    <MicOff className="w-5 h-5" />
-                  ) : (
-                    <Mic className="w-5 h-5" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isRecording ? "Stop recording (Space)" : "Start recording (Space)"}</p>
-              </TooltipContent>
-            </Tooltip>
+            {voiceEnabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={toggleRecording}
+                    disabled={isProcessing || isMicUnavailable || voiceStatus === "sending"}
+                    className={`p-3 sm:p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center ${
+                      isRecording
+                        ? "bg-destructive text-destructive-foreground recording-pulse"
+                        : isProcessing || voiceStatus === "sending"
+                        ? "bg-muted text-muted-foreground"
+                        : isMicUnavailable
+                        ? "bg-muted text-muted-foreground/50 cursor-not-allowed"
+                        : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    }`}
+                  >
+                    {isProcessing || voiceStatus === "sending" ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : isRecording ? (
+                      <MicOff className="w-5 h-5" />
+                    ) : (
+                      <Mic className="w-5 h-5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isRecording ? "Stop recording (Space)" : "Start recording (Space)"}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
             
-            <button
-              onClick={handleSpeakLastMessage}
-              className={`p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center shrink-0 ${
-                isSpeaking
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted hover:bg-muted/80 text-muted-foreground"
-              }`}
-              title={isSpeaking ? "Stop speaking" : "Replay last message"}
-            >
-              {isSpeaking ? (
-                <VolumeX className="w-5 h-5" />
-              ) : (
-                <Volume2 className="w-5 h-5" />
-              )}
-            </button>
+            {voiceEnabled && (
+              <button
+                onClick={handleSpeakLastMessage}
+                className={`p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center shrink-0 ${
+                  isSpeaking
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                }`}
+                title={isSpeaking ? "Stop speaking" : "Replay last message"}
+              >
+                {isSpeaking ? (
+                  <VolumeX className="w-5 h-5" />
+                ) : (
+                  <Volume2 className="w-5 h-5" />
+                )}
+              </button>
+            )}
             <Input
               ref={inputRef}
               value={inputValue}

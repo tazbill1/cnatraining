@@ -31,12 +31,15 @@ const sectionLabels = ["Intro", "Purpose & Context", "Script Part 1", "Pillars &
 
 export default function BaseStatementContent() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { settings } = useDealershipSettings();
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
 
   const module = getModuleById("base-statement");
+  const hasCustomScript = !!(settings?.custom_base_statement && settings.custom_base_statement.trim());
+  const dealershipName = profile?.dealership_name;
 
   const handleStart = () => {
     setStage("section1");

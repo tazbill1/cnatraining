@@ -100,6 +100,8 @@ export default function Certificates() {
               })}
             </div>
           )}
+          </>
+          )}
         </div>
       </AppLayout>
     </AuthGuard>

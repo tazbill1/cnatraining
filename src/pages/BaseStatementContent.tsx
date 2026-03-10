@@ -130,7 +130,15 @@ export default function BaseStatementContent() {
       case "section2":
         return (
           <div className="space-y-8">
-            <BaseStatementScriptSection />
+            {hasCustomScript ? (
+              <CustomScriptSection
+                scriptText={settings!.custom_base_statement!}
+                dealershipName={dealershipName}
+                part="1"
+              />
+            ) : (
+              <BaseStatementScriptSection />
+            )}
             <KnowledgeCheck
               check={baseStatementKnowledgeChecks.section2}
               onComplete={(passed) => handleKnowledgeCheckComplete("section2", passed)}
@@ -141,7 +149,15 @@ export default function BaseStatementContent() {
       case "section3":
         return (
           <div className="space-y-8">
-            <BaseStatementPillarsSection />
+            {hasCustomScript ? (
+              <CustomScriptSection
+                scriptText={settings!.custom_base_statement!}
+                dealershipName={dealershipName}
+                part="2"
+              />
+            ) : (
+              <BaseStatementPillarsSection />
+            )}
             <KnowledgeCheck
               check={baseStatementKnowledgeChecks.section3}
               onComplete={(passed) => handleKnowledgeCheckComplete("section3", passed)}

@@ -187,9 +187,9 @@ export default function Learn() {
     }
   };
 
-  const completedCount = completedModules.length;
-  const totalModules = trainingModules.length;
-  const progressPercent = Math.round((completedCount / totalModules) * 100);
+  const totalModules = enabledModules.length;
+  const completedCount = completedModules.filter(id => enabledModules.some(m => m.id === id)).length;
+  const progressPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
   const hasActiveFilters = search || difficultyFilter !== "all" || completionFilter !== "all" || sortOption !== "recommended";
 
   return (

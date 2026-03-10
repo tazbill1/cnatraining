@@ -527,12 +527,11 @@ function FeaturesTab({ dealershipId, settings, onSaved }: { dealershipId: string
   const handleSave = async () => {
     setSaving(true);
     const payload = {
-      dealership_id: dealershipId,
       voice_training_enabled: voiceEnabled,
       certificates_enabled: certificatesEnabled,
       leaderboard_enabled: leaderboardEnabled,
     };
-    const { error } = await supabase.from("dealership_settings" as any).upsert(payload, { onConflict: "dealership_id" });
+    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving features", description: error.message, variant: "destructive" });

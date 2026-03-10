@@ -35,10 +35,9 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -109,7 +108,7 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
       })),
     ];
 
-    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId);
+    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId, "user:", user.id);
 
     const response = await fetch(LOVABLE_AI_URL, {
       method: "POST",

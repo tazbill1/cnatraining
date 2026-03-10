@@ -12,7 +12,6 @@ const navItems = [
   { icon: Wrench, label: "Toolbox", path: "/toolbox" },
   { icon: TrendingUp, label: "Training Progress", path: "/progress" },
   { icon: History, label: "Session History", path: "/history" },
-  { icon: Trophy, label: "Performance", path: "/performance" },
   { icon: Award, label: "Certificates", path: "/certificates" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];

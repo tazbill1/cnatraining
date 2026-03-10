@@ -26,7 +26,7 @@ import VoiceTraining from "./pages/VoiceTraining";
 import Results from "./pages/Results";
 import SessionHistory from "./pages/SessionHistory";
 import Progress from "./pages/Progress";
-import Performance from "./pages/Performance";
+
 import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import Admin from "./pages/Admin";

@@ -16,8 +16,11 @@ interface CompletionRecord {
 
 export default function Certificates() {
   const { user, profile } = useAuth();
+  const { settings } = useDealershipSettings();
   const [completions, setCompletions] = useState<CompletionRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const certificatesDisabled = settings?.certificates_enabled === false;
 
   useEffect(() => {
     if (!user) return;

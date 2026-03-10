@@ -148,24 +148,24 @@ export default function Learn() {
     }
 
     return modules;
-  }, [search, difficultyFilter, completionFilter, sortOption, completedModules]);
+  }, [search, difficultyFilter, completionFilter, sortOption, completedModules, enabledModules]);
 
   // Counts for filter badges
   const difficultyCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: trainingModules.length };
-    trainingModules.forEach((m) => {
+    const counts: Record<string, number> = { all: enabledModules.length };
+    enabledModules.forEach((m) => {
       counts[m.difficulty] = (counts[m.difficulty] || 0) + 1;
     });
     return counts;
-  }, []);
+  }, [enabledModules]);
 
   const completionCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: trainingModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
-    trainingModules.forEach((m) => {
+    const counts: Record<string, number> = { all: enabledModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
+    enabledModules.forEach((m) => {
       counts[getModuleStatus(m.id)]++;
     });
     return counts;
-  }, [completedModules]);
+  }, [completedModules, enabledModules]);
 
   const handleModuleClick = (moduleId: string, isLocked: boolean) => {
     const bypassLock = window.event && (window.event as MouseEvent).shiftKey;

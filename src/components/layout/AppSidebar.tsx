@@ -33,6 +33,12 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
   const hasDealershipLogo = !!(settings?.logo_url?.trim());
 
+  const navItems = baseNavItems.filter(item => {
+    if (!item.featureKey) return true;
+    if (!settings) return true; // default: show all
+    return (settings as any)[item.featureKey] !== false;
+  });
+
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">
       {/* Logo */}

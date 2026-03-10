@@ -33,7 +33,14 @@ interface MobileNavProps {
 
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const { profile, isManager, isSuperAdmin, signOut } = useAuth();
+  const { settings } = useDealershipSettings();
   const location = useLocation();
+
+  const navItems = baseNavItems.filter(item => {
+    if (!item.featureKey) return true;
+    if (!settings) return true;
+    return (settings as any)[item.featureKey] !== false;
+  });
 
   const isActive = (path: string) => location.pathname === path;
 

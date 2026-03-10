@@ -509,7 +509,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or tap mic..."}
+              placeholder={!voiceEnabled ? "Type your response..." : isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or tap mic..."}
               disabled={isTyping || isRecording || voiceStatus === "sending"}
               className="flex-1 min-w-0"
             />

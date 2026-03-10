@@ -108,8 +108,14 @@ export default function Learn() {
     return "not-started";
   };
 
+  // Modules filtered by dealership settings
+  const enabledModules = useMemo(() => {
+    if (!settings || !settings.enabled_module_ids) return trainingModules;
+    return trainingModules.filter(m => settings.enabled_module_ids.includes(m.id));
+  }, [settings]);
+
   const filteredModules = useMemo(() => {
-    let modules = trainingModules.map((m, i) => ({ ...m, originalIndex: i }));
+    let modules = enabledModules.map((m, i) => ({ ...m, originalIndex: i }));
 
     // Search
     if (search) {

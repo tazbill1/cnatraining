@@ -70,7 +70,7 @@ const App = () => (
               <Route path="/history" element={<SessionHistory />} />
               <Route path="/history/:sessionId" element={<SessionHistory />} />
               <Route path="/progress" element={<Progress />} />
-              <Route path="/performance" element={<Performance />} />
+              <Route path="/performance" element={<Navigate to="/dashboard" replace />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/team" element={<Team />} />
               <Route path="/admin" element={<Admin />} />

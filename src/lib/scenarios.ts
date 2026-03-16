@@ -1,8 +1,8 @@
-import { User, Users, Search, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, BookOpen, Scale, TrendingDown, Sparkles, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar, Brain, BadgeDollarSign, Star, AlertTriangle, Lock, ClipboardList } from "lucide-react";
+import { User, Users, Search, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, BookOpen, Scale, TrendingDown, Sparkles, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar, Brain, BadgeDollarSign, Star, AlertTriangle, Lock, ClipboardList, ShieldAlert } from "lucide-react";
 
-export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call";
+export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call" | "objection-handling";
 
-export type BuyerType = "analyst" | "negotiator" | "emotional" | "loyal" | "urgent" | "general";
+export type BuyerType = "analyst" | "negotiator" | "emotional" | "loyal" | "urgent" | "general" | "budget-buyer" | "analytical-buyer" | "price-buyer";
 
 export interface BuyerType_Info {
   id: BuyerType;

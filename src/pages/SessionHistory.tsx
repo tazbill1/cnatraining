@@ -206,7 +206,7 @@ export default function SessionHistory() {
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => {
-                const scenario = scenarios.find((s) => s.id === session.scenario_type);
+                const scenarioDisplayName = getScenarioName(session.scenario_type);
                 const checklistState = (session.checklist_state || {}) as Record<string, boolean>;
                 const completedItems = Object.values(checklistState).filter(Boolean).length;
                 const checklist = getChecklist(session.scenario_type);

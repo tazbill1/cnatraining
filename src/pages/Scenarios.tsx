@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   scenarioCategories,
@@ -20,18 +21,20 @@ import {
 export default function Scenarios() {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { previewDealershipId } = useDealershipContext();
+  const dealershipId = previewDealershipId || profile?.dealership_id;
   const [customScenarios, setCustomScenarios] = useState<Scenario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch custom scenarios for this dealership
   useEffect(() => {
     const fetchCustom = async () => {
-      if (!profile?.dealership_id) return;
+      if (!dealershipId) return;
       setIsLoading(true);
       const { data } = await supabase
         .from("custom_scenarios")
         .select("*")
-        .eq("dealership_id", profile.dealership_id)
+        .eq("dealership_id", dealershipId)
         .eq("is_active", true);
       if (data) {
         setCustomScenarios(
@@ -56,7 +59,7 @@ export default function Scenarios() {
       setIsLoading(false);
     };
     fetchCustom();
-  }, [profile?.dealership_id]);
+  }, [dealershipId]);
 
   // Derive available categories from actual scenario data
   const availableCategories = useMemo(() => {

@@ -259,6 +259,35 @@ export default function DealershipModuleContent() {
             </div>
           )}
 
+          {/* Practice scenario stage */}
+          {current.type === "practice" && current.index !== undefined && (() => {
+            const ps = practiceScenarios[current.index];
+            const scenarioData: PracticeScenarioData = {
+              id: ps.id,
+              title: ps.title,
+              customerSetup: ps.customer_setup,
+              customerQuote: ps.customer_quote,
+              decisionPoints: (ps.decision_points || []).map((dp: any) => ({
+                id: dp.id,
+                prompt: dp.prompt,
+                context: dp.context,
+                options: (dp.options || []).map((o: any) => ({
+                  id: o.id,
+                  text: o.text,
+                  quality: o.quality,
+                  feedback: o.feedback,
+                  points: o.points,
+                })),
+              })),
+            };
+            return (
+              <div className="space-y-4">
+                <Badge variant="outline" className="capitalize">{ps.difficulty}</Badge>
+                <PracticeScenario scenario={scenarioData} />
+              </div>
+            );
+          })()}
+
           {/* Quiz stage */}
           {current.type === "quiz" && (
             <div className="space-y-6">

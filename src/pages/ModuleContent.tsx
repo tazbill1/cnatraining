@@ -34,7 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "practice" | "quiz" | "saving" | "complete";
+type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "quiz" | "saving" | "complete";
 
 const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "practice", "quiz"];
 

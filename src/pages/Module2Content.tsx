@@ -37,7 +37,7 @@ type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "sa
 
 const MODULE_ID = "trade-appraisal-process";
 
-const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "practice", "quiz"];
+const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
 
 const stageFriendlyNames: Record<ModuleStage, string> = {
   intro: "Introduction",

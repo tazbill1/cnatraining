@@ -198,7 +198,7 @@ export default function DealershipModuleContent() {
               )}
               {hasVideo && (
                 <VideoPlayer
-                  src={module.video_url!}
+                  videoUrl={module.video_url!}
                   title={module.video_title || module.title}
                   onComplete={() => {}}
                 />

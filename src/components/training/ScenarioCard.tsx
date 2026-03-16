@@ -7,9 +7,10 @@ interface ScenarioCardProps {
   scenario: Scenario;
   onClick: () => void;
   showCategory?: boolean;
+  isCustom?: boolean;
 }
 
-export function ScenarioCard({ scenario, onClick, showCategory = false }: ScenarioCardProps) {
+export function ScenarioCard({ scenario, onClick, showCategory = false, isCustom = false }: ScenarioCardProps) {
   const difficultyClass = {
     beginner: "difficulty-beginner",
     intermediate: "difficulty-intermediate",
@@ -32,6 +33,11 @@ export function ScenarioCard({ scenario, onClick, showCategory = false }: Scenar
             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {scenario.name}
             </h3>
+            {isCustom && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                Custom
+              </Badge>
+            )}
             {showCategory && category && (
               <Badge variant="secondary" className="text-xs">
                 {category.name}

@@ -186,7 +186,7 @@ export default function Learn() {
 
     // Custom dealership modules route to their own page
     if (moduleId.startsWith("dealership-")) {
-      navigate(`/learn/${moduleId}`);
+      navigate(`/learn/dealership/${moduleId.replace("dealership-", "")}`);
       return;
     }
 

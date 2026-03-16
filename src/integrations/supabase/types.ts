@@ -182,6 +182,56 @@ export type Database = {
           },
         ]
       }
+      dealership_practice_scenarios: {
+        Row: {
+          created_at: string
+          customer_quote: string
+          customer_setup: string
+          decision_points: Json
+          difficulty: string
+          id: string
+          is_active: boolean
+          module_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_quote: string
+          customer_setup: string
+          decision_points?: Json
+          difficulty?: string
+          id?: string
+          is_active?: boolean
+          module_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_quote?: string
+          customer_setup?: string
+          decision_points?: Json
+          difficulty?: string
+          id?: string
+          is_active?: boolean
+          module_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_practice_scenarios_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealership_quiz_questions: {
         Row: {
           created_at: string

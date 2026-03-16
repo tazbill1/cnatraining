@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Loader2, Pencil, Trash2, GripVertical, Upload, BookOpen, Video, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { PracticeScenarioManager } from "./PracticeScenarioManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { trainingModules } from "@/lib/modules";
@@ -479,6 +480,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
                       </div>
                     )}
                   </div>
+
+                  {/* Practice Scenarios */}
+                  <PracticeScenarioManager moduleId={m.id} />
                 </div>
               )}
             </Card>

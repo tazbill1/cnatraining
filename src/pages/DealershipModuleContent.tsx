@@ -4,7 +4,9 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import VideoPlayer from "@/components/learn/VideoPlayer";
+import { PracticeScenario, PracticeScenarioData } from "@/components/learn/PracticeScenario";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -26,6 +28,16 @@ interface QuizQuestion {
   sort_order: number;
 }
 
+interface DBPracticeScenario {
+  id: string;
+  difficulty: string;
+  title: string;
+  customer_setup: string;
+  customer_quote: string;
+  decision_points: any[];
+  is_active: boolean;
+}
+
 interface ModuleData {
   id: string;
   title: string;
@@ -34,6 +46,7 @@ interface ModuleData {
   video_title: string | null;
   sections: Section[];
   quiz_questions: QuizQuestion[];
+  practice_scenarios: DBPracticeScenario[];
 }
 
 export default function DealershipModuleContent() {
@@ -63,7 +76,7 @@ export default function DealershipModuleContent() {
         return;
       }
 
-      const [secRes, quizRes] = await Promise.all([
+      const [secRes, quizRes, practiceRes] = await Promise.all([
         supabase
           .from("dealership_module_sections")
           .select("*")
@@ -74,6 +87,12 @@ export default function DealershipModuleContent() {
           .select("*")
           .eq("module_id", dbId)
           .order("sort_order"),
+        supabase
+          .from("dealership_practice_scenarios" as any)
+          .select("*")
+          .eq("module_id", dbId)
+          .eq("is_active", true)
+          .order("sort_order"),
       ]);
 
       setModule({
@@ -83,6 +102,7 @@ export default function DealershipModuleContent() {
           ...q,
           options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
         })),
+        practice_scenarios: (practiceRes.data as any[]) || [],
       });
       setLoading(false);
     }
@@ -106,13 +126,22 @@ export default function DealershipModuleContent() {
   const hasVideo = !!module.video_url;
   const sections = module.sections;
   const hasQuiz = module.quiz_questions.length > 0;
+  const practiceScenarios = module.practice_scenarios || [];
+  const hasPractice = practiceScenarios.length > 0;
 
-  // Stages: [intro/video, ...sections, quiz?]
-  const stages: { type: "intro" | "section" | "quiz"; title: string; index?: number }[] = [];
+  // Stages: [intro/video, ...sections, ...practice, quiz?]
+  const stages: { type: "intro" | "section" | "practice" | "quiz"; title: string; index?: number }[] = [];
   if (hasVideo || module.description) {
     stages.push({ type: "intro", title: module.video_title || "Introduction" });
   }
   sections.forEach((s, i) => stages.push({ type: "section", title: s.title, index: i }));
+  if (hasPractice) {
+    practiceScenarios.forEach((ps, i) => stages.push({
+      type: "practice",
+      title: `Practice: ${ps.title}`,
+      index: i,
+    }));
+  }
   if (hasQuiz) stages.push({ type: "quiz", title: "Knowledge Check" });
 
   const totalStages = stages.length;
@@ -229,6 +258,35 @@ export default function DealershipModuleContent() {
               )}
             </div>
           )}
+
+          {/* Practice scenario stage */}
+          {current.type === "practice" && current.index !== undefined && (() => {
+            const ps = practiceScenarios[current.index];
+            const scenarioData: PracticeScenarioData = {
+              id: ps.id,
+              title: ps.title,
+              customerSetup: ps.customer_setup,
+              customerQuote: ps.customer_quote,
+              decisionPoints: (ps.decision_points || []).map((dp: any) => ({
+                id: dp.id,
+                prompt: dp.prompt,
+                context: dp.context,
+                options: (dp.options || []).map((o: any) => ({
+                  id: o.id,
+                  text: o.text,
+                  quality: o.quality,
+                  feedback: o.feedback,
+                  points: o.points,
+                })),
+              })),
+            };
+            return (
+              <div className="space-y-4">
+                <Badge variant="outline" className="capitalize">{ps.difficulty}</Badge>
+                <PracticeScenario scenario={scenarioData} />
+              </div>
+            );
+          })()}
 
           {/* Quiz stage */}
           {current.type === "quiz" && (

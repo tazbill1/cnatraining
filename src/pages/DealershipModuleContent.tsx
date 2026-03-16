@@ -4,7 +4,9 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import VideoPlayer from "@/components/learn/VideoPlayer";
+import { PracticeScenario, PracticeScenarioData } from "@/components/learn/PracticeScenario";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -26,6 +28,16 @@ interface QuizQuestion {
   sort_order: number;
 }
 
+interface DBPracticeScenario {
+  id: string;
+  difficulty: string;
+  title: string;
+  customer_setup: string;
+  customer_quote: string;
+  decision_points: any[];
+  is_active: boolean;
+}
+
 interface ModuleData {
   id: string;
   title: string;
@@ -34,6 +46,7 @@ interface ModuleData {
   video_title: string | null;
   sections: Section[];
   quiz_questions: QuizQuestion[];
+  practice_scenarios: DBPracticeScenario[];
 }
 
 export default function DealershipModuleContent() {

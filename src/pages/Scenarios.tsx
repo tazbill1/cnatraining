@@ -7,37 +7,35 @@ import { ScenarioCard } from "@/components/training/ScenarioCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  scenarios,
   scenarioCategories,
   getBuyerTypeById,
   ScenarioCategory,
   BuyerType,
   Scenario,
-  buyerTypes,
 } from "@/lib/scenarios";
 
 export default function Scenarios() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { settings, isLoading: settingsLoading } = useDealershipSettings();
   const [customScenarios, setCustomScenarios] = useState<Scenario[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch custom scenarios for this dealership
   useEffect(() => {
     const fetchCustom = async () => {
       if (!profile?.dealership_id) return;
+      setIsLoading(true);
       const { data } = await supabase
-        .from("custom_scenarios" as any)
+        .from("custom_scenarios")
         .select("*")
         .eq("dealership_id", profile.dealership_id)
         .eq("is_active", true);
       if (data) {
         setCustomScenarios(
-          (data as any[]).map((row) => ({
+          data.map((row) => ({
             id: `custom-${row.id}`,
             name: row.name,
             description: row.description || "",
@@ -55,27 +53,27 @@ export default function Scenarios() {
           }))
         );
       }
+      setIsLoading(false);
     };
     fetchCustom();
   }, [profile?.dealership_id]);
 
-  const enabledCategories = useMemo(() => {
-    if (!settings?.enabled_scenario_categories) return scenarioCategories;
-    return scenarioCategories.filter(c => settings.enabled_scenario_categories.includes(c.id));
-  }, [settings]);
-
-  const enabledDifficulties = useMemo(() => {
-    if (!settings?.enabled_difficulty_levels) return null;
-    return settings.enabled_difficulty_levels;
-  }, [settings]);
+  // Derive available categories from actual scenario data
+  const availableCategories = useMemo(() => {
+    const categoryIds = [...new Set(customScenarios.map((s) => s.category))];
+    // Use hardcoded metadata as a lookup for display info, preserve that order
+    return scenarioCategories.filter((c) =>
+      categoryIds.includes(c.id as ScenarioCategory)
+    );
+  }, [customScenarios]);
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // Resolve the effective active category
   const effectiveCategory = useMemo(() => {
-    if (activeCategory && enabledCategories.some(c => c.id === activeCategory)) return activeCategory;
-    return enabledCategories[0]?.id ?? "cna";
-  }, [activeCategory, enabledCategories]);
+    if (activeCategory && availableCategories.some((c) => c.id === activeCategory))
+      return activeCategory;
+    return availableCategories[0]?.id ?? null;
+  }, [activeCategory, availableCategories]);
 
   const handleSelectScenario = (scenarioId: string) => {
     navigate(`/training/${scenarioId}`);
@@ -89,42 +87,33 @@ export default function Scenarios() {
 
   const bgMap: Record<string, string> = {
     teal: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
-    indigo: "data-[state=active]:border-accent-foreground/40 data-[state=active]:bg-accent/50",
+    indigo:
+      "data-[state=active]:border-accent-foreground/40 data-[state=active]:bg-accent/50",
     sky: "data-[state=active]:border-primary/40 data-[state=active]:bg-primary/10",
   };
 
   const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 };
 
-  const filterByDifficulty = (scenarioList: Scenario[]) => {
-    if (!enabledDifficulties) return scenarioList;
-    return scenarioList.filter(s => enabledDifficulties.includes(s.difficulty));
-  };
-
-  const renderCategoryContent = (category: typeof scenarioCategories[number]) => {
+  const renderCategoryContent = (
+    category: (typeof scenarioCategories)[number]
+  ) => {
     const catId = category.id as ScenarioCategory;
+    const catScenarios = customScenarios.filter((s) => s.category === catId);
 
-    // Only show custom (database) scenarios — no hardcoded built-ins
-    const customForCategory = customScenarios.filter(s => s.category === catId);
-
-    // Collect unique buyer types from custom scenarios
-    const allBuyerTypeIds: BuyerType[] = [];
-    customForCategory.forEach(s => {
-      if (!allBuyerTypeIds.includes(s.buyerType)) allBuyerTypeIds.push(s.buyerType);
-    });
-
-    const allFilteredScenarios = allBuyerTypeIds.flatMap(btId => {
-      return filterByDifficulty(customForCategory.filter(s => s.buyerType === btId));
+    const buyerTypeIds: BuyerType[] = [];
+    catScenarios.forEach((s) => {
+      if (!buyerTypeIds.includes(s.buyerType)) buyerTypeIds.push(s.buyerType);
     });
 
     return (
       <div>
-        {/* Category Description */}
         <div className="mb-6 p-4 rounded-xl bg-muted/50 border border-border">
-          <h2 className="text-lg font-semibold text-foreground mb-1">{category.subtitle}</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1">
+            {category.subtitle}
+          </h2>
           <p className="text-sm text-muted-foreground">{category.description}</p>
         </div>
 
-        {/* Difficulty Legend */}
         <div className="flex items-center gap-6 mb-6">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-success" />
@@ -137,79 +126,84 @@ export default function Scenarios() {
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-destructive" />
             <span className="text-sm text-muted-foreground">Advanced</span>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5">
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1.5 py-0 h-4 gap-0.5"
+            >
               <Lock className="w-2.5 h-2.5" />
               Optional
             </Badge>
           </div>
         </div>
 
-        {allFilteredScenarios.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            No scenarios available at your current difficulty levels.
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {allBuyerTypeIds.map((buyerTypeId) => {
-              const buyerType = getBuyerTypeById(buyerTypeId);
-              const typeScenarios = filterByDifficulty(
-                customForCategory.filter(s => s.buyerType === buyerTypeId)
-              ).sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+        <div className="space-y-8">
+          {buyerTypeIds.map((buyerTypeId) => {
+            const buyerType = getBuyerTypeById(buyerTypeId);
+            const typeScenarios = catScenarios
+              .filter((s) => s.buyerType === buyerTypeId)
+              .sort(
+                (a, b) =>
+                  difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
+              );
 
-              if (typeScenarios.length === 0) return null;
+            if (typeScenarios.length === 0) return null;
 
-              // Fallback for buyer types not in the built-in list
-              const buyerTypeName = buyerType?.name || buyerTypeId.charAt(0).toUpperCase() + buyerTypeId.slice(1);
-              const buyerTypeDesc = buyerType?.description || "Custom buyer type";
-              const BuyerIcon = buyerType?.icon || Users;
+            const buyerTypeName =
+              buyerType?.name ||
+              buyerTypeId.charAt(0).toUpperCase() + buyerTypeId.slice(1);
+            const buyerTypeDesc =
+              buyerType?.description || "Custom buyer type";
+            const BuyerIcon = buyerType?.icon || Users;
 
-              return (
-                <div key={buyerTypeId}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <BuyerIcon className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground text-sm">{buyerTypeName}</h3>
-                      <p className="text-xs text-muted-foreground">{buyerTypeDesc}</p>
-                    </div>
+            return (
+              <div key={buyerTypeId}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                    <BuyerIcon className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
-                    {typeScenarios.map((scenario) => (
-                      <div key={scenario.id} className="relative">
-                        {scenario.isOptional && (
-                          <Badge
-                            variant="outline"
-                            className="absolute -top-2 right-3 z-10 text-[10px] px-2 py-0 h-5 bg-card border-muted-foreground/30 text-muted-foreground gap-1"
-                          >
-                            <Lock className="w-2.5 h-2.5" />
-                            Optional Challenge
-                          </Badge>
-                        )}
-                        <ScenarioCard
-                          scenario={scenario}
-                          onClick={() => handleSelectScenario(scenario.id)}
-                          isCustom={scenario.id.startsWith("custom-")}
-                        />
-                      </div>
-                    ))}
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm">
+                      {buyerTypeName}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {buyerTypeDesc}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+                  {typeScenarios.map((scenario) => (
+                    <div key={scenario.id} className="relative">
+                      {scenario.isOptional && (
+                        <Badge
+                          variant="outline"
+                          className="absolute -top-2 right-3 z-10 text-[10px] px-2 py-0 h-5 bg-card border-muted-foreground/30 text-muted-foreground gap-1"
+                        >
+                          <Lock className="w-2.5 h-2.5" />
+                          Optional Challenge
+                        </Badge>
+                      )}
+                      <ScenarioCard
+                        scenario={scenario}
+                        onClick={() => handleSelectScenario(scenario.id)}
+                        isCustom={scenario.id.startsWith("custom-")}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
-  const showTabs = enabledCategories.length > 1;
+  const showTabs = availableCategories.length > 1;
 
   return (
     <AuthGuard>
       <AppLayout>
         <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <Button
               variant="ghost"
@@ -223,24 +217,40 @@ export default function Scenarios() {
               Practice Center
             </h1>
             <p className="text-muted-foreground">
-              Choose a skill area, then practice with different buyer types from easy to hard
+              Choose a skill area, then practice with different buyer types from
+              easy to hard
             </p>
           </div>
 
-          {showTabs ? (
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading scenarios…
+            </div>
+          ) : availableCategories.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              No practice scenarios are available for your dealership yet.
+            </div>
+          ) : showTabs ? (
             <Tabs
-              value={effectiveCategory}
+              value={effectiveCategory ?? undefined}
               onValueChange={(value) => setActiveCategory(value)}
               className="w-full"
             >
-              <TabsList className={`grid w-full mb-6 h-auto p-1.5 gap-1.5`} style={{ gridTemplateColumns: `repeat(${enabledCategories.length}, 1fr)` }}>
-                {enabledCategories.map((category) => (
+              <TabsList
+                className="grid w-full mb-6 h-auto p-1.5 gap-1.5"
+                style={{
+                  gridTemplateColumns: `repeat(${availableCategories.length}, 1fr)`,
+                }}
+              >
+                {availableCategories.map((category) => (
                   <TabsTrigger
                     key={category.id}
                     value={category.id}
                     className={`flex flex-col items-center gap-1 py-3 px-2 rounded-lg border border-transparent transition-all ${bgMap[category.color] || ""}`}
                   >
-                    <category.icon className={`w-5 h-5 ${colorMap[category.color] || ""}`} />
+                    <category.icon
+                      className={`w-5 h-5 ${colorMap[category.color] || ""}`}
+                    />
                     <span className="text-xs sm:text-sm font-medium leading-tight text-center">
                       {category.name}
                     </span>
@@ -248,18 +258,18 @@ export default function Scenarios() {
                 ))}
               </TabsList>
 
-              {enabledCategories.map((category) => (
-                <TabsContent key={category.id} value={category.id} className="mt-0">
+              {availableCategories.map((category) => (
+                <TabsContent
+                  key={category.id}
+                  value={category.id}
+                  className="mt-0"
+                >
                   {renderCategoryContent(category)}
                 </TabsContent>
               ))}
             </Tabs>
-          ) : enabledCategories.length === 1 ? (
-            renderCategoryContent(enabledCategories[0])
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              No scenario categories are enabled for your dealership.
-            </div>
+            renderCategoryContent(availableCategories[0])
           )}
         </div>
       </AppLayout>

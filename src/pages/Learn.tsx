@@ -7,6 +7,7 @@ import { ModuleCard } from "@/components/learn/ModuleCard";
 import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
+import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";

@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { AppSidebar } from "./AppSidebar";
 import { MobileNav } from "./MobileNav";
 import { useIsMobile } from "@/hooks/use-mobile";

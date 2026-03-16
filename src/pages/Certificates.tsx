@@ -34,7 +34,11 @@ export default function Certificates() {
       });
   }, [user]);
 
-  const certifiableModules = trainingModules.filter(
+  const enabledModules = settings?.enabled_module_ids?.length
+    ? trainingModules.filter((m) => settings.enabled_module_ids.includes(m.id))
+    : trainingModules;
+
+  const certifiableModules = enabledModules.filter(
     (m) => !m.alwaysAccessible && m.id !== "base-statement-video"
   );
 

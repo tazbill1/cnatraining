@@ -339,7 +339,7 @@ export default function Learn() {
             ) : (
               filteredModules.map((module) => {
                 const isCompleted = completedModules.includes(module.id);
-                const isLocked = !checkPrerequisitesMet(module.id, completedModules);
+                const isLocked = module.alwaysAccessible ? false : !checkPrerequisitesMet(module.id, completedModules);
                 const hasProgress = !isCompleted && !!localStorage.getItem(`module_${module.id}_current_stage`);
 
                 return (

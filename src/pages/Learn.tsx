@@ -181,6 +181,12 @@ export default function Learn() {
       toast.info("Dev mode: bypassing prerequisite lock");
     }
 
+    // Custom dealership modules route to their own page
+    if (moduleId.startsWith("dealership-")) {
+      navigate(`/learn/${moduleId}`);
+      return;
+    }
+
     const implementedModules = ["base-statement", "base-statement-video", "vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework", "phone-sales-fundamentals", "buyer-types"];
     if (implementedModules.includes(moduleId)) {
       navigate(`/learn/${moduleId}`);

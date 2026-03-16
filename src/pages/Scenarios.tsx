@@ -59,7 +59,7 @@ export default function Scenarios() {
       setIsLoading(false);
     };
     fetchCustom();
-  }, [profile?.dealership_id]);
+  }, [dealershipId]);
 
   // Derive available categories from actual scenario data
   const availableCategories = useMemo(() => {

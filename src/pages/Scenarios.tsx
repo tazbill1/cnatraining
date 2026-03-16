@@ -106,23 +106,17 @@ export default function Scenarios() {
   const renderCategoryContent = (category: typeof scenarioCategories[number]) => {
     const catId = category.id as ScenarioCategory;
 
-    // Get built-in buyer types
-    const builtInBuyerTypes = getBuyerTypesInCategory(catId);
-
-    // Get custom scenarios for this category
+    // Only show custom (database) scenarios — no hardcoded built-ins
     const customForCategory = customScenarios.filter(s => s.category === catId);
 
-    // Find any additional buyer types from custom scenarios not in built-in
-    const customBuyerTypeIds = new Set(customForCategory.map(s => s.buyerType));
-    const allBuyerTypeIds = [...builtInBuyerTypes];
-    customBuyerTypeIds.forEach(bt => {
-      if (!allBuyerTypeIds.includes(bt)) allBuyerTypeIds.push(bt);
+    // Collect unique buyer types from custom scenarios
+    const allBuyerTypeIds: BuyerType[] = [];
+    customForCategory.forEach(s => {
+      if (!allBuyerTypeIds.includes(s.buyerType)) allBuyerTypeIds.push(s.buyerType);
     });
 
     const allFilteredScenarios = allBuyerTypeIds.flatMap(btId => {
-      const builtIn = filterByDifficulty(getScenariosByBuyerType(catId, btId));
-      const custom = filterByDifficulty(customForCategory.filter(s => s.buyerType === btId));
-      return [...builtIn, ...custom];
+      return filterByDifficulty(customForCategory.filter(s => s.buyerType === btId));
     });
 
     return (

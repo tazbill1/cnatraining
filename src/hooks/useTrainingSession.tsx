@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { Scenario } from "@/lib/scenarios";
 import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
 import { analyzePhoneChecklistFromConversation, calculatePhoneChecklistProgress } from "@/lib/phoneChecklist";
+import { analyzeCricChecklistFromConversation } from "@/lib/cricChecklist";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 

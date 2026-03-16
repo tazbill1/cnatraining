@@ -582,3 +582,326 @@ function FeaturesTab({ dealershipId, settings, onSaved }: { dealershipId: string
     </Card>
   );
 }
+
+/* ─── Scenarios Tab ─── */
+const BUYER_TYPES = [
+  { value: "general", label: "General" },
+  { value: "analyst", label: "Analyst" },
+  { value: "negotiator", label: "Negotiator" },
+  { value: "emotional", label: "Emotional" },
+  { value: "loyal", label: "Loyal" },
+  { value: "urgent", label: "Urgent" },
+];
+
+interface CustomScenario {
+  id: string;
+  dealership_id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  buyer_type: string;
+  difficulty: string;
+  customer_name: string;
+  personality: string | null;
+  system_prompt: string;
+  opening_line: string;
+  trade_vehicle: string | null;
+  trade_value: string | null;
+  estimated_time: string | null;
+  is_active: boolean;
+}
+
+const emptyForm = {
+  name: "",
+  description: "",
+  category: "cna",
+  buyer_type: "general",
+  difficulty: "intermediate",
+  customer_name: "Customer",
+  personality: "",
+  system_prompt: "",
+  opening_line: "",
+  trade_vehicle: "",
+  trade_value: "",
+};
+
+function ScenariosTab({ dealershipId }: { dealershipId: string }) {
+  const [scenarios, setScenarios] = useState<CustomScenario[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ ...emptyForm });
+
+  const fetchScenarios = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("custom_scenarios" as any)
+      .select("*")
+      .eq("dealership_id", dealershipId)
+      .order("created_at", { ascending: false });
+    setScenarios((data as any as CustomScenario[]) || []);
+    setLoading(false);
+  }, [dealershipId]);
+
+  useEffect(() => { fetchScenarios(); }, [fetchScenarios]);
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (s: CustomScenario) => {
+    setEditingId(s.id);
+    setForm({
+      name: s.name,
+      description: s.description || "",
+      category: s.category,
+      buyer_type: s.buyer_type,
+      difficulty: s.difficulty,
+      customer_name: s.customer_name,
+      personality: s.personality || "",
+      system_prompt: s.system_prompt,
+      opening_line: s.opening_line,
+      trade_vehicle: s.trade_vehicle || "",
+      trade_value: s.trade_value || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const generatePrompt = () => {
+    const lines = [
+      `You are playing a car buyer named ${form.customer_name}. ${form.personality}`,
+      "",
+      `CATEGORY: ${form.category}`,
+      `BUYER TYPE: ${form.buyer_type}`,
+    ];
+    if (form.trade_vehicle) lines.push(`TRADE VEHICLE: ${form.trade_vehicle}`);
+    if (form.trade_value) lines.push(`TRADE VALUE: ${form.trade_value}`);
+    lines.push(
+      "",
+      "BEHAVIOR:",
+      "- Stay in character as the customer at all times",
+      "- Respond naturally based on the salesperson's questions",
+      "- Keep responses concise (1-3 sentences typically)",
+      "- Show emotional reactions appropriate to your character",
+      "",
+      `OPENING LINE (say this first): "${form.opening_line}"`
+    );
+    setForm(prev => ({ ...prev, system_prompt: lines.join("\n") }));
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.system_prompt || !form.opening_line) {
+      toast({ title: "Missing required fields", description: "Name, System Prompt, and Opening Line are required.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      name: form.name,
+      description: form.description || null,
+      category: form.category,
+      buyer_type: form.buyer_type,
+      difficulty: form.difficulty,
+      customer_name: form.customer_name,
+      personality: form.personality || null,
+      system_prompt: form.system_prompt,
+      opening_line: form.opening_line,
+      trade_vehicle: form.trade_vehicle || null,
+      trade_value: form.trade_value || null,
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await supabase.from("custom_scenarios" as any).update(payload).eq("id", editingId));
+    } else {
+      ({ error } = await supabase.from("custom_scenarios" as any).insert({ ...payload, dealership_id: dealershipId }));
+    }
+    setSaving(false);
+    if (error) {
+      toast({ title: "Error saving scenario", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: editingId ? "Scenario updated" : "Scenario created" });
+      setDialogOpen(false);
+      fetchScenarios();
+    }
+  };
+
+  const toggleActive = async (id: string, current: boolean) => {
+    const { error } = await supabase.from("custom_scenarios" as any).update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "Error toggling scenario", description: error.message, variant: "destructive" });
+    } else {
+      fetchScenarios();
+    }
+  };
+
+  const setField = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold">Custom Scenarios</h3>
+        <Button size="sm" onClick={openAdd}>
+          <Plus className="w-4 h-4 mr-1" /> Add Scenario
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Buyer Type</TableHead>
+                <TableHead>Difficulty</TableHead>
+                <TableHead>Active</TableHead>
+                <TableHead className="w-[100px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {scenarios.map(s => (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableCell className="capitalize">{s.category.replace(/-/g, " ")}</TableCell>
+                  <TableCell className="capitalize">{s.buyer_type}</TableCell>
+                  <TableCell className="capitalize">{s.difficulty}</TableCell>
+                  <TableCell>
+                    <Switch checked={s.is_active} onCheckedChange={() => toggleActive(s.id, s.is_active)} />
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>Edit</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {scenarios.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                    No custom scenarios yet. Click "Add Scenario" to create one.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingId ? "Edit Scenario" : "Add Custom Scenario"}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Name *</Label>
+              <Input value={form.name} onChange={e => setField("name", e.target.value)} placeholder="e.g. Tough Negotiator Trade-In" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={e => setField("description", e.target.value)} placeholder="Brief description of the scenario" rows={2} />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={v => setField("category", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SCENARIO_CATEGORIES.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Buyer Type</Label>
+                <Select value={form.buyer_type} onValueChange={v => setField("buyer_type", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BUYER_TYPES.map(b => (
+                      <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Difficulty</Label>
+                <Select value={form.difficulty} onValueChange={v => setField("difficulty", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DIFFICULTY_LEVELS.map(d => (
+                      <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Customer Name</Label>
+                <Input value={form.customer_name} onChange={e => setField("customer_name", e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Trade Vehicle</Label>
+                <Input value={form.trade_vehicle} onChange={e => setField("trade_vehicle", e.target.value)} placeholder="Optional — e.g. 2019 Honda Accord" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Trade Value</Label>
+                <Input value={form.trade_value} onChange={e => setField("trade_value", e.target.value)} placeholder="Optional — e.g. $12,000" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Personality</Label>
+              <Textarea value={form.personality} onChange={e => setField("personality", e.target.value)} placeholder="Describe the customer's personality and background" rows={2} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Opening Line *</Label>
+              <Textarea value={form.opening_line} onChange={e => setField("opening_line", e.target.value)} placeholder="What does the customer say first?" rows={2} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>System Prompt *</Label>
+                <Button type="button" variant="outline" size="sm" onClick={generatePrompt}>
+                  <Wand2 className="w-3 h-3 mr-1" /> Generate Prompt
+                </Button>
+              </div>
+              <Textarea
+                value={form.system_prompt}
+                onChange={e => setField("system_prompt", e.target.value)}
+                placeholder="The full AI system prompt describing customer background, priorities, behavior..."
+                rows={8}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              {editingId ? "Save Changes" : "Create Scenario"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

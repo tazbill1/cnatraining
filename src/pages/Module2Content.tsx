@@ -12,8 +12,6 @@ import { ModuleQuiz } from "@/components/learn/ModuleQuiz";
 import { FramingSection } from "@/components/learn/sections/FramingSection";
 import { EvaluationSection } from "@/components/learn/sections/EvaluationSection";
 import { DisclosureSection } from "@/components/learn/sections/DisclosureSection";
-import { PracticeScenario } from "@/components/learn/PracticeScenario";
-import { module2PracticeScenario } from "@/lib/practiceScenarios";
 import {
   module2Objectives,
   module2Overview,
@@ -35,24 +33,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type ModuleStage = "intro" | "section1" | "section2" | "section3" | "practice" | "quiz" | "saving" | "complete";
+type ModuleStage = "intro" | "section1" | "section2" | "section3" | "quiz" | "saving" | "complete";
 
 const MODULE_ID = "trade-appraisal-process";
 
-const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "practice", "quiz"];
+const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "quiz"];
 
 const stageFriendlyNames: Record<ModuleStage, string> = {
   intro: "Introduction",
   section1: "Framing the Conversation",
   section2: "Vehicle Evaluation",
   section3: "Purchase Disclosure & AEAIR",
-  practice: "Practice Scenario",
   quiz: "Final Quiz",
   saving: "Saving",
   complete: "Complete",
 };
 
-const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Practice", "Quiz"];
+const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Quiz"];
 
 export default function Module2Content() {
   const navigate = useNavigate();
@@ -165,10 +162,9 @@ export default function Module2Content() {
       section1: 1,
       section2: 2,
       section3: 3,
-      practice: 4,
-      quiz: 5,
-      saving: 5,
-      complete: 5,
+      quiz: 4,
+      saving: 4,
+      complete: 4,
     };
     return stageMap[stage];
   };
@@ -236,28 +232,6 @@ export default function Module2Content() {
           </div>
         );
 
-      case "practice":
-        return (
-          <div className="space-y-6 md:space-y-8 animate-fade-in">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Practice Scenario</h2>
-              <p className="text-sm md:text-base text-muted-foreground">
-                Apply what you've learned in a realistic customer interaction. This is optional but recommended before the quiz.
-              </p>
-            </div>
-            <PracticeScenario scenario={module2PracticeScenario} />
-            <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t">
-              <Button variant="outline" onClick={handlePreviousSection} className="gap-2 w-full sm:w-auto">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Previous</span>
-              </Button>
-              <Button onClick={handleNextSection} className="gap-2 w-full sm:w-auto">
-                <span>Take Quiz</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        );
 
       case "quiz":
         return (
@@ -311,7 +285,7 @@ export default function Module2Content() {
     }
   };
 
-  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete" && stage !== "practice";
+  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete";
 
   return (
     <AuthGuard>

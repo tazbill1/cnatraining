@@ -16,6 +16,7 @@ import Module4Content from "./pages/Module4Content";
 import BuyerTypesContent from "./pages/BuyerTypesContent";
 import BuyerTypesVideo from "./pages/BuyerTypesVideo";
 import BaseStatementContent from "./pages/BaseStatementContent";
+import DealershipModuleContent from "./pages/DealershipModuleContent";
 import Toolbox from "./pages/Toolbox";
 import CNAForm from "./pages/CNAForm";
 import PhoneScripts from "./pages/PhoneScripts";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/learn/phone-sales-fundamentals" element={<Module4Content />} />
               <Route path="/learn/buyer-types" element={<BuyerTypesContent />} />
               <Route path="/learn/base-statement-video" element={<BuyerTypesVideo />} />
+              <Route path="/learn/dealership-:moduleId" element={<DealershipModuleContent />} />
               <Route path="/learn/:moduleId" element={<ModuleContent />} />
               <Route path="/toolbox" element={<Toolbox />} />
               <Route path="/toolbox/cna-form" element={<CNAForm />} />

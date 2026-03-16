@@ -7,6 +7,7 @@ import { ModuleCard } from "@/components/learn/ModuleCard";
 import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
+import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export default function Learn() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { settings, isLoading: settingsLoading } = useDealershipSettings();
+  const { dealershipModules, isLoading: dmLoading } = useDealershipModules();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -110,9 +112,9 @@ export default function Learn() {
 
   // Modules filtered by dealership settings
   const enabledModules = useMemo(() => {
-    if (!settings || !settings.enabled_module_ids) return trainingModules;
-    return trainingModules.filter(m => settings.enabled_module_ids.includes(m.id));
-  }, [settings]);
+    const enabledIds = settings?.enabled_module_ids || null;
+    return mergeModules(trainingModules, dealershipModules, enabledIds);
+  }, [settings, dealershipModules]);
 
   const filteredModules = useMemo(() => {
     let modules = enabledModules.map((m, i) => ({ ...m, originalIndex: i }));
@@ -177,6 +179,12 @@ export default function Learn() {
 
     if (isLocked && bypassLock) {
       toast.info("Dev mode: bypassing prerequisite lock");
+    }
+
+    // Custom dealership modules route to their own page
+    if (moduleId.startsWith("dealership-")) {
+      navigate(`/learn/${moduleId}`);
+      return;
     }
 
     const implementedModules = ["base-statement", "base-statement-video", "vehicle-selection-fundamentals", "trade-appraisal-process", "objection-handling-framework", "phone-sales-fundamentals", "buyer-types"];

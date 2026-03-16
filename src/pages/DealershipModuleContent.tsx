@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { VideoPlayer } from "@/components/learn/VideoPlayer";
+import VideoPlayer from "@/components/learn/VideoPlayer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";

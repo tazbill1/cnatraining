@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";
 import { useDealershipSettingsForId, DealershipSettings } from "@/hooks/useDealershipSettings";
 import { toast } from "@/hooks/use-toast";
+import { ContentTab } from "./ContentTab";
 
 interface DealershipDetailProps {
   dealershipId: string;

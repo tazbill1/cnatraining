@@ -36,7 +36,7 @@ import {
 
 type ModuleStage = "intro" | "section1" | "section2" | "section3" | "section4" | "quiz" | "saving" | "complete";
 
-const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "practice", "quiz"];
+const stageOrder: ModuleStage[] = ["intro", "section1", "section2", "section3", "section4", "quiz"];
 
 const stageFriendlyNames: Record<ModuleStage, string> = {
   intro: "Introduction",

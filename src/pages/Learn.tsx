@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, Search, X } from "lucide-react";
+import { BookOpen, Search, X, Eye } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ModuleCard } from "@/components/learn/ModuleCard";
@@ -8,6 +8,7 @@ import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";

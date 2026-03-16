@@ -50,7 +50,7 @@ const stageFriendlyNames: Record<ModuleStage, string> = {
   complete: "Complete",
 };
 
-const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Practice", "Quiz"];
+const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Quiz"];
 
 export default function Module2Content() {
   const navigate = useNavigate();

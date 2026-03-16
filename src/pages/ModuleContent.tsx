@@ -50,7 +50,7 @@ const stageFriendlyNames: Record<ModuleStage, string> = {
   complete: "Complete",
 };
 
-const sectionLabels = ["Intro", "Vehicle Selection", "ACV vs Trade", "6-Step Process", "Presentation", "Practice", "Quiz"];
+const sectionLabels = ["Intro", "Vehicle Selection", "ACV vs Trade", "6-Step Process", "Presentation", "Quiz"];
 
 export default function ModuleContent() {
   const { moduleId } = useParams();

@@ -21,13 +21,15 @@ import {
 export default function Scenarios() {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { previewDealershipId } = useDealershipContext();
+  const dealershipId = previewDealershipId || profile?.dealership_id;
   const [customScenarios, setCustomScenarios] = useState<Scenario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch custom scenarios for this dealership
   useEffect(() => {
     const fetchCustom = async () => {
-      if (!profile?.dealership_id) return;
+      if (!dealershipId) return;
       setIsLoading(true);
       const { data } = await supabase
         .from("custom_scenarios")

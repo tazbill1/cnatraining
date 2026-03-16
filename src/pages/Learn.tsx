@@ -112,9 +112,9 @@ export default function Learn() {
 
   // Modules filtered by dealership settings
   const enabledModules = useMemo(() => {
-    if (!settings || !settings.enabled_module_ids) return trainingModules;
-    return trainingModules.filter(m => settings.enabled_module_ids.includes(m.id));
-  }, [settings]);
+    const enabledIds = settings?.enabled_module_ids || null;
+    return mergeModules(trainingModules, dealershipModules, enabledIds);
+  }, [settings, dealershipModules]);
 
   const filteredModules = useMemo(() => {
     let modules = enabledModules.map((m, i) => ({ ...m, originalIndex: i }));

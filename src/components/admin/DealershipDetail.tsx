@@ -17,6 +17,7 @@ import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";
 import { useDealershipSettingsForId, DealershipSettings } from "@/hooks/useDealershipSettings";
 import { toast } from "@/hooks/use-toast";
+import { ContentTab } from "./ContentTab";
 
 interface DealershipDetailProps {
   dealershipId: string;
@@ -103,8 +104,9 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="training">Training Config</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="features">Features</TabsTrigger>
@@ -113,6 +115,10 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
         <TabsContent value="overview" className="space-y-6 mt-6">
           <OverviewTab users={users} sessions={sessions} invitations={invitations} dealershipId={dealershipId} onRefresh={fetchAll} />
+        </TabsContent>
+
+        <TabsContent value="content" className="mt-6">
+          <ContentTab dealershipId={dealershipId} />
         </TabsContent>
 
         <TabsContent value="training" className="mt-6">

@@ -69,7 +69,7 @@ export default function Results() {
   }
 
   const { results } = state;
-  const scenario = scenarios.find((s) => s.id === results.scenarioType);
+  const scenarioName = getScenarioName(results.scenarioType);
   const hasCategories = results.categories && Object.keys(results.categories).length > 0;
 
   const getScoreColor = (score: number) => {

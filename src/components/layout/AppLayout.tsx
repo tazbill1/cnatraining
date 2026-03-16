@@ -13,6 +13,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { settings } = useDealershipSettings();
+  const { profile } = useAuth();
+  const [logoError, setLogoError] = useState(false);
 
   // Set --dealership-color CSS variable for downstream use
   const dealershipStyle = settings?.primary_color

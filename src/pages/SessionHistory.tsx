@@ -97,7 +97,7 @@ export default function SessionHistory() {
 
   if (selectedSession) {
     const session = selectedSession;
-    const scenario = scenarios.find((s) => s.id === session.scenario_type);
+    const scenarioName = getScenarioName(session.scenario_type);
     const conversation = (session.conversation || []) as Array<{ role: string; content: string }>;
     const checklist = getChecklist(session.scenario_type);
     const checklistState = (session.checklist_state || {}) as Record<string, boolean>;

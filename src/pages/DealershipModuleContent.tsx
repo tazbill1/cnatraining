@@ -46,7 +46,7 @@ export default function DealershipModuleContent() {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  const dbId = moduleId?.replace("dealership-", "") || "";
+  const dbId = moduleId || "";
 
   useEffect(() => {
     async function load() {

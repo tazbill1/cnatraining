@@ -7,6 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Target, Clock, Calendar, TrendingUp, Download } from "lucide-react";
 import { scenarios } from "@/lib/scenarios";
+
+function getScenarioName(scenarioType: string): string {
+  const found = scenarios.find(s => s.id === scenarioType);
+  if (found) return found.name;
+  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
+  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 import { cn } from "@/lib/utils";
 import {
   Table,

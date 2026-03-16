@@ -3,6 +3,13 @@ import { ArrowLeft, RotateCcw, Shuffle, Check, AlertCircle, TrendingUp, MessageS
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { scenarios } from "@/lib/scenarios";
+
+function getScenarioName(scenarioType: string): string {
+  const found = scenarios.find(s => s.id === scenarioType);
+  if (found) return found.name;
+  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
+  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";

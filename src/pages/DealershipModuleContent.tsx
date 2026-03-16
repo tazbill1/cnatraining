@@ -126,13 +126,22 @@ export default function DealershipModuleContent() {
   const hasVideo = !!module.video_url;
   const sections = module.sections;
   const hasQuiz = module.quiz_questions.length > 0;
+  const practiceScenarios = module.practice_scenarios || [];
+  const hasPractice = practiceScenarios.length > 0;
 
-  // Stages: [intro/video, ...sections, quiz?]
-  const stages: { type: "intro" | "section" | "quiz"; title: string; index?: number }[] = [];
+  // Stages: [intro/video, ...sections, ...practice, quiz?]
+  const stages: { type: "intro" | "section" | "practice" | "quiz"; title: string; index?: number }[] = [];
   if (hasVideo || module.description) {
     stages.push({ type: "intro", title: module.video_title || "Introduction" });
   }
   sections.forEach((s, i) => stages.push({ type: "section", title: s.title, index: i }));
+  if (hasPractice) {
+    practiceScenarios.forEach((ps, i) => stages.push({
+      type: "practice",
+      title: `Practice: ${ps.title}`,
+      index: i,
+    }));
+  }
   if (hasQuiz) stages.push({ type: "quiz", title: "Knowledge Check" });
 
   const totalStages = stages.length;

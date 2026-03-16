@@ -12,8 +12,6 @@ import { ModuleQuiz } from "@/components/learn/ModuleQuiz";
 import { FramingSection } from "@/components/learn/sections/FramingSection";
 import { EvaluationSection } from "@/components/learn/sections/EvaluationSection";
 import { DisclosureSection } from "@/components/learn/sections/DisclosureSection";
-import { PracticeScenario } from "@/components/learn/PracticeScenario";
-import { module2PracticeScenario } from "@/lib/practiceScenarios";
 import {
   module2Objectives,
   module2Overview,

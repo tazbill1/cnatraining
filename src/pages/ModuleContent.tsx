@@ -293,7 +293,7 @@ export default function ModuleContent() {
     }
   };
 
-  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete" && stage !== "practice";
+  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete";
 
   const handleResume = () => {
     if (savedStage) {

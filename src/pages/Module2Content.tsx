@@ -285,7 +285,7 @@ export default function Module2Content() {
     }
   };
 
-  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete" && stage !== "practice";
+  const showNavigation = stage !== "intro" && stage !== "quiz" && stage !== "saving" && stage !== "complete";
 
   return (
     <AuthGuard>

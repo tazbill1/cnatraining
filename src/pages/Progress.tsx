@@ -242,8 +242,7 @@ export default function ProgressPage() {
                             {formatDate(session.completed_at)}
                           </TableCell>
                           <TableCell>
-                            {scenarios.find((s) => s.id === session.scenario_type)?.name ||
-                              session.scenario_type}
+                            {getScenarioName(session.scenario_type)}
                           </TableCell>
                           <TableCell>
                             <span className={cn("font-semibold", getScoreClass(session.score))}>

@@ -218,7 +218,7 @@ export default function SessionHistory() {
                     className="w-full card-premium p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors text-left"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{scenario?.name || session.scenario_type}</p>
+                      <p className="font-medium text-foreground truncate">{scenarioDisplayName}</p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />

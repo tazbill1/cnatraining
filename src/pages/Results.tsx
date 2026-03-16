@@ -138,7 +138,7 @@ export default function Results() {
           <div className="text-center mb-10">
             <h1 className="text-2xl font-semibold text-foreground mb-2">Session Complete</h1>
             <p className="text-muted-foreground mb-6">
-              {scenario?.name} • {formatDuration(results.durationSeconds)}
+              {scenarioName} • {formatDuration(results.durationSeconds)}
             </p>
             <div className={cn("inline-flex flex-col items-center justify-center w-40 h-40 rounded-full", getScoreBg(results.overallScore))}>
               <span className="text-5xl font-bold text-white">{results.overallScore}</span>

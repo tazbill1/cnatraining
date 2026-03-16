@@ -175,10 +175,9 @@ export default function ModuleContent() {
       section2: 2,
       section3: 3,
       section4: 4,
-      practice: 5,
-      quiz: 6,
-      saving: 6,
-      complete: 6,
+      quiz: 5,
+      saving: 5,
+      complete: 5,
     };
     return stageMap[stage];
   };

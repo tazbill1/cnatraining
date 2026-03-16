@@ -52,12 +52,11 @@ export function ChecklistPanel({
   elapsedTime,
   onEndSession,
 }: ChecklistPanelProps) {
-  const { checklist, title, progressLabel } = getChecklistForScenario(scenario);
+  const { checklist, title, progressLabel, grouped } = getChecklistForScenario(scenario);
   const completedCount = checklist.filter((item) => checklistState[item.id]).length;
   const progress = Math.round((completedCount / checklist.length) * 100);
 
-  // No phone grouping needed in the new buying-type system
-  const groupedItems = null;
+  const groupedItems = grouped;
 
   return (
     <div className="w-full sm:w-80 sm:border-l border-border bg-card flex flex-col sm:h-full">

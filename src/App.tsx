@@ -16,6 +16,7 @@ import Module4Content from "./pages/Module4Content";
 import BuyerTypesContent from "./pages/BuyerTypesContent";
 import BuyerTypesVideo from "./pages/BuyerTypesVideo";
 import BaseStatementContent from "./pages/BaseStatementContent";
+import DealershipModuleContent from "./pages/DealershipModuleContent";
 import Toolbox from "./pages/Toolbox";
 import CNAForm from "./pages/CNAForm";
 import PhoneScripts from "./pages/PhoneScripts";

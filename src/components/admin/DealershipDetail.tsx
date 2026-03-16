@@ -120,7 +120,6 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
         <TabsContent value="content" className="mt-6">
           <ContentTab dealershipId={dealershipId} />
         </TabsContent>
-        </TabsContent>
 
         <TabsContent value="training" className="mt-6">
           <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>

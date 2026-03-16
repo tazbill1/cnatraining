@@ -102,11 +102,12 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="training">Training Config</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="features">Features</TabsTrigger>
+          <TabsTrigger value="scenarios">Scenarios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
@@ -129,6 +130,10 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
           <SettingsGuard dealershipId={dealershipId} settings={settings} onInitialized={refetch}>
             <FeaturesTab dealershipId={dealershipId} settings={settings} onSaved={refetch} />
           </SettingsGuard>
+        </TabsContent>
+
+        <TabsContent value="scenarios" className="mt-6">
+          <ScenariosTab dealershipId={dealershipId} />
         </TabsContent>
       </Tabs>
     </div>

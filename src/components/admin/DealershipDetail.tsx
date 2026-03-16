@@ -112,7 +112,7 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
-          <OverviewTab users={users} sessions={sessions} invitations={invitations} />
+          <OverviewTab users={users} sessions={sessions} invitations={invitations} dealershipId={dealershipId} onRefresh={fetchAll} />
         </TabsContent>
 
         <TabsContent value="training" className="mt-6">

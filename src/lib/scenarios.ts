@@ -18,6 +18,9 @@ export const buyerTypes: BuyerType_Info[] = [
   { id: "loyal", name: "The Repeat Customer", description: "Brand-loyal, values familiarity and trust", icon: Heart },
   { id: "urgent", name: "The Life-Event Buyer", description: "Needs a vehicle quickly due to circumstance", icon: AlertTriangle },
   { id: "general", name: "General", description: "Mixed or unique buyer profiles", icon: Users },
+  { id: "budget-buyer", name: "The Budget Buyer", description: "Financially cautious, focused on monthly payments", icon: DollarSign },
+  { id: "analytical-buyer", name: "The Analytical Buyer", description: "Thorough researcher who overthinks big decisions", icon: Brain },
+  { id: "price-buyer", name: "The Price Buyer", description: "Direct negotiator shopping competitor quotes", icon: Target },
 ];
 
 export interface ScenarioCategory_Info {
@@ -53,6 +56,14 @@ export const scenarioCategories: ScenarioCategory_Info[] = [
     description: "Master the 6-step consultative call process — capture leads, build rapport, and secure appointments.",
     icon: PhoneIncoming,
     color: "sky",
+  },
+  {
+    id: "objection-handling",
+    name: "Objection Handling",
+    subtitle: "C.R.I.C. Objection Framework",
+    description: "Practice Clarify, Rephrase, Isolate, and Close on real-world objections — budget concerns, decision hesitation, and competitor quotes.",
+    icon: ShieldAlert,
+    color: "teal",
   },
 ];
 

@@ -114,7 +114,8 @@ export default function Learn() {
 
   // Modules filtered by dealership settings
   const enabledModules = useMemo(() => {
-    const enabledIds = settings?.enabled_module_ids || null;
+    // Pass the raw array (or undefined→null) so mergeModules can distinguish "no settings" from "empty list"
+    const enabledIds = settings ? settings.enabled_module_ids : null;
     return mergeModules(trainingModules, dealershipModules, enabledIds);
   }, [settings, dealershipModules]);
 

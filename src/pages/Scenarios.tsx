@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, Users } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   scenarios,
   scenarioCategories,
@@ -17,11 +19,48 @@ import {
   getScenariosByBuyerType,
   ScenarioCategory,
   BuyerType,
+  Scenario,
+  buyerTypes,
 } from "@/lib/scenarios";
 
 export default function Scenarios() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { settings, isLoading: settingsLoading } = useDealershipSettings();
+  const [customScenarios, setCustomScenarios] = useState<Scenario[]>([]);
+
+  // Fetch custom scenarios for this dealership
+  useEffect(() => {
+    const fetchCustom = async () => {
+      if (!profile?.dealership_id) return;
+      const { data } = await supabase
+        .from("custom_scenarios" as any)
+        .select("*")
+        .eq("dealership_id", profile.dealership_id)
+        .eq("is_active", true);
+      if (data) {
+        setCustomScenarios(
+          (data as any[]).map((row) => ({
+            id: `custom-${row.id}`,
+            name: row.name,
+            description: row.description || "",
+            personality: row.personality || "",
+            difficulty: row.difficulty as Scenario["difficulty"],
+            estimatedTime: row.estimated_time || "8-12 min",
+            icon: Users,
+            systemPrompt: row.system_prompt,
+            openingLine: row.opening_line,
+            category: row.category as ScenarioCategory,
+            buyerType: row.buyer_type as BuyerType,
+            customerName: row.customer_name,
+            tradeVehicle: row.trade_vehicle || undefined,
+            tradeValue: row.trade_value || undefined,
+          }))
+        );
+      }
+    };
+    fetchCustom();
+  }, [profile?.dealership_id]);
 
   const enabledCategories = useMemo(() => {
     if (!settings?.enabled_scenario_categories) return scenarioCategories;
@@ -59,17 +98,32 @@ export default function Scenarios() {
 
   const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 };
 
-  const filterByDifficulty = (scenarioList: typeof scenarios) => {
+  const filterByDifficulty = (scenarioList: Scenario[]) => {
     if (!enabledDifficulties) return scenarioList;
     return scenarioList.filter(s => enabledDifficulties.includes(s.difficulty));
   };
 
   const renderCategoryContent = (category: typeof scenarioCategories[number]) => {
-    const buyerTypesInCategory = getBuyerTypesInCategory(category.id as ScenarioCategory);
+    const catId = category.id as ScenarioCategory;
 
-    const allFilteredScenarios = buyerTypesInCategory.flatMap(btId =>
-      filterByDifficulty(getScenariosByBuyerType(category.id as ScenarioCategory, btId))
-    );
+    // Get built-in buyer types
+    const builtInBuyerTypes = getBuyerTypesInCategory(catId);
+
+    // Get custom scenarios for this category
+    const customForCategory = customScenarios.filter(s => s.category === catId);
+
+    // Find any additional buyer types from custom scenarios not in built-in
+    const customBuyerTypeIds = new Set(customForCategory.map(s => s.buyerType));
+    const allBuyerTypeIds = [...builtInBuyerTypes];
+    customBuyerTypeIds.forEach(bt => {
+      if (!allBuyerTypeIds.includes(bt)) allBuyerTypeIds.push(bt);
+    });
+
+    const allFilteredScenarios = allBuyerTypeIds.flatMap(btId => {
+      const builtIn = filterByDifficulty(getScenariosByBuyerType(catId, btId));
+      const custom = filterByDifficulty(customForCategory.filter(s => s.buyerType === btId));
+      return [...builtIn, ...custom];
+    });
 
     return (
       <div>
@@ -105,23 +159,33 @@ export default function Scenarios() {
           </div>
         ) : (
           <div className="space-y-8">
-            {buyerTypesInCategory.map((buyerTypeId) => {
+            {allBuyerTypeIds.map((buyerTypeId) => {
               const buyerType = getBuyerTypeById(buyerTypeId);
-              const typeScenarios = filterByDifficulty(
-                getScenariosByBuyerType(category.id as ScenarioCategory, buyerTypeId)
-              ).sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+              const builtInScenarios = filterByDifficulty(
+                getScenariosByBuyerType(catId, buyerTypeId)
+              );
+              const customTypeScenarios = filterByDifficulty(
+                customForCategory.filter(s => s.buyerType === buyerTypeId)
+              );
+              const typeScenarios = [...builtInScenarios, ...customTypeScenarios]
+                .sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
 
-              if (!buyerType || typeScenarios.length === 0) return null;
+              if (typeScenarios.length === 0) return null;
+
+              // Fallback for buyer types not in the built-in list
+              const buyerTypeName = buyerType?.name || buyerTypeId.charAt(0).toUpperCase() + buyerTypeId.slice(1);
+              const buyerTypeDesc = buyerType?.description || "Custom buyer type";
+              const BuyerIcon = buyerType?.icon || Users;
 
               return (
                 <div key={buyerTypeId}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <buyerType.icon className="w-4 h-4 text-muted-foreground" />
+                      <BuyerIcon className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground text-sm">{buyerType.name}</h3>
-                      <p className="text-xs text-muted-foreground">{buyerType.description}</p>
+                      <h3 className="font-semibold text-foreground text-sm">{buyerTypeName}</h3>
+                      <p className="text-xs text-muted-foreground">{buyerTypeDesc}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
@@ -139,6 +203,7 @@ export default function Scenarios() {
                         <ScenarioCard
                           scenario={scenario}
                           onClick={() => handleSelectScenario(scenario.id)}
+                          isCustom={scenario.id.startsWith("custom-")}
                         />
                       </div>
                     ))}

@@ -68,21 +68,22 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
   const { settings, isLoading: settingsLoading, refetch } = useDealershipSettingsForId(dealershipId);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      const [usersRes, sessionsRes, invitesRes] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
-        supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
-        supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
-      ]);
-      setUsers(usersRes.data || []);
-      setSessions(sessionsRes.data || []);
-      setInvitations(invitesRes.data || []);
-      setLoading(false);
-    };
-    fetchAll();
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const [usersRes, sessionsRes, invitesRes] = await Promise.all([
+      supabase.from("profiles").select("id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
+      supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
+      supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
+    ]);
+    setUsers(usersRes.data || []);
+    setSessions(sessionsRes.data || []);
+    setInvitations(invitesRes.data || []);
+    setLoading(false);
   }, [dealershipId]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   if (loading || settingsLoading) {
     return (

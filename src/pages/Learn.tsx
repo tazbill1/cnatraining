@@ -206,6 +206,16 @@ export default function Learn() {
     <AuthGuard>
       <AppLayout>
         <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+          {/* Preview Banner */}
+          {isPreviewing && previewDealership && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+              <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="text-amber-800 dark:text-amber-200">
+                <strong>Preview Mode:</strong> Viewing as <strong>{previewDealership.name}</strong> salesperson. Use the sidebar switcher to exit.
+              </span>
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-3 mb-2">

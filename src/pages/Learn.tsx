@@ -36,6 +36,7 @@ export default function Learn() {
   const { user, profile } = useAuth();
   const { settings, isLoading: settingsLoading } = useDealershipSettings();
   const { dealershipModules, isLoading: dmLoading } = useDealershipModules();
+  const { isPreviewing, previewDealership } = useDealershipContext();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

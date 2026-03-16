@@ -34,7 +34,7 @@ export default function Scenarios() {
       const { data } = await supabase
         .from("custom_scenarios")
         .select("*")
-        .eq("dealership_id", profile.dealership_id)
+        .eq("dealership_id", dealershipId)
         .eq("is_active", true);
       if (data) {
         setCustomScenarios(

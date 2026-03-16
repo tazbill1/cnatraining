@@ -44,7 +44,6 @@ const stageFriendlyNames: Record<ModuleStage, string> = {
   section1: "Framing the Conversation",
   section2: "Vehicle Evaluation",
   section3: "Purchase Disclosure & AEAIR",
-  practice: "Practice Scenario",
   quiz: "Final Quiz",
   saving: "Saving",
   complete: "Complete",

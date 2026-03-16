@@ -240,28 +240,6 @@ export default function ModuleContent() {
           </div>
         );
 
-      case "practice":
-        return (
-          <div className="space-y-6 md:space-y-8 animate-fade-in">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Practice Scenario</h2>
-              <p className="text-sm md:text-base text-muted-foreground">
-                Apply what you've learned in a realistic customer interaction. This is optional but recommended before the quiz.
-              </p>
-            </div>
-            <PracticeScenario scenario={module1PracticeScenario} />
-            <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t">
-              <Button variant="outline" onClick={handlePreviousSection} className="gap-2 w-full sm:w-auto">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Previous</span>
-              </Button>
-              <Button onClick={handleNextSection} className="gap-2 w-full sm:w-auto">
-                <span>Take Quiz</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        );
 
       case "quiz":
         return (

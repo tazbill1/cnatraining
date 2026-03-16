@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Users, Activity, Mail, Loader2, Save, Settings, Plus, Wand2 } from "lucide-react";
+import { ArrowLeft, Users, Activity, Mail, Loader2, Save, Settings, Plus, Wand2, UserPlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";
@@ -68,21 +68,22 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
   const { settings, isLoading: settingsLoading, refetch } = useDealershipSettingsForId(dealershipId);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
-      const [usersRes, sessionsRes, invitesRes] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
-        supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
-        supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
-      ]);
-      setUsers(usersRes.data || []);
-      setSessions(sessionsRes.data || []);
-      setInvitations(invitesRes.data || []);
-      setLoading(false);
-    };
-    fetchAll();
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const [usersRes, sessionsRes, invitesRes] = await Promise.all([
+      supabase.from("profiles").select("id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
+      supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
+      supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
+    ]);
+    setUsers(usersRes.data || []);
+    setSessions(sessionsRes.data || []);
+    setInvitations(invitesRes.data || []);
+    setLoading(false);
   }, [dealershipId]);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   if (loading || settingsLoading) {
     return (
@@ -111,7 +112,7 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
-          <OverviewTab users={users} sessions={sessions} invitations={invitations} />
+          <OverviewTab users={users} sessions={sessions} invitations={invitations} dealershipId={dealershipId} onRefresh={fetchAll} />
         </TabsContent>
 
         <TabsContent value="training" className="mt-6">
@@ -176,7 +177,56 @@ function SettingsGuard({ dealershipId, settings, onInitialized, children }: { de
 }
 
 /* ─── Overview Tab (existing content) ─── */
-function OverviewTab({ users, sessions, invitations }: { users: ProfileRow[]; sessions: SessionRow[]; invitations: InvitationRow[] }) {
+function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: { users: ProfileRow[]; sessions: SessionRow[]; invitations: InvitationRow[]; dealershipId: string; onRefresh: () => void }) {
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [unassignedUsers, setUnassignedUsers] = useState<ProfileRow[]>([]);
+  const [loadingUnassigned, setLoadingUnassigned] = useState(false);
+  const [assigning, setAssigning] = useState<string | null>(null);
+
+  const fetchUnassigned = async () => {
+    setLoadingUnassigned(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, last_active_at, created_at")
+      .is("dealership_id", null);
+    setUnassignedUsers(data || []);
+    setLoadingUnassigned(false);
+  };
+
+  const handleOpenAssign = () => {
+    setAssignOpen(true);
+    fetchUnassigned();
+  };
+
+  const handleAssign = async (profileId: string) => {
+    setAssigning(profileId);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ dealership_id: dealershipId } as any)
+      .eq("id", profileId);
+    setAssigning(null);
+    if (error) {
+      toast({ title: "Failed to assign user", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "User assigned to dealership" });
+      setUnassignedUsers(prev => prev.filter(u => u.id !== profileId));
+      onRefresh();
+    }
+  };
+
+  const handleRemove = async (profileId: string) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ dealership_id: null } as any)
+      .eq("id", profileId);
+    if (error) {
+      toast({ title: "Failed to remove user", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "User removed from dealership" });
+      onRefresh();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
@@ -204,7 +254,12 @@ function OverviewTab({ users, sessions, invitations }: { users: ProfileRow[]; se
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Team Members</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Team Members</CardTitle>
+          <Button size="sm" onClick={handleOpenAssign}>
+            <UserPlus className="w-4 h-4 mr-1" /> Assign User
+          </Button>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -213,6 +268,7 @@ function OverviewTab({ users, sessions, invitations }: { users: ProfileRow[]; se
                 <TableHead>Email</TableHead>
                 <TableHead>Last Active</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -226,17 +282,50 @@ function OverviewTab({ users, sessions, invitations }: { users: ProfileRow[]; se
                   <TableCell className="text-muted-foreground text-sm">
                     {formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}
                   </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleRemove(u.id)} title="Remove from dealership">
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-6">No users yet</TableCell>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">No users yet — click "Assign User" to add existing users</TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Assign User Dialog */}
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Assign User to Dealership</DialogTitle>
+          </DialogHeader>
+          {loadingUnassigned ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+          ) : unassignedUsers.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">All users are already assigned to a dealership.</p>
+          ) : (
+            <div className="max-h-80 overflow-y-auto space-y-1">
+              {unassignedUsers.map(u => (
+                <div key={u.id} className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent">
+                  <div>
+                    <p className="text-sm font-medium">{u.full_name || u.email}</p>
+                    {u.full_name && <p className="text-xs text-muted-foreground">{u.email}</p>}
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => handleAssign(u.id)} disabled={assigning === u.id}>
+                    {assigning === u.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Assign"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Recent Sessions</CardTitle></CardHeader>

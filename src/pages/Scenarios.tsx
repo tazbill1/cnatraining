@@ -155,14 +155,9 @@ export default function Scenarios() {
           <div className="space-y-8">
             {allBuyerTypeIds.map((buyerTypeId) => {
               const buyerType = getBuyerTypeById(buyerTypeId);
-              const builtInScenarios = filterByDifficulty(
-                getScenariosByBuyerType(catId, buyerTypeId)
-              );
-              const customTypeScenarios = filterByDifficulty(
+              const typeScenarios = filterByDifficulty(
                 customForCategory.filter(s => s.buyerType === buyerTypeId)
-              );
-              const typeScenarios = [...builtInScenarios, ...customTypeScenarios]
-                .sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+              ).sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
 
               if (typeScenarios.length === 0) return null;
 

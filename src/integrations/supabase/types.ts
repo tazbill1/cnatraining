@@ -82,6 +82,144 @@ export type Database = {
           },
         ]
       }
+      dealership_module_sections: {
+        Row: {
+          content_html: string | null
+          content_type: string
+          created_at: string
+          id: string
+          module_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          content_html?: string | null
+          content_type?: string
+          created_at?: string
+          id?: string
+          module_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          content_html?: string | null
+          content_type?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_module_sections_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealership_modules: {
+        Row: {
+          base_module_id: string | null
+          created_at: string
+          dealership_id: string
+          description: string | null
+          estimated_time: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+          video_title: string | null
+          video_url: string | null
+        }
+        Insert: {
+          base_module_id?: string | null
+          created_at?: string
+          dealership_id: string
+          description?: string | null
+          estimated_time?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+          video_title?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          base_module_id?: string | null
+          created_at?: string
+          dealership_id?: string
+          description?: string | null
+          estimated_time?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          video_title?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_modules_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dealership_quiz_questions: {
+        Row: {
+          created_at: string
+          explanation: string | null
+          id: string
+          module_id: string
+          options: Json
+          question: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          module_id: string
+          options?: Json
+          question: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          module_id?: string
+          options?: Json
+          question?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_quiz_questions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealership_settings: {
         Row: {
           certificates_enabled: boolean | null

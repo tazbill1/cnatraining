@@ -13,8 +13,6 @@ import { VehicleSelectionSection } from "@/components/learn/sections/VehicleSele
 import { ACVSection } from "@/components/learn/sections/ACVSection";
 import { TradeValueSection } from "@/components/learn/sections/TradeValueSection";
 import { PresentationSection } from "@/components/learn/sections/PresentationSection";
-import { PracticeScenario } from "@/components/learn/PracticeScenario";
-import { module1PracticeScenario } from "@/lib/practiceScenarios";
 import {
   module1Objectives,
   module1Overview,

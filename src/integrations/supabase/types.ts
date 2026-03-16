@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_scenarios: {
+        Row: {
+          buyer_type: string
+          category: string
+          created_at: string | null
+          customer_name: string
+          dealership_id: string
+          description: string | null
+          difficulty: string
+          estimated_time: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          opening_line: string
+          personality: string | null
+          system_prompt: string
+          trade_value: string | null
+          trade_vehicle: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_type?: string
+          category?: string
+          created_at?: string | null
+          customer_name?: string
+          dealership_id: string
+          description?: string | null
+          difficulty?: string
+          estimated_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          opening_line: string
+          personality?: string | null
+          system_prompt: string
+          trade_value?: string | null
+          trade_vehicle?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_type?: string
+          category?: string
+          created_at?: string | null
+          customer_name?: string
+          dealership_id?: string
+          description?: string | null
+          difficulty?: string
+          estimated_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          opening_line?: string
+          personality?: string | null
+          system_prompt?: string
+          trade_value?: string | null
+          trade_vehicle?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_scenarios_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealership_settings: {
         Row: {
           certificates_enabled: boolean | null

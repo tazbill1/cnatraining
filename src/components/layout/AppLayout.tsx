@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { AppSidebar } from "./AppSidebar";
 import { MobileNav } from "./MobileNav";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,6 +13,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { settings } = useDealershipSettings();
+  const { profile } = useAuth();
+  const [logoError, setLogoError] = useState(false);
 
   // Set --dealership-color CSS variable for downstream use
   const dealershipStyle = settings?.primary_color
@@ -51,7 +54,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                 />
               </svg>
             </button>
-            <span className="font-semibold text-lg">CNA Training</span>
+            {settings?.logo_url && !logoError && (
+              <img
+                src={settings.logo_url}
+                alt="Logo"
+                className="h-6 w-auto"
+                onError={() => setLogoError(true)}
+              />
+            )}
+            <span className="font-semibold text-lg">
+              {settings?.dealership_tagline || profile?.dealership_name || "Sales Training"}
+            </span>
           </header>
         )}
         {children}

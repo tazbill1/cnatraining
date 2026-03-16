@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, Search, X } from "lucide-react";
+import { BookOpen, Search, X, Eye } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ModuleCard } from "@/components/learn/ModuleCard";
@@ -8,6 +8,7 @@ import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export default function Learn() {
   const { user, profile } = useAuth();
   const { settings, isLoading: settingsLoading } = useDealershipSettings();
   const { dealershipModules, isLoading: dmLoading } = useDealershipModules();
+  const { isPreviewing, previewDealership } = useDealershipContext();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -112,7 +114,8 @@ export default function Learn() {
 
   // Modules filtered by dealership settings
   const enabledModules = useMemo(() => {
-    const enabledIds = settings?.enabled_module_ids || null;
+    // Pass the raw array (or undefined→null) so mergeModules can distinguish "no settings" from "empty list"
+    const enabledIds = settings ? settings.enabled_module_ids : null;
     return mergeModules(trainingModules, dealershipModules, enabledIds);
   }, [settings, dealershipModules]);
 
@@ -204,6 +207,16 @@ export default function Learn() {
     <AuthGuard>
       <AppLayout>
         <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+          {/* Preview Banner */}
+          {isPreviewing && previewDealership && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+              <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="text-amber-800 dark:text-amber-200">
+                <strong>Preview Mode:</strong> Viewing as <strong>{previewDealership.name}</strong> salesperson. Use the sidebar switcher to exit.
+              </span>
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-3 mb-2">

@@ -114,7 +114,7 @@ export default function SessionHistory() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{scenario?.name || session.scenario_type}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{scenarioName}</h1>
                 <p className="text-sm text-muted-foreground">
                   {session.completed_at ? formatDate(session.completed_at) : "Unknown"} •{" "}
                   {session.duration_seconds ? formatDuration(session.duration_seconds) : "—"}

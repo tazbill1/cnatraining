@@ -13,10 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   scenarios,
   scenarioCategories,
-  getScenariosByCategory,
-  getBuyerTypesInCategory,
   getBuyerTypeById,
-  getScenariosByBuyerType,
   ScenarioCategory,
   BuyerType,
   Scenario,

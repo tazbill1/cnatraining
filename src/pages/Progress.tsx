@@ -125,7 +125,7 @@ export default function ProgressPage() {
       ["Date", "Scenario", "Score", "Duration", "Rapport", "Info Gathering", "Needs ID", "CNA Completion"],
       ...sessions.map((s) => [
         formatDate(s.completed_at),
-        scenarios.find((sc) => sc.id === s.scenario_type)?.name || s.scenario_type,
+        getScenarioName(s.scenario_type),
         s.score,
         formatDuration(s.duration_seconds),
         s.rapport_score,

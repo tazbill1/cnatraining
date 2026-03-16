@@ -211,7 +211,7 @@ export default function DealershipModuleContent() {
             <div className="space-y-6">
               {sections[current.index].video_url && (
                 <VideoPlayer
-                  src={sections[current.index].video_url!}
+                  videoUrl={sections[current.index].video_url!}
                   title={sections[current.index].title}
                   onComplete={() => {}}
                 />

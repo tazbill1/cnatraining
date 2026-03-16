@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { TrainingModule, trainingModules, ModuleDifficulty } from "@/lib/modules";
 import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, PlayCircle, LucideIcon } from "lucide-react";
 
@@ -88,7 +89,9 @@ function toTrainingModule(dm: DealershipModule): TrainingModule {
 
 export function useDealershipModules() {
   const { profile } = useAuth();
-  const dealershipId = profile?.dealership_id;
+  const { previewDealershipId } = useDealershipContext();
+  // Preview mode overrides the user's own dealership
+  const dealershipId = previewDealershipId || profile?.dealership_id;
 
   const { data, isLoading } = useQuery({
     queryKey: ["dealership-modules", dealershipId],
@@ -120,20 +123,24 @@ export function mergeModules(
     }
   });
 
-  // Filter defaults by enabled IDs, then apply overrides
-  let modules = defaults.filter((m) => !enabledIds || enabledIds.includes(m.id));
+  // Filter defaults by enabled IDs — empty array means NO defaults
+  let modules: TrainingModule[];
+  if (enabledIds === null || enabledIds === undefined) {
+    // No settings record → show all defaults
+    modules = [...defaults];
+  } else {
+    modules = defaults.filter((m) => enabledIds.includes(m.id));
+  }
 
   modules = modules.map((m) => {
     const override = overrides.get(m.id);
     if (!override) return m;
     return {
       ...m,
-      // Keep the original ID for routing to built-in content
       title: override.title || m.title,
       description: override.description || m.description,
       icon: iconMap[override.icon || ""] || m.icon,
       estimatedTime: override.estimated_time || m.estimatedTime,
-      // If the override has custom sections, mark it for custom rendering
       _dealershipModuleId: override.id,
       _hasCustomContent: override.sections.length > 0,
     } as TrainingModule & { _dealershipModuleId?: string; _hasCustomContent?: boolean };

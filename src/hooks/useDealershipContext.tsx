@@ -16,6 +16,11 @@ interface DealershipContextType {
   setSelectedDealershipId: (id: string | null) => void;
   isFiltering: boolean;
   loading: boolean;
+  /** When set, pages like Learn/Practice render as if the admin belongs to this dealership */
+  previewDealershipId: string | null;
+  previewDealership: Dealership | null;
+  setPreviewDealershipId: (id: string | null) => void;
+  isPreviewing: boolean;
 }
 
 const DealershipContext = createContext<DealershipContextType | undefined>(undefined);
@@ -24,6 +29,7 @@ export function DealershipProvider({ children }: { children: ReactNode }) {
   const { isSuperAdmin, user } = useAuth();
   const [dealerships, setDealerships] = useState<Dealership[]>([]);
   const [selectedDealershipId, setSelectedDealershipId] = useState<string | null>(null);
+  const [previewDealershipId, setPreviewDealershipId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -41,6 +47,7 @@ export function DealershipProvider({ children }: { children: ReactNode }) {
   }, [isSuperAdmin, user]);
 
   const selectedDealership = dealerships.find((d) => d.id === selectedDealershipId) || null;
+  const previewDealership = dealerships.find((d) => d.id === previewDealershipId) || null;
 
   return (
     <DealershipContext.Provider
@@ -51,6 +58,10 @@ export function DealershipProvider({ children }: { children: ReactNode }) {
         setSelectedDealershipId,
         isFiltering: !!selectedDealershipId,
         loading,
+        previewDealershipId,
+        previewDealership,
+        setPreviewDealershipId,
+        isPreviewing: !!previewDealershipId,
       }}
     >
       {children}

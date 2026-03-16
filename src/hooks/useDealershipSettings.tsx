@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 
 export interface DealershipSettings {
   id: string;
@@ -71,7 +72,9 @@ async function fetchSettings(dealershipId: string): Promise<DealershipSettings> 
 
 export function useDealershipSettings() {
   const { profile } = useAuth();
-  const dealershipId = profile?.dealership_id;
+  const { previewDealershipId } = useDealershipContext();
+  // Preview mode overrides the user's own dealership
+  const dealershipId = previewDealershipId || profile?.dealership_id;
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["dealership-settings", dealershipId],

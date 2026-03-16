@@ -54,7 +54,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                 />
               </svg>
             </button>
-            <span className="font-semibold text-lg">CNA Training</span>
+            {settings?.logo_url && !logoError && (
+              <img
+                src={settings.logo_url}
+                alt="Logo"
+                className="h-6 w-auto"
+                onError={() => setLogoError(true)}
+              />
+            )}
+            <span className="font-semibold text-lg">
+              {settings?.dealership_tagline || profile?.dealership_name || "Sales Training"}
+            </span>
           </header>
         )}
         {children}

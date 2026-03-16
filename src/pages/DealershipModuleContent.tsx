@@ -76,7 +76,7 @@ export default function DealershipModuleContent() {
         return;
       }
 
-      const [secRes, quizRes] = await Promise.all([
+      const [secRes, quizRes, practiceRes] = await Promise.all([
         supabase
           .from("dealership_module_sections")
           .select("*")
@@ -87,6 +87,12 @@ export default function DealershipModuleContent() {
           .select("*")
           .eq("module_id", dbId)
           .order("sort_order"),
+        supabase
+          .from("dealership_practice_scenarios" as any)
+          .select("*")
+          .eq("module_id", dbId)
+          .eq("is_active", true)
+          .order("sort_order"),
       ]);
 
       setModule({
@@ -96,6 +102,7 @@ export default function DealershipModuleContent() {
           ...q,
           options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
         })),
+        practice_scenarios: (practiceRes.data as any[]) || [],
       });
       setLoading(false);
     }

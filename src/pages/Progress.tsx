@@ -7,6 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Target, Clock, Calendar, TrendingUp, Download } from "lucide-react";
 import { scenarios } from "@/lib/scenarios";
+
+function getScenarioName(scenarioType: string): string {
+  const found = scenarios.find(s => s.id === scenarioType);
+  if (found) return found.name;
+  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
+  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -118,7 +125,7 @@ export default function ProgressPage() {
       ["Date", "Scenario", "Score", "Duration", "Rapport", "Info Gathering", "Needs ID", "CNA Completion"],
       ...sessions.map((s) => [
         formatDate(s.completed_at),
-        scenarios.find((sc) => sc.id === s.scenario_type)?.name || s.scenario_type,
+        getScenarioName(s.scenario_type),
         s.score,
         formatDuration(s.duration_seconds),
         s.rapport_score,
@@ -235,8 +242,7 @@ export default function ProgressPage() {
                             {formatDate(session.completed_at)}
                           </TableCell>
                           <TableCell>
-                            {scenarios.find((s) => s.id === session.scenario_type)?.name ||
-                              session.scenario_type}
+                            {getScenarioName(session.scenario_type)}
                           </TableCell>
                           <TableCell>
                             <span className={cn("font-semibold", getScoreClass(session.score))}>

@@ -8,6 +8,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Clock, Calendar, Check, X, MessageSquare } from "lucide-react";
 import { scenarios } from "@/lib/scenarios";
+
+function getScenarioName(scenarioType: string): string {
+  const found = scenarios.find(s => s.id === scenarioType);
+  if (found) return found.name;
+  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
+  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 import { cnaChecklist, categoryLabels, ChecklistItem } from "@/lib/checklist";
 import { phoneChecklist } from "@/lib/phoneChecklist";
 import { cn } from "@/lib/utils";
@@ -90,7 +97,7 @@ export default function SessionHistory() {
 
   if (selectedSession) {
     const session = selectedSession;
-    const scenario = scenarios.find((s) => s.id === session.scenario_type);
+    const scenarioName = getScenarioName(session.scenario_type);
     const conversation = (session.conversation || []) as Array<{ role: string; content: string }>;
     const checklist = getChecklist(session.scenario_type);
     const checklistState = (session.checklist_state || {}) as Record<string, boolean>;
@@ -107,7 +114,7 @@ export default function SessionHistory() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">{scenario?.name || session.scenario_type}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{scenarioName}</h1>
                 <p className="text-sm text-muted-foreground">
                   {session.completed_at ? formatDate(session.completed_at) : "Unknown"} •{" "}
                   {session.duration_seconds ? formatDuration(session.duration_seconds) : "—"}
@@ -199,7 +206,7 @@ export default function SessionHistory() {
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => {
-                const scenario = scenarios.find((s) => s.id === session.scenario_type);
+                const scenarioDisplayName = getScenarioName(session.scenario_type);
                 const checklistState = (session.checklist_state || {}) as Record<string, boolean>;
                 const completedItems = Object.values(checklistState).filter(Boolean).length;
                 const checklist = getChecklist(session.scenario_type);
@@ -211,7 +218,7 @@ export default function SessionHistory() {
                     className="w-full card-premium p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors text-left"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{scenario?.name || session.scenario_type}</p>
+                      <p className="font-medium text-foreground truncate">{scenarioDisplayName}</p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />

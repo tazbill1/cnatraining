@@ -3,6 +3,13 @@ import { ArrowLeft, RotateCcw, Shuffle, Check, AlertCircle, TrendingUp, MessageS
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { scenarios } from "@/lib/scenarios";
+
+function getScenarioName(scenarioType: string): string {
+  const found = scenarios.find(s => s.id === scenarioType);
+  if (found) return found.name;
+  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
+  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
@@ -62,7 +69,7 @@ export default function Results() {
   }
 
   const { results } = state;
-  const scenario = scenarios.find((s) => s.id === results.scenarioType);
+  const scenarioName = getScenarioName(results.scenarioType);
   const hasCategories = results.categories && Object.keys(results.categories).length > 0;
 
   const getScoreColor = (score: number) => {
@@ -131,7 +138,7 @@ export default function Results() {
           <div className="text-center mb-10">
             <h1 className="text-2xl font-semibold text-foreground mb-2">Session Complete</h1>
             <p className="text-muted-foreground mb-6">
-              {scenario?.name} • {formatDuration(results.durationSeconds)}
+              {scenarioName} • {formatDuration(results.durationSeconds)}
             </p>
             <div className={cn("inline-flex flex-col items-center justify-center w-40 h-40 rounded-full", getScoreBg(results.overallScore))}>
               <span className="text-5xl font-bold text-white">{results.overallScore}</span>

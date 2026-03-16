@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { cnaChecklist, categoryLabels as cnaCategoryLabels } from "@/lib/checklist";
 import { tradeAppraisalChecklist, vehicleSelectionChecklist } from "@/lib/tradeChecklist";
+import { cricChecklist, cricCategoryLabels } from "@/lib/cricChecklist";
 import { phoneChecklist, phoneCategoryLabels } from "@/lib/phoneChecklist";
 import { cn } from "@/lib/utils";
 import { Scenario } from "@/lib/scenarios";
@@ -14,19 +15,34 @@ interface ChecklistPanelProps {
 }
 
 function getChecklistForScenario(scenario: Scenario) {
-  // Use trade checklist if the scenario has trade data
+  // C.R.I.C. checklist for objection-handling scenarios
+  if (scenario.category === "objection-handling") {
+    return {
+      checklist: cricChecklist,
+      title: "C.R.I.C. Checklist",
+      progressLabel: "Objection Handling Progress",
+      grouped: Object.entries(cricCategoryLabels).map(([cat, label]) => ({
+        category: cat,
+        label,
+        items: cricChecklist.filter((item) => item.category === cat),
+      })).filter((g) => g.items.length > 0),
+    };
+  }
+  // Use trade checklist if the scenario has trade data (and is not objection-handling)
   if (scenario.customerName && scenario.tradeVehicle) {
     return {
       checklist: tradeAppraisalChecklist,
       title: "Trade Appraisal Checklist",
       progressLabel: "Appraisal Progress",
+      grouped: null,
     };
   }
-  // Default to CNA checklist for all buying-type scenarios
+  // Default to CNA checklist
   return {
     checklist: cnaChecklist,
     title: "CNA Checklist",
     progressLabel: "CNA Progress",
+    grouped: null,
   };
 }
 

@@ -247,6 +247,23 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
     }
   };
 
+  const handleToggleRole = async (userRow: ProfileRow) => {
+    const newRole = userRow.role === "manager" ? "salesperson" : "manager";
+    setTogglingRole(userRow.user_id);
+    try {
+      // Delete existing non-super_admin roles, then insert new one
+      await supabase.from("user_roles").delete().eq("user_id", userRow.user_id).neq("role", "super_admin");
+      const { error } = await supabase.from("user_roles").insert({ user_id: userRow.user_id, role: newRole });
+      if (error) throw error;
+      toast({ title: `Role updated to ${newRole}` });
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: "Failed to update role", description: err.message, variant: "destructive" });
+    } finally {
+      setTogglingRole(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">

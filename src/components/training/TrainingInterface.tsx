@@ -295,27 +295,43 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                   <Mic className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {sessionState.scenario?.customerName
-                    ? "Time to explain the trade process!"
-                    : "Your turn to greet the customer!"}
-                </h3>
-                {sessionState.scenario?.customerName && (
-                  <div className="mb-3 p-3 rounded-lg bg-muted/50 border border-border text-sm">
-                    <p className="font-medium text-foreground">Customer: {sessionState.scenario.customerName}</p>
-                    {sessionState.scenario.tradeVehicle && (
-                      <p className="text-muted-foreground">Trade Vehicle: {sessionState.scenario.tradeVehicle}</p>
+                {sessionState.scenario?.category === "trade-appraisal" ? (
+                  <>
+                    <h3 className="font-semibold text-lg mb-2">Time to Walk Through the Trade Process</h3>
+                    {sessionState.scenario.customerName && (
+                      <div className="mb-3 p-3 rounded-lg bg-muted/50 border border-border text-sm text-left max-w-md mx-auto">
+                        <p className="font-medium text-foreground mb-1">📋 Situation Briefing</p>
+                        <p className="text-muted-foreground mb-2">The CNA is complete. You've built rapport and identified their needs. Now transition into the trade appraisal.</p>
+                        <div className="border-t border-border pt-2 mt-2 space-y-1">
+                          <p className="text-foreground"><span className="text-muted-foreground">Customer:</span> {sessionState.scenario.customerName}</p>
+                          {sessionState.scenario.tradeVehicle && (
+                            <p className="text-foreground"><span className="text-muted-foreground">Trade:</span> {sessionState.scenario.tradeVehicle}</p>
+                          )}
+                          {sessionState.scenario.tradeValue && (
+                            <p className="text-foreground"><span className="text-muted-foreground">ACV:</span> <span className="font-semibold">{sessionState.scenario.tradeValue}</span></p>
+                          )}
+                        </div>
+                      </div>
                     )}
-                    {sessionState.scenario.tradeValue && (
-                      <p className="text-muted-foreground">ACV: <span className="font-semibold text-foreground">{sessionState.scenario.tradeValue}</span></p>
-                    )}
-                  </div>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Start by framing the trade evaluation process for the customer. Explain what happens next before inspecting the vehicle.
+                    </p>
+                  </>
+                ) : sessionState.scenario?.category === "inbound-call" ? (
+                  <>
+                    <h3 className="font-semibold text-lg mb-2">Incoming Call — Pick Up!</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      A customer is calling about a vehicle they saw online. Answer the phone professionally and work to earn the appointment.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-semibold text-lg mb-2">Your Turn to Greet the Customer!</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      A customer just walked onto the lot. Use the mic button or type your opening greeting to begin the conversation.
+                    </p>
+                  </>
                 )}
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  {sessionState.scenario?.customerName
-                    ? "The CNA is complete. Now explain how the trade evaluation works before inspecting the vehicle."
-                    : "A customer just walked onto the lot. Use the mic button or type your opening greeting to begin the conversation."}
-                </p>
                 <p className="text-sm text-muted-foreground mt-4 italic">
                   Scenario: {sessionState.scenario?.name}
                 </p>

@@ -34,6 +34,7 @@ export default function Training() {
         }
 
         const row = data as any;
+        const isObjectionHandling = row.category === "objection-handling";
         setScenario({
           id: `custom-${row.id}`,
           name: row.name,
@@ -49,6 +50,7 @@ export default function Training() {
           customerName: row.customer_name,
           tradeVehicle: row.trade_vehicle || undefined,
           tradeValue: row.trade_value || undefined,
+          customerOpens: isObjectionHandling,
         });
         setLoading(false);
       };

@@ -73,12 +73,23 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [usersRes, sessionsRes, invitesRes] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
+    const [usersRes, sessionsRes, invitesRes, rolesRes] = await Promise.all([
+      supabase.from("profiles").select("id, user_id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
       supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
       supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
     ]);
-    setUsers(usersRes.data || []);
+    
+    const roles = rolesRes.data || [];
+    const enrichedUsers = (usersRes.data || []).map(u => {
+      // Find the highest role for this user
+      const userRoles = roles.filter(r => r.user_id === u.user_id);
+      const isManager = userRoles.some(r => r.role === "manager");
+      const isSuperAdmin = userRoles.some(r => r.role === "super_admin");
+      return { ...u, role: isSuperAdmin ? "super_admin" : isManager ? "manager" : "salesperson" };
+    });
+    
+    setUsers(enrichedUsers);
     setSessions(sessionsRes.data || []);
     setInvitations(invitesRes.data || []);
     setLoading(false);

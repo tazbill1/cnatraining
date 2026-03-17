@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { UserDetailPanel } from "@/components/team/UserDetailPanel";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +50,7 @@ export default function Team() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{ userId: string; name: string } | null>(null);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [teamSessions, setTeamSessions] = useState<Array<{
     user_id: string;
@@ -265,6 +267,13 @@ export default function Team() {
     <AuthGuard>
       <AppLayout>
         <div className="p-4 md:p-8 max-w-6xl mx-auto">
+          {selectedUser ? (
+            <UserDetailPanel
+              userId={selectedUser.userId}
+              userName={selectedUser.name}
+              onBack={() => setSelectedUser(null)}
+            />
+          ) : (<>
           {/* Header */}
           <div className="mb-6 md:mb-8">
             <Button
@@ -425,6 +434,7 @@ export default function Team() {
                 getActivityStatus={getActivityStatus} 
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
+                onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
               />
             </TabsContent>
 
@@ -434,6 +444,7 @@ export default function Team() {
                 getActivityStatus={getActivityStatus} 
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
+                onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
               />
             </TabsContent>
 
@@ -454,6 +465,7 @@ export default function Team() {
                     getActivityStatus={getActivityStatus} 
                     getScoreBadge={getScoreBadge}
                     isMobile={isMobile}
+                    onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
                   />
                 </CardContent>
               </Card>
@@ -463,6 +475,7 @@ export default function Team() {
               <TeamInsights sessions={teamSessions} users={users} />
             </TabsContent>
           </Tabs>
+          </>)}
         </div>
       </AppLayout>
     </AuthGuard>
@@ -609,6 +622,7 @@ interface UserListProps {
   getActivityStatus: (lastActive: string | null) => { label: string; variant: "default" | "secondary" | "destructive" | "outline" };
   getScoreBadge: (score: number) => { color: string };
   isMobile: boolean;
+  onSelectUser?: (userId: string, name: string) => void;
 }
 
 function maskEmail(email: string): string {
@@ -618,7 +632,7 @@ function maskEmail(email: string): string {
   return `${maskedUser}@${domain}`;
 }
 
-function UserList({ users, getActivityStatus, getScoreBadge, isMobile }: UserListProps) {
+function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser }: UserListProps) {
   if (users.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">
@@ -636,7 +650,7 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile }: UserLis
           const scoreBadge = getScoreBadge(user.avg_score);
           
           return (
-            <Card key={user.id} className="p-4">
+            <Card key={user.id} className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => onSelectUser?.(user.user_id, user.full_name)}>
               <div className="flex items-start gap-3">
                 <Avatar className="h-10 w-10 shrink-0">
                   <AvatarFallback className="text-xs">
@@ -704,7 +718,7 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile }: UserLis
           const scoreBadge = getScoreBadge(user.avg_score);
           
           return (
-            <TableRow key={user.id}>
+            <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onSelectUser?.(user.user_id, user.full_name)}>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">

@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Users, Activity, Mail, Loader2, Save, Settings, Plus, Wand2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Users, Activity, Mail, Loader2, Save, Settings, Plus, Wand2, UserPlus, X, ShieldCheck, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";
@@ -27,10 +27,12 @@ interface DealershipDetailProps {
 
 interface ProfileRow {
   id: string;
+  user_id: string;
   full_name: string;
   email: string;
   last_active_at: string | null;
   created_at: string;
+  role?: string;
 }
 
 interface SessionRow {
@@ -71,12 +73,23 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [usersRes, sessionsRes, invitesRes] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
+    const [usersRes, sessionsRes, invitesRes, rolesRes] = await Promise.all([
+      supabase.from("profiles").select("id, user_id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
       supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
       supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
     ]);
-    setUsers(usersRes.data || []);
+    
+    const roles = rolesRes.data || [];
+    const enrichedUsers = (usersRes.data || []).map(u => {
+      // Find the highest role for this user
+      const userRoles = roles.filter(r => r.user_id === u.user_id);
+      const isManager = userRoles.some(r => r.role === "manager");
+      const isSuperAdmin = userRoles.some(r => r.role === "super_admin");
+      return { ...u, role: isSuperAdmin ? "super_admin" : isManager ? "manager" : "salesperson" };
+    });
+    
+    setUsers(enrichedUsers);
     setSessions(sessionsRes.data || []);
     setInvitations(invitesRes.data || []);
     setLoading(false);
@@ -188,14 +201,15 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
   const [unassignedUsers, setUnassignedUsers] = useState<ProfileRow[]>([]);
   const [loadingUnassigned, setLoadingUnassigned] = useState(false);
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [togglingRole, setTogglingRole] = useState<string | null>(null);
 
   const fetchUnassigned = async () => {
     setLoadingUnassigned(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email, last_active_at, created_at")
+      .select("id, user_id, full_name, email, last_active_at, created_at")
       .is("dealership_id", null);
-    setUnassignedUsers(data || []);
+    setUnassignedUsers((data || []).map(u => ({ ...u, role: "salesperson" })));
     setLoadingUnassigned(false);
   };
 
@@ -230,6 +244,23 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
     } else {
       toast({ title: "User removed from dealership" });
       onRefresh();
+    }
+  };
+
+  const handleToggleRole = async (userRow: ProfileRow) => {
+    const newRole = userRow.role === "manager" ? "salesperson" : "manager";
+    setTogglingRole(userRow.user_id);
+    try {
+      // Delete existing non-super_admin roles, then insert new one
+      await supabase.from("user_roles").delete().eq("user_id", userRow.user_id).neq("role", "super_admin");
+      const { error } = await supabase.from("user_roles").insert({ user_id: userRow.user_id, role: newRole });
+      if (error) throw error;
+      toast({ title: `Role updated to ${newRole}` });
+      onRefresh();
+    } catch (err: any) {
+      toast({ title: "Failed to update role", description: err.message, variant: "destructive" });
+    } finally {
+      setTogglingRole(null);
     }
   };
 
@@ -272,6 +303,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Last Active</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead className="w-10"></TableHead>
@@ -282,6 +314,27 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>
+                    {u.role === "super_admin" ? (
+                      <Badge variant="default" className="gap-1"><ShieldCheck className="w-3 h-3" /> Super Admin</Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        disabled={togglingRole === u.user_id}
+                        onClick={(e) => { e.stopPropagation(); handleToggleRole(u); }}
+                      >
+                        {togglingRole === u.user_id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : u.role === "manager" ? (
+                          <Badge variant="default" className="gap-1 cursor-pointer"><ShieldCheck className="w-3 h-3" /> Manager</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="gap-1 cursor-pointer"><User className="w-3 h-3" /> Salesperson</Badge>
+                        )}
+                      </Button>
+                    )}
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {u.last_active_at ? formatDistanceToNow(new Date(u.last_active_at), { addSuffix: true }) : "Never"}
                   </TableCell>
@@ -297,7 +350,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
               ))}
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">No users yet — click "Assign User" to add existing users</TableCell>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">No users yet — click "Assign User" to add existing users</TableCell>
                 </TableRow>
               )}
             </TableBody>

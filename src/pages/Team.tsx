@@ -619,6 +619,7 @@ interface UserListProps {
   getActivityStatus: (lastActive: string | null) => { label: string; variant: "default" | "secondary" | "destructive" | "outline" };
   getScoreBadge: (score: number) => { color: string };
   isMobile: boolean;
+  onSelectUser?: (userId: string, name: string) => void;
 }
 
 function maskEmail(email: string): string {

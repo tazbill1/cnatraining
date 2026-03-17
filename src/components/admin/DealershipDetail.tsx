@@ -303,6 +303,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Last Active</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead className="w-10"></TableHead>
@@ -313,6 +314,27 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>
+                    {u.role === "super_admin" ? (
+                      <Badge variant="default" className="gap-1"><ShieldCheck className="w-3 h-3" /> Super Admin</Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        disabled={togglingRole === u.user_id}
+                        onClick={(e) => { e.stopPropagation(); handleToggleRole(u); }}
+                      >
+                        {togglingRole === u.user_id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : u.role === "manager" ? (
+                          <Badge variant="default" className="gap-1 cursor-pointer"><ShieldCheck className="w-3 h-3" /> Manager</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="gap-1 cursor-pointer"><User className="w-3 h-3" /> Salesperson</Badge>
+                        )}
+                      </Button>
+                    )}
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {u.last_active_at ? formatDistanceToNow(new Date(u.last_active_at), { addSuffix: true }) : "Never"}
                   </TableCell>
@@ -328,7 +350,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
               ))}
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">No users yet — click "Assign User" to add existing users</TableCell>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">No users yet — click "Assign User" to add existing users</TableCell>
                 </TableRow>
               )}
             </TableBody>

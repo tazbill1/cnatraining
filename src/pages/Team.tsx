@@ -629,7 +629,7 @@ function maskEmail(email: string): string {
   return `${maskedUser}@${domain}`;
 }
 
-function UserList({ users, getActivityStatus, getScoreBadge, isMobile }: UserListProps) {
+function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser }: UserListProps) {
   if (users.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">

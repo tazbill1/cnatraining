@@ -267,6 +267,13 @@ export default function Team() {
     <AuthGuard>
       <AppLayout>
         <div className="p-4 md:p-8 max-w-6xl mx-auto">
+          {selectedUser ? (
+            <UserDetailPanel
+              userId={selectedUser.userId}
+              userName={selectedUser.name}
+              onBack={() => setSelectedUser(null)}
+            />
+          ) : (<>
           {/* Header */}
           <div className="mb-6 md:mb-8">
             <Button

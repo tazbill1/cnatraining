@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { Scenario } from "@/lib/scenarios";
 import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
 import { analyzePhoneChecklistFromConversation, calculatePhoneChecklistProgress } from "@/lib/phoneChecklist";
+import { analyzeCricChecklistFromConversation } from "@/lib/cricChecklist";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 
@@ -149,9 +150,9 @@ export function useTrainingSession() {
         const allMessages = [...updatedMessages, aiMessage];
 
         // Analyze checklist based on scenario category
-        const hasTradeData = !!(sessionState.scenario?.customerName && sessionState.scenario?.tradeVehicle);
-        const newChecklistState = false // phone checklist no longer used as separate category
-          ? analyzePhoneChecklistFromConversation(
+        const isObjectionHandling = sessionState.scenario?.category === "objection-handling";
+        const newChecklistState = isObjectionHandling
+          ? analyzeCricChecklistFromConversation(
               allMessages.map((m) => ({ role: m.role, content: m.content })),
               sessionState.checklistState
             )

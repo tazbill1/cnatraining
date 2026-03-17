@@ -718,7 +718,7 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
           const scoreBadge = getScoreBadge(user.avg_score);
           
           return (
-            <TableRow key={user.id}>
+            <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onSelectUser?.(user.user_id, user.full_name)}>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">

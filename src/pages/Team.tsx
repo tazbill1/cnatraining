@@ -472,6 +472,7 @@ export default function Team() {
               <TeamInsights sessions={teamSessions} users={users} />
             </TabsContent>
           </Tabs>
+          </>)}
         </div>
       </AppLayout>
     </AuthGuard>

@@ -206,9 +206,9 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
     setLoadingUnassigned(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email, last_active_at, created_at")
+      .select("id, user_id, full_name, email, last_active_at, created_at")
       .is("dealership_id", null);
-    setUnassignedUsers(data || []);
+    setUnassignedUsers((data || []).map(u => ({ ...u, role: "salesperson" })));
     setLoadingUnassigned(false);
   };
 

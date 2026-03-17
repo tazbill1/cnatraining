@@ -434,6 +434,7 @@ export default function Team() {
                 getActivityStatus={getActivityStatus} 
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
+                onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
               />
             </TabsContent>
 
@@ -443,6 +444,7 @@ export default function Team() {
                 getActivityStatus={getActivityStatus} 
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
+                onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
               />
             </TabsContent>
 
@@ -463,6 +465,7 @@ export default function Team() {
                     getActivityStatus={getActivityStatus} 
                     getScoreBadge={getScoreBadge}
                     isMobile={isMobile}
+                    onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
                   />
                 </CardContent>
               </Card>

@@ -650,7 +650,7 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
           const scoreBadge = getScoreBadge(user.avg_score);
           
           return (
-            <Card key={user.id} className="p-4">
+            <Card key={user.id} className="p-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => onSelectUser?.(user.user_id, user.full_name)}>
               <div className="flex items-start gap-3">
                 <Avatar className="h-10 w-10 shrink-0">
                   <AvatarFallback className="text-xs">

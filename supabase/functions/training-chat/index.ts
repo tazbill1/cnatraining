@@ -108,14 +108,18 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
 
-      // Fetch the custom scenario and verify the user belongs to the same dealership
+      // Fetch the custom scenario and verify access
       const { data: profile } = await serviceClient
         .from("profiles")
         .select("dealership_id")
         .eq("user_id", user.id)
         .single();
 
-      if (!profile?.dealership_id) {
+      // Check if user is a super_admin (can access any dealership's scenarios)
+      const { data: isSuperAdmin } = await serviceClient
+        .rpc("has_role", { _user_id: user.id, _role: "super_admin" });
+
+      if (!profile?.dealership_id && !isSuperAdmin) {
         return new Response(
           JSON.stringify({ error: "User has no dealership assigned" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -135,8 +139,15 @@ serve(async (req) => {
         );
       }
 
-      // Verify dealership match and active status
-      if (customScenario.dealership_id !== profile.dealership_id || !customScenario.is_active) {
+      // Super admins can access any active scenario; others must match dealership
+      if (!customScenario.is_active) {
+        return new Response(
+          JSON.stringify({ error: "Scenario not available" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!isSuperAdmin && customScenario.dealership_id !== profile?.dealership_id) {
         return new Response(
           JSON.stringify({ error: "Scenario not available" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }

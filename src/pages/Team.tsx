@@ -50,6 +50,7 @@ export default function Team() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{ userId: string; name: string } | null>(null);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [teamSessions, setTeamSessions] = useState<Array<{
     user_id: string;

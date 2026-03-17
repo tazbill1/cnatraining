@@ -201,6 +201,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
   const [unassignedUsers, setUnassignedUsers] = useState<ProfileRow[]>([]);
   const [loadingUnassigned, setLoadingUnassigned] = useState(false);
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [togglingRole, setTogglingRole] = useState<string | null>(null);
 
   const fetchUnassigned = async () => {
     setLoadingUnassigned(true);

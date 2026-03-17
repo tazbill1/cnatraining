@@ -83,6 +83,8 @@ export interface Scenario {
   tradeVehicle?: string;
   tradeValue?: string;
   isOptional?: boolean;
+  /** If true, the AI customer delivers the opening line first (e.g. objection scenarios) */
+  customerOpens?: boolean;
 }
 
 export const scenarios: Scenario[] = [

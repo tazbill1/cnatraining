@@ -83,11 +83,22 @@ export function useTrainingSession() {
 
         if (error) throw error;
 
-        // Start with empty messages - salesperson greets first
+        // For scenarios where the customer opens (e.g. objection handling),
+        // inject the opening line as the first assistant message
+        const initialMessages: Message[] = [];
+        if (scenario.customerOpens && scenario.openingLine) {
+          initialMessages.push({
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: scenario.openingLine,
+            timestamp: new Date(),
+          });
+        }
+
         setSessionState({
           id: data.id,
           scenario,
-          messages: [],
+          messages: initialMessages,
           checklistState: {},
           isActive: true,
           startTime: new Date(),

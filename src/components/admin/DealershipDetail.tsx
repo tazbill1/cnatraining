@@ -27,10 +27,12 @@ interface DealershipDetailProps {
 
 interface ProfileRow {
   id: string;
+  user_id: string;
   full_name: string;
   email: string;
   last_active_at: string | null;
   created_at: string;
+  role?: string;
 }
 
 interface SessionRow {

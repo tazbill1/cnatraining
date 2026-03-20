@@ -4,6 +4,7 @@ import { AppSidebar } from "./AppSidebar";
 import { MobileNav } from "./MobileNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 
 interface AppLayoutProps {
   children: ReactNode;

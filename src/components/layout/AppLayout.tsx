@@ -65,7 +65,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               />
             )}
             <span className="font-semibold text-lg">
-              {settings?.dealership_tagline || profile?.dealership_name || "Sales Training"}
+              {settings?.dealership_tagline || previewDealership?.name || selectedDealership?.name || profile?.dealership_name || "Sales Training"}
             </span>
           </header>
         )}

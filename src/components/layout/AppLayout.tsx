@@ -15,6 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { settings } = useDealershipSettings();
   const { profile } = useAuth();
+  const { previewDealership, selectedDealership } = useDealershipContext();
   const [logoError, setLogoError] = useState(false);
 
   // Set --dealership-color CSS variable for downstream use

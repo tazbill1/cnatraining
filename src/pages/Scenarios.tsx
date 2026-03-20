@@ -21,8 +21,8 @@ import {
 export default function Scenarios() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { previewDealershipId } = useDealershipContext();
-  const dealershipId = previewDealershipId || profile?.dealership_id;
+  const { previewDealershipId, selectedDealershipId } = useDealershipContext();
+  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id;
   const [customScenarios, setCustomScenarios] = useState<Scenario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

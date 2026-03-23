@@ -32,6 +32,7 @@ export default function Dashboard() {
     averageScore: 0,
     totalHours: 0,
     certificationProgress: 0,
+    improvement: null as number | null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [bannerDismissed, setBannerDismissed] = useState(true);
@@ -61,27 +62,37 @@ export default function Dashboard() {
           .eq("user_id", user.id)
           .eq("status", "completed")
           .order("completed_at", { ascending: false })
-          .limit(5);
+          .limit(6);
 
         if (error) throw error;
 
-        const sessionsData = (data || []) as SessionData[];
-        setSessions(sessionsData);
+        const allSessions = (data || []) as SessionData[];
+        setSessions(allSessions.slice(0, 5));
 
-        const totalSessions = sessionsData.length;
+        const totalSessions = allSessions.length;
         const averageScore = totalSessions > 0
-          ? Math.round(sessionsData.reduce((sum, s) => sum + s.score, 0) / totalSessions)
+          ? Math.round(allSessions.reduce((sum, s) => sum + s.score, 0) / totalSessions)
           : 0;
-        const totalMinutes = sessionsData.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60;
+        const totalMinutes = allSessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60;
         const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
 
         const certProgress = Math.min(100, Math.round((totalSessions / 10) * 50 + (averageScore >= 80 ? 50 : averageScore * 0.5)));
+
+        let improvement: number | null = null;
+        if (totalSessions >= 4) {
+          const recent3 = allSessions.slice(0, 3);
+          const prev3 = allSessions.slice(3, 6);
+          const recentAvg = recent3.reduce((s, x) => s + x.score, 0) / recent3.length;
+          const prevAvg = prev3.reduce((s, x) => s + x.score, 0) / prev3.length;
+          improvement = Math.round(recentAvg - prevAvg);
+        }
 
         setStats({
           totalSessions,
           averageScore,
           totalHours,
           certificationProgress: certProgress,
+          improvement,
         });
       } catch (error) {
         logger.error("Error fetching dashboard data:", error);
@@ -192,8 +203,8 @@ export default function Dashboard() {
             <StatCard
               icon={<TrendingUp className="w-5 h-5 text-primary" />}
               label="Improvement"
-              value="+12%"
-              trend={{ value: 12, isPositive: true }}
+              value={stats.improvement !== null ? `${stats.improvement >= 0 ? '+' : ''}${stats.improvement}%` : "—"}
+              trend={stats.improvement !== null ? { value: Math.abs(stats.improvement), isPositive: stats.improvement >= 0 } : undefined}
             />
           </div>
 

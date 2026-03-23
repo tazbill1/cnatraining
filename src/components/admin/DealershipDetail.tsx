@@ -436,6 +436,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
 function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId: string; invitations: InvitationRow[]; onRefresh: () => void }) {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
 
   const handleInvite = async () => {
     if (!email.trim() || !email.includes("@")) return;

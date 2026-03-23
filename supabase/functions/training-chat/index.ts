@@ -235,7 +235,7 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
       })),
     ];
 
-    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId, "user:", user.id);
+    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId, "user:", userId);
 
     const response = await fetch(LOVABLE_AI_URL, {
       method: "POST",

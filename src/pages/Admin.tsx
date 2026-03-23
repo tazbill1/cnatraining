@@ -93,7 +93,7 @@ export default function Admin() {
 
       // Auto-create default settings row
       const { error: settingsError } = await supabase
-        .from("dealership_settings" as any)
+        .from("dealership_settings")
         .insert({ dealership_id: data.id });
 
       if (settingsError) {

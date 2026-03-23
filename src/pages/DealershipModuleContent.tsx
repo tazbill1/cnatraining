@@ -88,7 +88,7 @@ export default function DealershipModuleContent() {
           .eq("module_id", dbId)
           .order("sort_order"),
         supabase
-          .from("dealership_practice_scenarios" as any)
+          .from("dealership_practice_scenarios")
           .select("*")
           .eq("module_id", dbId)
           .eq("is_active", true)
@@ -96,13 +96,13 @@ export default function DealershipModuleContent() {
       ]);
 
       setModule({
-        ...(mod as any),
+        ...mod,
         sections: secRes.data || [],
-        quiz_questions: (quizRes.data || []).map((q: any) => ({
+        quiz_questions: (quizRes.data || []).map((q: { id: string; question: string; options: unknown; explanation: string | null; sort_order: number }) => ({
           ...q,
           options: typeof q.options === "string" ? JSON.parse(q.options) : q.options,
         })),
-        practice_scenarios: (practiceRes.data as any[]) || [],
+        practice_scenarios: (practiceRes.data || []) as unknown as DBPracticeScenario[],
       });
       setLoading(false);
     }

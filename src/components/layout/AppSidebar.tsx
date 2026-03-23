@@ -44,7 +44,7 @@ export function AppSidebar() {
   const navItems = baseNavItems.filter(item => {
     if (!item.featureKey) return true;
     if (!settings) return true; // default: show all
-    return (settings as any)[item.featureKey] !== false;
+    return settings[item.featureKey as keyof typeof settings] !== false;
   });
 
   return (

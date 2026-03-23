@@ -23,7 +23,7 @@ export default function Training() {
       const fetchCustom = async () => {
         setLoading(true);
         const { data, error } = await supabase
-          .from("custom_scenarios" as any)
+          .from("custom_scenarios")
           .select("*")
           .eq("id", uuid)
           .single();
@@ -33,7 +33,7 @@ export default function Training() {
           return;
         }
 
-        const row = data as any;
+        const row = data;
         const isObjectionHandling = row.category === "objection-handling";
         setScenario({
           id: `custom-${row.id}`,

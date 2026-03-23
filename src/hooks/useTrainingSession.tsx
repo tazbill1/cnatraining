@@ -187,8 +187,10 @@ export function useTrainingSession() {
             checklist_state: newChecklistState,
           })
           .eq("id", sessionState.id)
-          .then(() => {})
-          .catch((err) => logger.error("Failed to save conversation:", err));
+          .then(
+            () => {},
+            (err) => logger.error("Failed to save conversation:", err)
+          );
       } catch (error) {
         logger.error("Error sending message:", error);
         toast.error("Failed to get AI response. Please try again.");

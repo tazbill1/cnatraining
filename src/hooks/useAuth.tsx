@@ -74,18 +74,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener first
+    let profileFetchedForUser: string | null = null;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Defer profile fetch to avoid deadlock
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
+          // Only fetch profile once per user to avoid duplicate calls
+          // from multiple auth events (INITIAL_SESSION + TOKEN_REFRESHED)
+          if (profileFetchedForUser !== session.user.id) {
+            profileFetchedForUser = session.user.id;
+            setTimeout(() => {
+              fetchProfile(session.user.id);
+            }, 0);
+          }
         } else {
-        setProfile(null);
+          profileFetchedForUser = null;
+          setProfile(null);
           setIsManager(false);
           setIsSuperAdmin(false);
         }

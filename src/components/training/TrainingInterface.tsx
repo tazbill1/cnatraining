@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Send, Mic, MicOff, Volume2, VolumeX, Loader2, ArrowLeft, RotateCcw, AlertCircle, ExternalLink, X, Keyboard, ClipboardList } from "lucide-react";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { useVoiceChat } from "@/hooks/useVoiceChat";
@@ -167,8 +168,28 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     
     const message = inputValue.trim();
     setInputValue("");
-    await sendMessage(message);
-    inputRef.current?.focus();
+
+    // Set up timeout warnings
+    const warningTimer = setTimeout(() => {
+      toast("Taking longer than usual… still working");
+    }, 15_000);
+
+    const abortTimer = setTimeout(() => {
+      toast.error("Connection issue — please check your internet and try again");
+      // Re-populate input so user can retry
+      setInputValue(message);
+    }, 30_000);
+
+    try {
+      await sendMessage(message);
+    } catch {
+      // Re-populate input on error so user can retry without retyping
+      setInputValue(message);
+    } finally {
+      clearTimeout(warningTimer);
+      clearTimeout(abortTimer);
+      inputRef.current?.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

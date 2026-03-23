@@ -494,6 +494,100 @@ export type Database = {
           },
         ]
       }
+      sales_goals: {
+        Row: {
+          close_rate_goal: number
+          created_at: string
+          dealership_id: string | null
+          id: string
+          internet_leads_goal: number
+          month: string
+          phone_leads_goal: number
+          sales_goal: number
+          show_rate_goal: number
+          updated_at: string
+          user_id: string
+          walk_ins_goal: number
+        }
+        Insert: {
+          close_rate_goal?: number
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          internet_leads_goal?: number
+          month: string
+          phone_leads_goal?: number
+          sales_goal?: number
+          show_rate_goal?: number
+          updated_at?: string
+          user_id: string
+          walk_ins_goal?: number
+        }
+        Update: {
+          close_rate_goal?: number
+          created_at?: string
+          dealership_id?: string | null
+          id?: string
+          internet_leads_goal?: number
+          month?: string
+          phone_leads_goal?: number
+          sales_goal?: number
+          show_rate_goal?: number
+          updated_at?: string
+          user_id?: string
+          walk_ins_goal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_goals_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_leads: {
+        Row: {
+          created_at: string
+          customer_name: string
+          dealership_id: string | null
+          id: string
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          dealership_id?: string | null
+          id?: string
+          source: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          dealership_id?: string | null
+          id?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_leads_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_sessions: {
         Row: {
           ai_feedback: Json | null
@@ -576,6 +670,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      walk_in_logs: {
+        Row: {
+          dealership_id: string | null
+          id: string
+          logged_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          dealership_id?: string | null
+          id?: string
+          logged_at?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          dealership_id?: string | null
+          id?: string
+          logged_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "walk_in_logs_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

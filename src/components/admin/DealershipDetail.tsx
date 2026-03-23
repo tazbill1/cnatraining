@@ -255,7 +255,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
       await supabase.from("user_roles").delete().eq("user_id", userRow.user_id).neq("role", "super_admin");
       const { error } = await supabase.from("user_roles").insert({ user_id: userRow.user_id, role: newRole });
       if (error) throw error;
-      toast({ title: `Role updated to ${newRole}` });
+      toast.success(`Role updated to ${newRole}`);
       onRefresh();
     } catch (err: any) {
       toast.error("Failed to update role");

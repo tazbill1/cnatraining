@@ -37,7 +37,13 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Certificates = lazy(() => import("./pages/Certificates"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

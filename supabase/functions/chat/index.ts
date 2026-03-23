@@ -223,7 +223,11 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "Service temporarily unavailable" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Get the persona system prompt
@@ -241,7 +245,7 @@ serve(async (req) => {
       content: msg.content,
     }));
 
-    console.log("Calling Lovable AI with persona:", persona, "user:", claimsData.claims.sub);
+    console.log("Calling Lovable AI with persona:", persona, "user:", user.id);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -294,9 +298,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Chat API error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to get response";
+    console.error("Chat error details:", error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

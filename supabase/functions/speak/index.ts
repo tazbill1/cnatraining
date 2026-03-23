@@ -53,7 +53,11 @@ serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_TTS_KEY") || Deno.env.get("ELEVENLABS_API_KEY");
 
     if (!ELEVENLABS_API_KEY) {
-      throw new Error("ELEVENLABS_TTS_KEY is not configured");
+      console.error("ELEVENLABS_TTS_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "Service temporarily unavailable" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const body = await req.json();
@@ -117,9 +121,9 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Speech generation error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Speech generation error details:", error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

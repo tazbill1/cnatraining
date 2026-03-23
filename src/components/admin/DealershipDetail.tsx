@@ -170,7 +170,7 @@ function SettingsGuard({ dealershipId, settings, onInitialized, children }: { de
   const handleInit = async () => {
     setInitializing(true);
     const { error } = await supabase
-      .from("dealership_settings" as any)
+      .from("dealership_settings")
       .insert({ dealership_id: dealershipId });
     setInitializing(false);
     if (error) {
@@ -222,7 +222,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
     setAssigning(profileId);
     const { error } = await supabase
       .from("profiles")
-      .update({ dealership_id: dealershipId } as any)
+      .update({ dealership_id: dealershipId })
       .eq("id", profileId);
     setAssigning(null);
     if (error) {
@@ -237,7 +237,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
   const handleRemove = async (profileId: string) => {
     const { error } = await supabase
       .from("profiles")
-      .update({ dealership_id: null } as any)
+      .update({ dealership_id: null })
       .eq("id", profileId);
     if (error) {
       toast({ title: "Failed to remove user", description: error.message, variant: "destructive" });
@@ -484,7 +484,7 @@ function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: 
       completion_deadline_days: deadlineDays ? parseInt(deadlineDays) : null,
       custom_base_statement: customBaseStatement || null,
     };
-    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
+    const { error } = await supabase.from("dealership_settings").update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving settings", description: error.message, variant: "destructive" });
@@ -620,7 +620,7 @@ function BrandingTab({ dealershipId, settings, onSaved }: { dealershipId: string
       dealership_tagline: tagline,
       custom_welcome_message: welcomeMessage || null,
     };
-    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
+    const { error } = await supabase.from("dealership_settings").update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving branding", description: error.message, variant: "destructive" });
@@ -686,7 +686,7 @@ function FeaturesTab({ dealershipId, settings, onSaved }: { dealershipId: string
       certificates_enabled: certificatesEnabled,
       leaderboard_enabled: leaderboardEnabled,
     };
-    const { error } = await supabase.from("dealership_settings" as any).update(payload).eq("dealership_id", dealershipId);
+    const { error } = await supabase.from("dealership_settings").update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
       toast({ title: "Error saving features", description: error.message, variant: "destructive" });
@@ -784,11 +784,11 @@ function ScenariosTab({ dealershipId }: { dealershipId: string }) {
   const fetchScenarios = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("custom_scenarios" as any)
+      .from("custom_scenarios")
       .select("*")
       .eq("dealership_id", dealershipId)
       .order("created_at", { ascending: false });
-    setScenarios((data as any as CustomScenario[]) || []);
+    setScenarios((data || []) as unknown as CustomScenario[]);
     setLoading(false);
   }, [dealershipId]);
 
@@ -862,9 +862,9 @@ function ScenariosTab({ dealershipId }: { dealershipId: string }) {
 
     let error;
     if (editingId) {
-      ({ error } = await supabase.from("custom_scenarios" as any).update(payload).eq("id", editingId));
+      ({ error } = await supabase.from("custom_scenarios").update(payload).eq("id", editingId));
     } else {
-      ({ error } = await supabase.from("custom_scenarios" as any).insert({ ...payload, dealership_id: dealershipId }));
+      ({ error } = await supabase.from("custom_scenarios").insert({ ...payload, dealership_id: dealershipId }));
     }
     setSaving(false);
     if (error) {
@@ -877,7 +877,7 @@ function ScenariosTab({ dealershipId }: { dealershipId: string }) {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    const { error } = await supabase.from("custom_scenarios" as any).update({ is_active: !current }).eq("id", id);
+    const { error } = await supabase.from("custom_scenarios").update({ is_active: !current }).eq("id", id);
     if (error) {
       toast({ title: "Error toggling scenario", description: error.message, variant: "destructive" });
     } else {

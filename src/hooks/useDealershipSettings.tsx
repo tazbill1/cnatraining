@@ -50,7 +50,7 @@ const DEFAULT_SETTINGS: Omit<DealershipSettings, "id" | "dealership_id" | "creat
 
 async function fetchSettings(dealershipId: string): Promise<DealershipSettings> {
   const { data, error } = await supabase
-    .from("dealership_settings" as any)
+    .from("dealership_settings")
     .select("*")
     .eq("dealership_id", dealershipId)
     .maybeSingle();

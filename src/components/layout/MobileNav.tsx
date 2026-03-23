@@ -48,7 +48,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const navItems = baseNavItems.filter(item => {
     if (!item.featureKey) return true;
     if (!settings) return true;
-    return (settings as any)[item.featureKey] !== false;
+    return settings[item.featureKey as keyof typeof settings] !== false;
   });
 
   const isActive = (path: string) => location.pathname === path;

@@ -92,7 +92,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       .select("*")
       .eq("dealership_id", dealershipId)
       .order("sort_order");
-    setModules((data as any[]) || []);
+    setModules((data || []) as DealershipModule[]);
     setLoading(false);
   };
 
@@ -106,7 +106,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       .select("*")
       .eq("module_id", moduleId)
       .order("sort_order");
-    setSections(prev => ({ ...prev, [moduleId]: (data as any[]) || [] }));
+    setSections(prev => ({ ...prev, [moduleId]: (data || []) as ModuleSection[] }));
   };
 
   const fetchQuizzes = async (moduleId: string) => {
@@ -115,7 +115,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       .select("*")
       .eq("module_id", moduleId)
       .order("sort_order");
-    setQuizzes(prev => ({ ...prev, [moduleId]: (data as any[]) || [] }));
+    setQuizzes(prev => ({ ...prev, [moduleId]: (data || []) as unknown as QuizQuestion[] }));
   };
 
   const handleExpandModule = (moduleId: string) => {
@@ -175,9 +175,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
 
     let error;
     if (editingModule) {
-      ({ error } = await supabase.from("dealership_modules").update(payload as any).eq("id", editingModule.id));
+      ({ error } = await supabase.from("dealership_modules").update(payload).eq("id", editingModule.id));
     } else {
-      ({ error } = await supabase.from("dealership_modules").insert(payload as any));
+      ({ error } = await supabase.from("dealership_modules").insert(payload));
     }
     setSaving(false);
     if (error) {
@@ -245,9 +245,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     };
     let error;
     if (editingSection) {
-      ({ error } = await supabase.from("dealership_module_sections").update(payload as any).eq("id", editingSection.id));
+      ({ error } = await supabase.from("dealership_module_sections").update(payload).eq("id", editingSection.id));
     } else {
-      ({ error } = await supabase.from("dealership_module_sections").insert(payload as any));
+      ({ error } = await supabase.from("dealership_module_sections").insert(payload));
     }
     setSaving(false);
     if (error) {
@@ -321,9 +321,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     };
     let error;
     if (editingQuiz) {
-      ({ error } = await supabase.from("dealership_quiz_questions").update(payload as any).eq("id", editingQuiz.id));
+      ({ error } = await supabase.from("dealership_quiz_questions").update(payload).eq("id", editingQuiz.id));
     } else {
-      ({ error } = await supabase.from("dealership_quiz_questions").insert(payload as any));
+      ({ error } = await supabase.from("dealership_quiz_questions").insert(payload));
     }
     setSaving(false);
     if (error) {

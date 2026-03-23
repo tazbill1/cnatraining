@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useDealershipContext } from "@/hooks/useDealershipContext";
@@ -14,7 +14,7 @@ const baseNavItems = [
   { icon: GraduationCap, label: "Learn", path: "/learn", featureKey: null },
   { icon: MessageSquare, label: "Practice", path: "/scenarios", featureKey: null },
   { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
-  { icon: TrendingUp, label: "Training Progress", path: "/progress", featureKey: null },
+  
   { icon: History, label: "Session History", path: "/history", featureKey: null },
   { icon: Award, label: "Certificates", path: "/certificates", featureKey: "certificates_enabled" as const },
   { icon: Settings, label: "Settings", path: "/settings", featureKey: null },

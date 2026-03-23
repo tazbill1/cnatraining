@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,8 +30,10 @@ export default function Scenarios() {
   // Fetch custom scenarios for this dealership
   useEffect(() => {
     const fetchCustom = async () => {
-      if (!dealershipId) return;
-      setIsLoading(true);
+      if (!dealershipId) {
+        setIsLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("custom_scenarios")
         .select("*")
@@ -225,9 +228,25 @@ export default function Scenarios() {
             </p>
           </div>
 
-          {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Loading scenarios…
+          {!dealershipId ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                <Building2 className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground mb-2">No dealership linked</h2>
+              <p className="text-sm text-muted-foreground max-w-md mb-6">
+                Your account isn't linked to a dealership yet — contact your manager to get set up.
+              </p>
+              <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+            </div>
+          ) : isLoading ? (
+            <div className="space-y-6">
+              <Skeleton className="h-10 w-full rounded-lg" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                ))}
+              </div>
             </div>
           ) : availableCategories.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">

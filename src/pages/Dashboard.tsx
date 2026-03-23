@@ -37,6 +37,20 @@ export default function Dashboard() {
   const [bannerDismissed, setBannerDismissed] = useState(true);
 
   useEffect(() => {
+    if (user) {
+      const key = `onboarding_banner_dismissed_${user.id}`;
+      setBannerDismissed(localStorage.getItem(key) === 'true');
+    }
+  }, [user]);
+
+  const dismissBanner = () => {
+    if (user) {
+      localStorage.setItem(`onboarding_banner_dismissed_${user.id}`, 'true');
+    }
+    setBannerDismissed(true);
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
 

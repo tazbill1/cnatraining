@@ -1,6 +1,6 @@
 import { User, Users, Search, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, BookOpen, Scale, TrendingDown, Sparkles, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar, Brain, BadgeDollarSign, Star, AlertTriangle, Lock, ClipboardList, ShieldAlert } from "lucide-react";
 
-export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call" | "objection-handling";
+export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call" | "objection-handling" | "meet-greet" | "rapport-investigation";
 
 export type BuyerType = "analyst" | "negotiator" | "emotional" | "loyal" | "urgent" | "general" | "budget-buyer" | "analytical-buyer" | "price-buyer";
 
@@ -64,6 +64,22 @@ export const scenarioCategories: ScenarioCategory_Info[] = [
     description: "Practice Clarify, Rephrase, Isolate, and Close on real-world objections — budget concerns, decision hesitation, and competitor quotes.",
     icon: ShieldAlert,
     color: "teal",
+  },
+  {
+    id: "meet-greet",
+    name: "Meet & Greet",
+    subtitle: "First Impressions",
+    description: "Practice your greeting script, Yes questions, Either/Or questions, and handling the 'just looking' reflex.",
+    icon: Handshake,
+    color: "sky",
+  },
+  {
+    id: "rapport-investigation",
+    name: "Rapport & Investigation",
+    subtitle: "Building Trust & Uncovering Needs",
+    description: "Practice the Rapport Pattern, open-ended questions, and discovering hot buttons through genuine conversation.",
+    icon: Search,
+    color: "indigo",
   },
 ];
 

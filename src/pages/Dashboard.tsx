@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { Play, Trophy, Clock, Target, TrendingUp, Award, Megaphone } from "lucide-react";
+import { Play, Trophy, Clock, Target, TrendingUp, Award, Megaphone, X, BookOpen, Swords } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { StatCard } from "@/components/dashboard/StatCard";

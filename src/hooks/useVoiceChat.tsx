@@ -83,8 +83,12 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const lastSpeechTimeRef = useRef<number>(Date.now());
   const retryCountRef = useRef(0);
   const isRetryingRef = useRef(false);
+  // Keep voiceStatusRef in sync with voiceStatus state
+  useEffect(() => {
+    voiceStatusRef.current = voiceStatus;
+  }, [voiceStatus]);
 
-  const safeCloseAudioContext = useCallback((ctx: AudioContext | null) => {
+
     if (!ctx) return;
     try {
       // AudioContext.close() returns a Promise and may reject in some browsers

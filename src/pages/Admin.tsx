@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Shield, Plus, Building2, Users, Activity, Loader2, AlertTriangle, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { DealershipDetail } from "@/components/admin/DealershipDetail";
 
@@ -29,7 +29,7 @@ interface Dealership {
 export default function Admin() {
   const navigate = useNavigate();
   const { user, isSuperAdmin } = useAuth();
-  const { toast } = useToast();
+  
   const [loading, setLoading] = useState(true);
   const [dealerships, setDealerships] = useState<Dealership[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -72,7 +72,7 @@ export default function Admin() {
 
       setDealerships(enriched);
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to load dealerships", description: err.message });
+      toast.error(`Failed to load dealerships: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -97,9 +97,9 @@ export default function Admin() {
         .insert({ dealership_id: data.id });
 
       if (settingsError) {
-        toast({ variant: "default", title: "Dealership created", description: `${newName.trim()} added, but default settings could not be initialized. You can set them up from the detail view.` });
+        toast.success(`${newName.trim()} added (default settings could not be initialized)`);
       } else {
-        toast({ title: "Dealership created", description: `${newName.trim()} has been added.` });
+        toast.success(`${newName.trim()} has been added`);
       }
 
       setNewName("");
@@ -107,7 +107,7 @@ export default function Admin() {
       setShowAddModal(false);
       fetchDealerships();
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to create dealership", description: err.message });
+      toast.error(`Failed to create dealership: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -120,7 +120,7 @@ export default function Admin() {
       .eq("id", d.id);
 
     if (error) {
-      toast({ variant: "destructive", title: "Failed to update", description: error.message });
+      toast.error(`Failed to update: ${error.message}`);
     } else {
       fetchDealerships();
     }

@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { trainingModules } from "@/lib/modules";
 import { useDealershipSettingsForId, DealershipSettings } from "@/hooks/useDealershipSettings";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ContentTab } from "./ContentTab";
 
 interface DealershipDetailProps {

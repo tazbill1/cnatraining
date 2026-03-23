@@ -17,7 +17,7 @@ import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loa
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { logger } from "@/lib/logger";
 
@@ -42,7 +42,7 @@ interface Invitation {
 export default function Team() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
+  
   const isMobile = useIsMobile();
   const [isManager, setIsManager] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -100,7 +100,7 @@ export default function Team() {
 
   const handleSendInvite = async () => {
     if (!inviteEmail.trim() || !inviteEmail.includes("@")) {
-      toast({ variant: "destructive", title: "Please enter a valid email" });
+      toast.error("Please enter a valid email");
       return;
     }
     setIsSendingInvite(true);
@@ -110,11 +110,11 @@ export default function Team() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "Invitation sent!", description: `Invite sent to ${inviteEmail.trim()}` });
+      toast.success(`Invite sent to ${inviteEmail.trim()}`);
       setInviteEmail("");
       fetchInvitations();
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to send invite", description: err.message });
+      toast.error(`Failed to send invite: ${err.message}`);
     } finally {
       setIsSendingInvite(false);
     }
@@ -128,10 +128,10 @@ export default function Team() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "Invitation resent!", description: `Invite resent to ${inv.email}` });
+      toast.success(`Invite resent to ${inv.email}`);
       fetchInvitations();
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to resend", description: err.message });
+      toast.error(`Failed to resend: ${err.message}`);
     } finally {
       setResendingId(null);
     }

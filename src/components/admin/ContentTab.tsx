@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Loader2, Pencil, Trash2, GripVertical, Upload, BookOpen, Video, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import { PracticeScenarioManager } from "./PracticeScenarioManager";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { trainingModules } from "@/lib/modules";
 
 interface DealershipModule {

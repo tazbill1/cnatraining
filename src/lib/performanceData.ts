@@ -3,16 +3,16 @@
 import type { Lead, UserPerformanceData, TeamMemberData, Goals, Metrics } from "./performanceTypes";
 
 export const initialLeads: Lead[] = [
-  { id: 1, name: "Sarah Martinez", source: "internet", status: "sold" },
-  { id: 2, name: "Mike Johnson", source: "phone", status: "showed" },
-  { id: 3, name: "Jessica Chen", source: "internet", status: "appt-set" },
-  { id: 4, name: "David Wilson", source: "phone", status: "sold" },
-  { id: 5, name: "Amanda Rodriguez", source: "internet", status: "showed" },
-  { id: 6, name: "Tom Anderson", source: "internet", status: "lead" },
-  { id: 7, name: "Lisa Brown", source: "phone", status: "lead" },
-  { id: 8, name: "Chris Taylor", source: "internet", status: "appt-set" },
-  { id: 9, name: "Maria Garcia", source: "phone", status: "appt-set" },
-  { id: 10, name: "Kevin White", source: "internet", status: "showed" },
+  { id: "1", name: "Sarah Martinez", source: "internet", status: "sold" },
+  { id: "2", name: "Mike Johnson", source: "phone", status: "showed" },
+  { id: "3", name: "Jessica Chen", source: "internet", status: "appt-set" },
+  { id: "4", name: "David Wilson", source: "phone", status: "sold" },
+  { id: "5", name: "Amanda Rodriguez", source: "internet", status: "showed" },
+  { id: "6", name: "Tom Anderson", source: "internet", status: "lead" },
+  { id: "7", name: "Lisa Brown", source: "phone", status: "lead" },
+  { id: "8", name: "Chris Taylor", source: "internet", status: "appt-set" },
+  { id: "9", name: "Maria Garcia", source: "phone", status: "appt-set" },
+  { id: "10", name: "Kevin White", source: "internet", status: "showed" },
 ];
 
 export const initialUserData: UserPerformanceData = {

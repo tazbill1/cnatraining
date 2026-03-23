@@ -6,8 +6,8 @@ import type { Lead } from "@/lib/performanceTypes";
 
 interface PipelineTabProps {
   leads: Lead[];
-  onUpdateStatus: (leadId: number, status: Lead["status"]) => void;
-  onDeleteLead: (leadId: number) => void;
+  onUpdateStatus: (leadId: string, status: Lead["status"]) => void;
+  onDeleteLead: (leadId: string) => void;
   onAddLeadClick: () => void;
 }
 
@@ -21,8 +21,8 @@ function PipelineColumn({
   title: string;
   leads: Lead[];
   variant: "default" | "warning" | "success";
-  onUpdateStatus: (leadId: number, status: Lead["status"]) => void;
-  onDeleteLead: (leadId: number) => void;
+  onUpdateStatus: (leadId: string, status: Lead["status"]) => void;
+  onDeleteLead: (leadId: string) => void;
 }) {
   const bgColors = {
     default: "bg-muted/30",

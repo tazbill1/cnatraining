@@ -438,22 +438,25 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
   const [sending, setSending] = useState(false);
   const [resending, setResending] = useState<string | null>(null);
 
-  const handleInvite = async () => {
-    if (!email.trim() || !email.includes("@")) return;
-    setSending(true);
+  const handleInvite = async (targetEmail?: string, isResend?: boolean) => {
+    const sendEmail = targetEmail || email.trim();
+    if (!sendEmail || !sendEmail.includes("@")) return;
+    if (isResend) setResending(sendEmail);
+    else setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: email.trim(), dealership_id: dealershipId },
+        body: { email: sendEmail, dealership_id: dealershipId, resend: true },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(data?.message || `Invitation sent to ${email.trim()}`);
-      setEmail("");
+      toast.success(data?.message || `Invitation sent to ${sendEmail}`);
+      if (!isResend) setEmail("");
       onRefresh();
     } catch (err: any) {
       toast.error(err.message || "Failed to send invitation");
     } finally {
       setSending(false);
+      setResending(null);
     }
   };
 
@@ -471,7 +474,7 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleInvite()}
           />
-          <Button onClick={handleInvite} disabled={sending || !email.trim()}>
+          <Button onClick={() => handleInvite()} disabled={sending || !email.trim()}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
             Send Invite
           </Button>
@@ -483,6 +486,7 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Sent</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -497,19 +501,24 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
                   <TableCell className="text-muted-foreground text-sm">
                     {formatDistanceToNow(new Date(inv.created_at), { addSuffix: true })}
                   </TableCell>
+                  <TableCell>
+                    {inv.status !== "accepted" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        disabled={resending === inv.email}
+                        onClick={() => handleInvite(inv.email, true)}
+                      >
+                        {resending === inv.email ? <Loader2 className="w-3 h-3 animate-spin" /> : "Resend"}
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
-        {invitations.length === 0 && (
-          <p className="text-center text-muted-foreground py-4 text-sm">No invitations yet — enter an email above to invite someone.</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 /* ─── Training Config Tab ─── */
 function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: string; settings: DealershipSettings | null; onSaved: () => void }) {
   const [saving, setSaving] = useState(false);

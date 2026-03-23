@@ -426,40 +426,8 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Invitations</CardTitle></CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Sent</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invitations.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell className="font-medium">{inv.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={inv.status === "accepted" ? "default" : "secondary"}>
-                      {inv.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {formatDistanceToNow(new Date(inv.created_at), { addSuffix: true })}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {invitations.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-6">No invitations yet</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+
+
     </div>
   );
 }

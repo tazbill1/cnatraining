@@ -180,15 +180,17 @@ export function useTrainingSession() {
           timestamp: m.timestamp.toISOString(),
         }));
         
-        Promise.resolve(
-          supabase
-            .from("training_sessions")
-            .update({
-              conversation: conversationForDb,
-              checklist_state: newChecklistState,
-            })
-            .eq("id", sessionState.id)
-        ).catch((err) => logger.error("Failed to save conversation:", err));
+        supabase
+          .from("training_sessions")
+          .update({
+            conversation: conversationForDb,
+            checklist_state: newChecklistState,
+          })
+          .eq("id", sessionState.id)
+          .then(
+            () => {},
+            (err) => logger.error("Failed to save conversation:", err)
+          );
       } catch (error) {
         logger.error("Error sending message:", error);
         toast.error("Failed to get AI response. Please try again.");

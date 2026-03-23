@@ -93,22 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
-      if (sessionError) {
-        setError(sessionError.message);
-        setIsLoading(false);
-        return;
-      }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      setIsLoading(false);
-    });
+    // getSession() is intentionally omitted — onAuthStateChange fires
+    // with the initial session automatically, so calling both causes
+    // duplicate fetchProfile calls on every page load.
 
     return () => subscription.unsubscribe();
   }, []);

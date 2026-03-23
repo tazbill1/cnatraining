@@ -66,6 +66,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const [micPermission, setMicPermission] = useState<"granted" | "denied" | "prompt" | "unavailable">("prompt");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
+  const voiceStatusRef = useRef<VoiceStatus>("idle");
   const [audioLevel, setAudioLevel] = useState(0);
   const [silenceCountdown, setSilenceCountdown] = useState(SILENCE_COUNTDOWN_SECONDS);
   const [handsFreeModeEnabled, setHandsFreeModeEnabled] = useState(false);
@@ -82,6 +83,10 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
   const lastSpeechTimeRef = useRef<number>(Date.now());
   const retryCountRef = useRef(0);
   const isRetryingRef = useRef(false);
+  // Keep voiceStatusRef in sync with voiceStatus state
+  useEffect(() => {
+    voiceStatusRef.current = voiceStatus;
+  }, [voiceStatus]);
 
   const safeCloseAudioContext = useCallback((ctx: AudioContext | null) => {
     if (!ctx) return;
@@ -304,7 +309,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
             clearTimeout(silenceTimerRef.current);
           }
           silenceTimerRef.current = setTimeout(() => {
-            if (finalTranscriptRef.current.trim() && voiceStatus === "listening") {
+            if (finalTranscriptRef.current.trim() && voiceStatusRef.current === "listening") {
               startSilenceCountdown();
             }
           }, 1500);
@@ -420,7 +425,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         toast.error("Could not start speech recognition. Please try again.");
       }
     }
-  }, [getSpeechRecognition, options, toast, startAudioLevelMonitoring, stopAudioLevelMonitoring, startSilenceCountdown, resetCountdown, voiceStatus]);
+  }, [getSpeechRecognition, options, startAudioLevelMonitoring, stopAudioLevelMonitoring, startSilenceCountdown, resetCountdown]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
@@ -456,7 +461,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     finalTranscriptRef.current = "";
     stopAudioLevelMonitoring();
     toast("Recording cancelled");
-  }, [stopAudioLevelMonitoring, toast]);
+  }, [stopAudioLevelMonitoring]);
 
   // Reset voice status (for external control)
   const resetVoiceStatus = useCallback(() => {

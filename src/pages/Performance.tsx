@@ -10,18 +10,11 @@ import { QuickEntryTab } from "@/components/performance/QuickEntryTab";
 import { PipelineTab } from "@/components/performance/PipelineTab";
 import { ProgressTab } from "@/components/performance/ProgressTab";
 import { LeaderboardTab } from "@/components/performance/LeaderboardTab";
-
-import {
-  initialLeads,
-  initialUserData,
-  teamData,
-  calculateMetricsFromLeads,
-  calculateTeamMemberMetrics,
-} from "@/lib/performanceData";
+import { usePerformanceData } from "@/hooks/usePerformanceData";
+import { calculateMetricsFromLeads } from "@/lib/performanceData";
 import type {
   Lead,
   Goals,
-  UserPerformanceData,
   ActiveTab,
   LeaderboardView,
   TimePeriod,
@@ -35,10 +28,20 @@ export default function Performance() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
 
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
-  const [nextLeadId, setNextLeadId] = useState(11);
-  const [userData, setUserData] = useState<UserPerformanceData>(initialUserData);
-  const [goalForm, setGoalForm] = useState<Goals>(userData.goals);
+  const {
+    leads,
+    goals,
+    walkIn,
+    leaderboard,
+    isLoading,
+    addLead,
+    updateLeadStatus,
+    deleteLead,
+    logWalkIn,
+    saveGoals,
+  } = usePerformanceData();
+
+  const [goalForm, setGoalForm] = useState<Goals>(goals);
 
   const [leadForm, setLeadForm] = useState({
     name: "",
@@ -46,13 +49,20 @@ export default function Performance() {
     status: "lead" as Lead["status"],
   });
 
-  // Sync goalForm when userData.goals changes
+  // Sync goalForm when goals change (after fetch)
   useEffect(() => {
-    setGoalForm(userData.goals);
-  }, [userData.goals]);
+    setGoalForm(goals);
+  }, [goals]);
+
+  // Build userData shape for QuickEntryTab
+  const userData = {
+    name: "You",
+    walkIn,
+    goals,
+  };
 
   // Calculate current metrics
-  const currentMetrics = calculateMetricsFromLeads(leads, userData.walkIn);
+  const currentMetrics = calculateMetricsFromLeads(leads, walkIn);
 
   // Calculate pace and projection
   const calculatePace = (): PaceData => {
@@ -62,7 +72,7 @@ export default function Performance() {
     const monthProgress = currentDay / daysInMonth;
 
     const totalSales = currentMetrics.totalSales;
-    const salesGoal = userData.goals.sales;
+    const salesGoal = goals.sales;
     const expectedSales = salesGoal * monthProgress;
     const projectedSales = monthProgress > 0 ? Math.round(totalSales / monthProgress) : 0;
 
@@ -82,21 +92,9 @@ export default function Performance() {
 
   const pace = calculatePace();
 
-  // Get sorted team for leaderboard
+  // Leaderboard sorting
   const getSortedTeam = () => {
-    // Build team with current user's actual metrics
-    const allTeam = [
-      ...teamData.map((person) => ({
-        name: person.name,
-        metrics: calculateTeamMemberMetrics(person),
-      })),
-      {
-        name: "You",
-        metrics: currentMetrics,
-      },
-    ];
-
-    return allTeam.sort((a, b) => {
+    return [...leaderboard].sort((a, b) => {
       if (leaderboardView === "sales") {
         return b.metrics.totalSales - a.metrics.totalSales;
       } else if (leaderboardView === "showRate") {
@@ -110,40 +108,48 @@ export default function Performance() {
   };
 
   // Handlers
-  const handleSaveGoals = () => {
-    setUserData((prev) => ({ ...prev, goals: { ...goalForm } }));
+  const handleSaveGoals = async () => {
+    await saveGoals(goalForm);
     setShowGoalModal(false);
   };
 
-  const handleAddLead = (lead: Omit<Lead, "id">) => {
-    setLeads((prev) => [...prev, { id: nextLeadId, ...lead }]);
-    setNextLeadId((prev) => prev + 1);
+  const handleAddLead = async (lead: Omit<Lead, "id">) => {
+    await addLead(lead);
   };
 
-  const handleAddLeadFromModal = () => {
+  const handleAddLeadFromModal = async () => {
     if (!leadForm.name.trim()) return;
-    handleAddLead(leadForm);
+    await addLead(leadForm);
     setLeadForm({ name: "", source: "internet", status: "lead" });
     setShowLeadModal(false);
   };
 
-  const handleLogWalkIn = (type: "visit" | "sale") => {
-    setUserData((prev) => ({
-      ...prev,
-      walkIn: {
-        visits: type === "visit" ? prev.walkIn.visits + 1 : prev.walkIn.visits,
-        sales: type === "sale" ? prev.walkIn.sales + 1 : prev.walkIn.sales,
-      },
-    }));
+  const handleLogWalkIn = async (type: "visit" | "sale") => {
+    await logWalkIn(type);
   };
 
-  const handleUpdateLeadStatus = (leadId: number, status: Lead["status"]) => {
-    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status } : l)));
+  const handleUpdateLeadStatus = async (leadId: string, status: Lead["status"]) => {
+    await updateLeadStatus(leadId, status);
   };
 
-  const handleDeleteLead = (leadId: number) => {
-    setLeads((prev) => prev.filter((l) => l.id !== leadId));
+  const handleDeleteLead = async (leadId: string) => {
+    await deleteLead(leadId);
   };
+
+  if (isLoading) {
+    return (
+      <AuthGuard>
+        <AppLayout>
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground">Loading performance data…</p>
+            </div>
+          </div>
+        </AppLayout>
+      </AuthGuard>
+    );
+  }
 
   return (
     <AuthGuard>
@@ -162,7 +168,7 @@ export default function Performance() {
               </div>
               <Button
                 onClick={() => {
-                  setGoalForm(userData.goals);
+                  setGoalForm(goals);
                   setShowGoalModal(true);
                 }}
                 className="w-full sm:w-auto"
@@ -238,7 +244,7 @@ export default function Performance() {
           {activeTab === "dashboard" && (
             <ProgressTab
               metrics={currentMetrics}
-              goals={userData.goals}
+              goals={goals}
               leads={leads}
               pace={pace}
             />
@@ -251,8 +257,6 @@ export default function Performance() {
               setLeaderboardView={setLeaderboardView}
             />
           )}
-
-          
         </div>
 
         {/* Modals */}

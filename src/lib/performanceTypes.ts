@@ -1,7 +1,7 @@
 // Types for the Sales Performance Tracker
 
 export interface Lead {
-  id: number;
+  id: string;
   name: string;
   source: "internet" | "phone" | "walk-in";
   status: "lead" | "appt-set" | "showed" | "sold" | "lost";
@@ -49,6 +49,11 @@ export interface PaceData {
   projected: number;
   gap: number;
   status: "on-track" | "warning" | "behind";
+}
+
+export interface TeamMemberWithMetrics {
+  name: string;
+  metrics: Metrics;
 }
 
 export type TimePeriod = "mtd" | "rolling90" | "ytd";

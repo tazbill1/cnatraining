@@ -14,13 +14,61 @@ const MAX_MESSAGE_LENGTH = 2000;
 // Lovable AI Gateway endpoint
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
+// Decode and verify JWT using HMAC-SHA256
+async function verifyJwt(token: string, secret: string): Promise<{ sub: string } | null> {
+  try {
+    const [headerB64, payloadB64, sigB64] = token.split(".");
+    if (!headerB64 || !payloadB64 || !sigB64) return null;
+
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"],
+    );
+
+    // Base64url decode the signature
+    const sig = Uint8Array.from(
+      atob(sigB64.replace(/-/g, "+").replace(/_/g, "/")),
+      (c) => c.charCodeAt(0),
+    );
+
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      sig,
+      encoder.encode(`${headerB64}.${payloadB64}`),
+    );
+
+    if (!valid) return null;
+
+    const payload = JSON.parse(
+      new TextDecoder().decode(
+        Uint8Array.from(
+          atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")),
+          (c) => c.charCodeAt(0),
+        ),
+      ),
+    );
+
+    // Check expiry
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+    return payload as { sub: string };
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Authentication check
+    // Authentication — decode JWT locally (no network call)
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -29,20 +77,21 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const token = authHeader.replace("Bearer ", "");
+    const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET");
+    if (!jwtSecret) {
+      throw new Error("SUPABASE_JWT_SECRET is not configured");
+    }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
+    const jwtPayload = await verifyJwt(token, jwtSecret);
+    if (!jwtPayload?.sub) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const userId = jwtPayload.sub;
 
     // Parse and validate input
     const body = await req.json();
@@ -112,12 +161,12 @@ serve(async (req) => {
       const { data: profile } = await serviceClient
         .from("profiles")
         .select("dealership_id")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       // Check if user is a super_admin (can access any dealership's scenarios)
       const { data: isSuperAdmin } = await serviceClient
-        .rpc("has_role", { _user_id: user.id, _role: "super_admin" });
+        .rpc("has_role", { _user_id: userId, _role: "super_admin" });
 
       if (!profile?.dealership_id && !isSuperAdmin) {
         return new Response(
@@ -186,7 +235,7 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
       })),
     ];
 
-    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId, "user:", user.id);
+    console.log("Calling Lovable AI with", messages.length, "messages for scenario:", scenarioId, "user:", userId);
 
     const response = await fetch(LOVABLE_AI_URL, {
       method: "POST",

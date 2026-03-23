@@ -43,7 +43,11 @@ serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
     if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+      console.error("OPENAI_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "Service temporarily unavailable" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const formData = await req.formData();
@@ -73,7 +77,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Transcribing audio file:", audioFile.name, "size:", audioFile.size, "user:", claimsData.claims.sub);
+    console.log("Transcribing audio file:", audioFile.name, "size:", audioFile.size, "user:", user.id);
 
     // Create form data for OpenAI Whisper API
     const openaiFormData = new FormData();
@@ -103,9 +107,9 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Transcription error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Transcription error details:", error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

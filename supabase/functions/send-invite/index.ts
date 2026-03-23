@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to send invitation" }),
+      JSON.stringify({ error: "Failed to send invitation" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

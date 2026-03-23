@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, History, Shield, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
@@ -28,10 +29,17 @@ const adminItems = [
 export function AppSidebar() {
   const { profile, isManager, isSuperAdmin, signOut } = useAuth();
   const { settings } = useDealershipSettings();
+  const { previewDealership, selectedDealership } = useDealershipContext();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
   const hasDealershipLogo = !!(settings?.logo_url?.trim());
+  const activeDealershipName =
+    settings?.dealership_tagline ||
+    previewDealership?.name ||
+    selectedDealership?.name ||
+    profile?.dealership_name ||
+    "Dealership";
 
   const navItems = baseNavItems.filter(item => {
     if (!item.featureKey) return true;
@@ -48,7 +56,7 @@ export function AppSidebar() {
             <>
               <img
                 src={settings!.logo_url!}
-                alt={profile?.dealership_name || "Dealership"}
+                  alt={activeDealershipName}
                 className="h-12 w-auto max-w-[180px] object-contain"
               />
               <div className="flex items-center gap-1.5 opacity-50">
@@ -153,7 +161,7 @@ export function AppSidebar() {
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{profile?.full_name || "User"}</p>
             <p className="text-xs text-sidebar-foreground/60 truncate">
-              {profile?.dealership_name || "Dealership"}
+                {activeDealershipName}
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { LayoutDashboard, MessageSquare, TrendingUp, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
+import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
@@ -34,7 +35,15 @@ interface MobileNavProps {
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const { profile, isManager, isSuperAdmin, signOut } = useAuth();
   const { settings } = useDealershipSettings();
+  const { previewDealership, selectedDealership } = useDealershipContext();
   const location = useLocation();
+
+  const activeDealershipName =
+    settings?.dealership_tagline ||
+    previewDealership?.name ||
+    selectedDealership?.name ||
+    profile?.dealership_name ||
+    "Dealership";
 
   const navItems = baseNavItems.filter(item => {
     if (!item.featureKey) return true;
@@ -160,7 +169,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{profile?.full_name || "User"}</p>
               <p className="text-xs text-sidebar-foreground/60 truncate">
-                {profile?.dealership_name || "Dealership"}
+                {activeDealershipName}
               </p>
             </div>
           </div>

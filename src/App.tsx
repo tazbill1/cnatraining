@@ -35,6 +35,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Team = lazy(() => import("./pages/Team"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Certificates = lazy(() => import("./pages/Certificates"));
+const Performance = lazy(() => import("./pages/Performance"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({

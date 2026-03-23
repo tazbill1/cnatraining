@@ -386,6 +386,9 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
         </DialogContent>
       </Dialog>
 
+      {/* Invite New User Section */}
+      <InviteSection dealershipId={dealershipId} invitations={invitations} onRefresh={onRefresh} />
+
       <Card>
         <CardHeader><CardTitle className="text-base">Recent Sessions</CardTitle></CardHeader>
         <CardContent>

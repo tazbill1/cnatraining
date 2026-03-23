@@ -115,7 +115,7 @@ export function useTrainingSession() {
   );
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, options?: { onError?: (content: string) => void }) => {
       if (!sessionState.id || !sessionState.scenario || !content.trim()) return;
 
       const userMessage: Message = {
@@ -192,6 +192,7 @@ export function useTrainingSession() {
       } catch (error) {
         logger.error("Error sending message:", error);
         toast.error("Failed to get AI response. Please try again.");
+        options?.onError?.(content);
       } finally {
         setIsTyping(false);
       }

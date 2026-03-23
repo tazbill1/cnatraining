@@ -14,13 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { User, Building, Volume2, Gauge, MessageSquare, Lock, Save, Loader2 } from "lucide-react";
 import { logger } from "@/lib/logger";
 
 export default function Settings() {
   const { profile, refreshProfile, signOut } = useAuth();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   
@@ -54,17 +53,10 @@ export default function Settings() {
       if (error) throw error;
 
       await refreshProfile();
-      toast({
-        title: "Settings saved",
-        description: "Your preferences have been updated.",
-      });
+      toast.success("Settings saved");
     } catch (error) {
       logger.error("Error saving settings:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-      });
+      toast.error("Failed to save settings. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -72,20 +64,12 @@ export default function Settings() {
 
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Passwords don't match",
-        description: "Please make sure both passwords are the same.",
-      });
+      toast.error("Passwords don't match");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Password too short",
-        description: "Password must be at least 6 characters.",
-      });
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -97,18 +81,11 @@ export default function Settings() {
 
       if (error) throw error;
 
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully.",
-      });
+      toast.success("Password updated");
       setPasswordData({ newPassword: "", confirmPassword: "" });
     } catch (error) {
       logger.error("Error changing password:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to change password. Please try again.",
-      });
+      toast.error("Failed to change password. Please try again.");
     } finally {
       setPasswordLoading(false);
     }

@@ -5,7 +5,7 @@ import { Scenario } from "@/lib/scenarios";
 import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
 import { analyzePhoneChecklistFromConversation, calculatePhoneChecklistProgress } from "@/lib/phoneChecklist";
 import { analyzeCricChecklistFromConversation } from "@/lib/cricChecklist";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
 interface Message {
@@ -27,7 +27,7 @@ interface SessionState {
 
 export function useTrainingSession() {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  
   const [sessionState, setSessionState] = useState<SessionState>({
     id: null,
     scenario: null,
@@ -106,11 +106,7 @@ export function useTrainingSession() {
         });
       } catch (error) {
         logger.error("Error starting session:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to start training session",
-        });
+        toast.error("Failed to start training session");
       } finally {
         setIsLoading(false);
       }
@@ -193,11 +189,7 @@ export function useTrainingSession() {
           .eq("id", sessionState.id);
       } catch (error) {
         logger.error("Error sending message:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to get AI response. Please try again.",
-        });
+        toast.error("Failed to get AI response. Please try again.");
       } finally {
         setIsTyping(false);
       }
@@ -277,11 +269,7 @@ export function useTrainingSession() {
       };
     } catch (error) {
       logger.error("Error ending session:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save session results",
-      });
+        toast.error("Failed to save session results");
       return null;
     }
   }, [sessionState, toast]);

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Send, Volume2, X, Keyboard } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { logger } from "@/lib/logger";
@@ -66,7 +66,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpeechTimeRef = useRef<number>(Date.now());
 
-  const { toast } = useToast();
+  
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -203,11 +203,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      toast({
-        title: "Not Supported",
-        description: "Speech recognition is not supported in this browser. Please use Chrome.",
-        variant: "destructive",
-      });
+      toast.error("Speech recognition is not supported in this browser. Please use Chrome.");
       return null;
     }
 
@@ -259,11 +255,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     } catch (error) {
       logger.error("Chat error:", error);
       setVoiceStatus("idle");
-      toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to get response. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -401,11 +393,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       }
       
       if (event.error !== "aborted") {
-        toast({
-          title: "Voice Error",
-          description: "Could not recognize speech. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Could not recognize speech. Please try again.");
       }
     };
 
@@ -449,10 +437,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     setVoiceStatus("idle");
     finalTranscriptRef.current = "";
     stopAudioLevelMonitoring();
-    toast({
-      title: "Recording cancelled",
-      description: "Your message was not sent.",
-    });
+    toast("Recording cancelled");
   }, [stopAudioLevelMonitoring, toast]);
 
   // Send message (for text input, not voice)
@@ -492,11 +477,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       await speakText(data.message, data.voice);
     } catch (error) {
       console.error("Chat error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to get response. Please try again.");
     } finally {
       setIsProcessing(false);
     }

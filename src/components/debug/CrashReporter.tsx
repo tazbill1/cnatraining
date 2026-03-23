@@ -8,7 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 type CrashKind = "error" | "unhandledrejection";
 
@@ -53,7 +53,6 @@ function persistCrash(report: CrashReport) {
 }
 
 export function CrashReporter() {
-  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [lastCrash, setLastCrash] = useState<CrashReport | null>(() => loadLastCrash());
 
@@ -90,12 +89,7 @@ export function CrashReporter() {
 
       persistCrash(report);
       setLastCrash(report);
-
-      toast({
-        variant: "destructive",
-        title: "App error captured",
-        description: "Open the crash report to copy details.",
-      });
+      toast.error("App error captured — open the crash report to copy details.");
       setOpen(true);
     };
 
@@ -117,12 +111,7 @@ export function CrashReporter() {
 
       persistCrash(report);
       setLastCrash(report);
-
-      toast({
-        variant: "destructive",
-        title: "Unhandled promise rejection",
-        description: "Open the crash report to copy details.",
-      });
+      toast.error("Unhandled promise rejection — open the crash report to copy details.");
       setOpen(true);
     };
 
@@ -133,7 +122,7 @@ export function CrashReporter() {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onUnhandledRejection);
     };
-  }, [toast]);
+  }, []);
 
   if (!lastCrash) return null;
 
@@ -157,13 +146,9 @@ export function CrashReporter() {
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(crashText);
-                toast({ title: "Copied", description: "Crash report copied to clipboard." });
+                toast.success("Crash report copied to clipboard");
               } catch {
-                toast({
-                  variant: "destructive",
-                  title: "Copy failed",
-                  description: "Your browser blocked clipboard access. You can still select and copy manually.",
-                });
+                toast.error("Copy failed — select and copy manually.");
               }
             }}
           >

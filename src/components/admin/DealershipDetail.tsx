@@ -519,6 +519,14 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
             </TableBody>
           </Table>
         )}
+        {invitations.length === 0 && (
+          <p className="text-center text-muted-foreground py-4 text-sm">No invitations yet — enter an email above to invite someone.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ─── Training Config Tab ─── */
 function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: string; settings: DealershipSettings | null; onSaved: () => void }) {
   const [saving, setSaving] = useState(false);

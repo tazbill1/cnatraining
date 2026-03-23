@@ -156,7 +156,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
 
   const handleSaveModule = async () => {
     if (!formTitle.trim()) {
-      toast({ title: "Title is required", variant: "destructive" });
+      toast.error("Title is required");
       return;
     }
     setSaving(true);
@@ -181,9 +181,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     }
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving module", description: error.message, variant: "destructive" });
+      toast.error("Error saving module");
     } else {
-      toast({ title: editingModule ? "Module updated" : "Module created" });
+      toast.success(editingModule ? "Module updated" : "Module created");
       setModuleDialogOpen(false);
       fetchModules();
     }
@@ -193,9 +193,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     if (!confirm("Delete this module and all its content?")) return;
     const { error } = await supabase.from("dealership_modules").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error deleting", description: error.message, variant: "destructive" });
+      toast.error("Error deleting");
     } else {
-      toast({ title: "Module deleted" });
+      toast.success("Module deleted");
       fetchModules();
     }
   };
@@ -231,7 +231,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
 
   const handleSaveSection = async () => {
     if (!sectionTitle.trim()) {
-      toast({ title: "Section title is required", variant: "destructive" });
+      toast.error("Section title is required");
       return;
     }
     setSaving(true);
@@ -251,9 +251,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     }
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving section", description: error.message, variant: "destructive" });
+      toast.error("Error saving section");
     } else {
-      toast({ title: editingSection ? "Section updated" : "Section added" });
+      toast.success(editingSection ? "Section updated" : "Section added");
       setSectionDialogOpen(false);
       fetchSections(sectionModuleId);
     }
@@ -307,7 +307,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
 
   const handleSaveQuiz = async () => {
     if (!quizQuestion.trim() || quizOptions.filter(o => o.text.trim()).length < 2) {
-      toast({ title: "Question and at least 2 options required", variant: "destructive" });
+      toast.error("Question and at least 2 options required");
       return;
     }
     setSaving(true);
@@ -327,9 +327,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     }
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving question", description: error.message, variant: "destructive" });
+      toast.error("Error saving question");
     } else {
-      toast({ title: editingQuiz ? "Question updated" : "Question added" });
+      toast.success(editingQuiz ? "Question updated" : "Question added");
       setQuizDialogOpen(false);
       fetchQuizzes(quizModuleId);
     }
@@ -349,14 +349,14 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     const path = `${dealershipId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("training-videos").upload(path, file);
     if (error) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      toast.error("Upload failed");
       setUploading(false);
       return;
     }
     const { data: urlData } = supabase.storage.from("training-videos").getPublicUrl(path);
     onUrl(urlData.publicUrl);
     setUploading(false);
-    toast({ title: "Video uploaded" });
+    toast.success("Video uploaded");
   };
 
   if (loading) {

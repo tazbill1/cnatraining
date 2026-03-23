@@ -121,18 +121,18 @@ export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerPro
 
   const handleSave = async () => {
     if (!formTitle.trim() || !formSetup.trim() || !formQuote.trim()) {
-      toast({ title: "Title, setup, and quote are required", variant: "destructive" });
+      toast.error("Title, setup, and quote are required");
       return;
     }
     // Validate decision points
     for (const dp of formDecisionPoints) {
       if (!dp.prompt.trim()) {
-        toast({ title: "Each decision point needs a prompt", variant: "destructive" });
+        toast.error("Each decision point needs a prompt");
         return;
       }
       const filledOptions = dp.options.filter(o => o.text.trim());
       if (filledOptions.length < 2) {
-        toast({ title: "Each decision needs at least 2 options", variant: "destructive" });
+        toast.error("Each decision needs at least 2 options");
         return;
       }
     }
@@ -161,9 +161,9 @@ export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerPro
     }
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving practice scenario", description: error.message, variant: "destructive" });
+      toast.error("Error saving practice scenario");
     } else {
-      toast({ title: editing ? "Practice scenario updated" : "Practice scenario added" });
+      toast.success(editing ? "Practice scenario updated" : "Practice scenario added");
       setDialogOpen(false);
       fetchScenarios();
     }

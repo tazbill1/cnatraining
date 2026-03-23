@@ -174,9 +174,9 @@ function SettingsGuard({ dealershipId, settings, onInitialized, children }: { de
       .insert({ dealership_id: dealershipId });
     setInitializing(false);
     if (error) {
-      toast({ title: "Failed to initialize settings", description: error.message, variant: "destructive" });
+      toast.error("Failed to initialize settings");
     } else {
-      toast({ title: "Settings initialized with defaults" });
+      toast.success("Settings initialized with defaults");
       onInitialized();
     }
   };
@@ -226,9 +226,9 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
       .eq("id", profileId);
     setAssigning(null);
     if (error) {
-      toast({ title: "Failed to assign user", description: error.message, variant: "destructive" });
+      toast.error("Failed to assign user");
     } else {
-      toast({ title: "User assigned to dealership" });
+      toast.success("User assigned to dealership");
       setUnassignedUsers(prev => prev.filter(u => u.id !== profileId));
       onRefresh();
     }
@@ -240,9 +240,9 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
       .update({ dealership_id: null })
       .eq("id", profileId);
     if (error) {
-      toast({ title: "Failed to remove user", description: error.message, variant: "destructive" });
+      toast.error("Failed to remove user");
     } else {
-      toast({ title: "User removed from dealership" });
+      toast.success("User removed from dealership");
       onRefresh();
     }
   };
@@ -258,7 +258,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
       toast({ title: `Role updated to ${newRole}` });
       onRefresh();
     } catch (err: any) {
-      toast({ title: "Failed to update role", description: err.message, variant: "destructive" });
+      toast.error("Failed to update role");
     } finally {
       setTogglingRole(null);
     }
@@ -487,9 +487,9 @@ function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: 
     const { error } = await supabase.from("dealership_settings").update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving settings", description: error.message, variant: "destructive" });
+      toast.error("Error saving settings");
     } else {
-      toast({ title: "Training settings saved" });
+      toast.success("Training settings saved");
       onSaved();
     }
   };
@@ -623,9 +623,9 @@ function BrandingTab({ dealershipId, settings, onSaved }: { dealershipId: string
     const { error } = await supabase.from("dealership_settings").update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving branding", description: error.message, variant: "destructive" });
+      toast.error("Error saving branding");
     } else {
-      toast({ title: "Branding settings saved" });
+      toast.success("Branding settings saved");
       onSaved();
     }
   };
@@ -689,9 +689,9 @@ function FeaturesTab({ dealershipId, settings, onSaved }: { dealershipId: string
     const { error } = await supabase.from("dealership_settings").update(payload).eq("dealership_id", dealershipId);
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving features", description: error.message, variant: "destructive" });
+      toast.error("Error saving features");
     } else {
-      toast({ title: "Feature settings saved" });
+      toast.success("Feature settings saved");
       onSaved();
     }
   };
@@ -842,7 +842,7 @@ function ScenariosTab({ dealershipId }: { dealershipId: string }) {
 
   const handleSave = async () => {
     if (!form.name || !form.system_prompt || !form.opening_line) {
-      toast({ title: "Missing required fields", description: "Name, System Prompt, and Opening Line are required.", variant: "destructive" });
+      toast.error("Missing required fields");
       return;
     }
     setSaving(true);
@@ -868,9 +868,9 @@ function ScenariosTab({ dealershipId }: { dealershipId: string }) {
     }
     setSaving(false);
     if (error) {
-      toast({ title: "Error saving scenario", description: error.message, variant: "destructive" });
+      toast.error("Error saving scenario");
     } else {
-      toast({ title: editingId ? "Scenario updated" : "Scenario created" });
+      toast.success(editingId ? "Scenario updated" : "Scenario created");
       setDialogOpen(false);
       fetchScenarios();
     }
@@ -879,7 +879,7 @@ function ScenariosTab({ dealershipId }: { dealershipId: string }) {
   const toggleActive = async (id: string, current: boolean) => {
     const { error } = await supabase.from("custom_scenarios").update({ is_active: !current }).eq("id", id);
     if (error) {
-      toast({ title: "Error toggling scenario", description: error.message, variant: "destructive" });
+      toast.error("Error toggling scenario");
     } else {
       fetchScenarios();
     }

@@ -289,7 +289,11 @@ export default function Results() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-4 justify-center">
-            <Button onClick={() => navigate(`/training/${results.scenarioType}`)} variant="outline" size="lg">
+            <Button onClick={() => {
+              const st = results.scenarioType;
+              const scenarioPath = !st.startsWith("custom-") && st.includes("-") && st.length === 36 ? `custom-${st}` : st;
+              navigate(`/training/${scenarioPath}`);
+            }} variant="outline" size="lg">
               <RotateCcw className="w-4 h-4 mr-2" /> Try Again
             </Button>
             <Button onClick={() => navigate("/scenarios")} variant="outline" size="lg">

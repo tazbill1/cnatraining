@@ -386,6 +386,9 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
         </DialogContent>
       </Dialog>
 
+      {/* Invite New User Section */}
+      <InviteSection dealershipId={dealershipId} invitations={invitations} onRefresh={onRefresh} />
+
       <Card>
         <CardHeader><CardTitle className="text-base">Recent Sessions</CardTitle></CardHeader>
         <CardContent>
@@ -423,9 +426,56 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Invitations</CardTitle></CardHeader>
-        <CardContent>
+
+
+    </div>
+  );
+}
+
+/* ─── Invite Section ─── */
+function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId: string; invitations: InvitationRow[]; onRefresh: () => void }) {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleInvite = async () => {
+    if (!email.trim() || !email.includes("@")) return;
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-invite", {
+        body: { email: email.trim(), dealership_id: dealershipId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data?.message || `Invitation sent to ${email.trim()}`);
+      setEmail("");
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send invitation");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">Invitations</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter email address..."
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+          />
+          <Button onClick={handleInvite} disabled={sending || !email.trim()}>
+            {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
+            Send Invite
+          </Button>
+        </div>
+        {invitations.length > 0 && (
           <Table>
             <TableHeader>
               <TableRow>
@@ -448,16 +498,14 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
                   </TableCell>
                 </TableRow>
               ))}
-              {invitations.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-6">No invitations yet</TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+        {invitations.length === 0 && (
+          <p className="text-center text-muted-foreground py-4 text-sm">No invitations yet — enter an email above to invite someone.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

@@ -34,6 +34,7 @@ export default function Dashboard() {
     certificationProgress: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [bannerDismissed, setBannerDismissed] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {

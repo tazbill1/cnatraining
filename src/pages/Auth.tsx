@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
@@ -15,7 +15,6 @@ type AuthMode = "signin" | "signup";
 export default function Auth() {
   const navigate = useNavigate();
   const { user, signIn, signUp, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
   const [mode, setMode] = useState<AuthMode>("signin");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -33,28 +32,19 @@ export default function Auth() {
       });
       
       if (redirected) {
-        return; // Page is redirecting
+        return;
       }
       
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Google sign in failed",
-          description: error.message || "Unable to sign in with Google",
-        });
+        toast.error(error.message || "Unable to sign in with Google");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-      });
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
@@ -69,36 +59,23 @@ export default function Auth() {
       if (mode === "signin") {
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
-          toast({
-            variant: "destructive",
-            title: "Sign in failed",
-            description: error.message || "Invalid email or password",
-          });
+          toast.error(error.message || "Invalid email or password");
         } else {
           navigate("/dashboard");
         }
       } else {
         if (!formData.fullName.trim()) {
-          toast({
-            variant: "destructive",
-            title: "Name required",
-            description: "Please enter your full name",
-          });
+          toast.error("Please enter your full name");
           setIsLoading(false);
           return;
         }
 
-        // Check if email has been invited via edge function
         const { data: inviteCheck } = await supabase.functions.invoke("check-invite", {
           body: { email: formData.email.trim() },
         });
 
         if (!inviteCheck?.invited) {
-          toast({
-            variant: "destructive",
-            title: "Invitation required",
-            description: "You need an invitation to create an account. Please contact your manager.",
-          });
+          toast.error("You need an invitation to create an account. Please contact your manager.");
           setIsLoading(false);
           return;
         }
@@ -106,32 +83,17 @@ export default function Auth() {
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
           if (error.message.includes("already registered")) {
-            toast({
-              variant: "destructive",
-              title: "Account exists",
-              description: "This email is already registered. Please sign in instead.",
-            });
+            toast.error("This email is already registered. Please sign in instead.");
           } else {
-            toast({
-              variant: "destructive",
-              title: "Sign up failed",
-              description: error.message,
-            });
+            toast.error(error.message);
           }
         } else {
-          toast({
-            title: "Account created!",
-            description: "Welcome to Werkandme",
-          });
+          toast.success("Account created! Welcome to Werkandme");
           navigate("/dashboard");
         }
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-      });
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }

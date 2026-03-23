@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -59,7 +59,7 @@ const SILENCE_COUNTDOWN_SECONDS = 2;
 const MAX_RETRY_ATTEMPTS = 2;
 
 export function useVoiceChat(options: UseVoiceChatOptions = {}) {
-  const { toast } = useToast();
+  
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -256,11 +256,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     
     if (!SpeechRecognitionAPI) {
       setMicPermission("unavailable");
-      toast({
-        variant: "destructive",
-        title: "Speech Recognition Unavailable",
-        description: "Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari.",
-      });
+      toast.error("Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari.");
       return;
     }
 
@@ -339,11 +335,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
                 retryCountRef.current = 0;
                 if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
                 if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                toast({
-                  variant: "destructive",
-                  title: "Speech Recognition Error",
-                  description: "Could not restart microphone. Please try again.",
-                });
+                    toast.error("Could not restart microphone. Please try again.");
               }
             }
           }, 300);
@@ -367,30 +359,15 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         
         if (event.error === "not-allowed") {
           setMicPermission("denied");
-          toast({
-            variant: "destructive",
-            title: "Microphone Access Denied",
-            description: "Please allow microphone access in your browser settings.",
-          });
+          toast.error("Please allow microphone access in your browser settings.");
         } else if (event.error === "no-speech") {
           if (!finalTranscriptRef.current.trim()) {
-            toast({
-              title: "No Speech Detected",
-              description: "Please speak clearly into your microphone.",
-            });
+            toast("No speech detected. Please speak clearly into your microphone.");
           }
         } else if (event.error === "audio-capture") {
-          toast({
-            variant: "destructive",
-            title: "Microphone Lost",
-            description: "Microphone connection interrupted. Please try again.",
-          });
+          toast.error("Microphone connection interrupted. Please try again.");
         } else if (event.error !== "aborted") {
-          toast({
-            variant: "destructive",
-            title: "Speech Recognition Error",
-            description: "Something went wrong. Please try again.",
-          });
+          toast.error("Something went wrong. Please try again.");
         }
       };
 
@@ -438,17 +415,9 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       
       if (error.name === "NotAllowedError") {
         setMicPermission("denied");
-        toast({
-          variant: "destructive",
-          title: "Microphone Access Denied",
-          description: "Please allow microphone access in your browser settings.",
-        });
+        toast.error("Please allow microphone access in your browser settings.");
       } else {
-        toast({
-          variant: "destructive",
-          title: "Microphone Error",
-          description: "Could not start speech recognition. Please try again.",
-        });
+        toast.error("Could not start speech recognition. Please try again.");
       }
     }
   }, [getSpeechRecognition, options, toast, startAudioLevelMonitoring, stopAudioLevelMonitoring, startSilenceCountdown, resetCountdown, voiceStatus]);
@@ -486,10 +455,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     setVoiceStatus("idle");
     finalTranscriptRef.current = "";
     stopAudioLevelMonitoring();
-    toast({
-      title: "Recording cancelled",
-      description: "Your message was not sent.",
-    });
+    toast("Recording cancelled");
   }, [stopAudioLevelMonitoring, toast]);
 
   // Reset voice status (for external control)
@@ -564,11 +530,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
       } catch (error) {
         console.error("ElevenLabs speech error:", error);
         setIsSpeaking(false);
-        toast({
-          variant: "destructive",
-          title: "Speech Error",
-          description: "Failed to generate speech. Please try again.",
-        });
+        toast.error("Failed to generate speech. Please try again.");
       }
     },
     [isSpeaking, toast, handsFreeModeEnabled, startRecording]

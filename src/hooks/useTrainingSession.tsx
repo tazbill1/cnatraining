@@ -111,7 +111,7 @@ export function useTrainingSession() {
         setIsLoading(false);
       }
     },
-    [user, toast]
+    [user, profile]
   );
 
   const sendMessage = useCallback(
@@ -196,7 +196,7 @@ export function useTrainingSession() {
         setIsTyping(false);
       }
     },
-    [sessionState, toast]
+    [sessionState]
   );
 
   const endSession = useCallback(async () => {
@@ -274,7 +274,7 @@ export function useTrainingSession() {
         toast.error("Failed to save session results");
       return null;
     }
-  }, [sessionState, toast]);
+  }, [sessionState]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

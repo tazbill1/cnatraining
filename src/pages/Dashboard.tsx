@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { Play, Trophy, Clock, Target, TrendingUp, Award, Megaphone } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -219,8 +220,17 @@ export default function Dashboard() {
                   </Button>
                 </div>
                 {isLoading ? (
-                  <div className="py-8 text-center text-muted-foreground">
-                    Loading...
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center gap-4 p-3 rounded-lg">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                        <Skeleton className="h-6 w-12" />
+                      </div>
+                    ))}
                   </div>
                 ) : sessions.length > 0 ? (
                   <div className="space-y-2">

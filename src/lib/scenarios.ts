@@ -1,6 +1,6 @@
 import { User, Users, Search, DollarSign, Gauge, Clock, Shield, Zap, Heart, Car, BookOpen, Scale, TrendingDown, Sparkles, Handshake, Target, Banknote, Phone, PhoneIncoming, Calendar, Brain, BadgeDollarSign, Star, AlertTriangle, Lock, ClipboardList, ShieldAlert } from "lucide-react";
 
-export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call" | "objection-handling" | "meet-greet" | "rapport-investigation";
+export type ScenarioCategory = "cna" | "trade-appraisal" | "inbound-call" | "objection-handling" | "meet-greet" | "rapport-investigation" | "bypassing" | "pencil-negotiation";
 
 export type BuyerType = "analyst" | "negotiator" | "emotional" | "loyal" | "urgent" | "general" | "budget-buyer" | "analytical-buyer" | "price-buyer";
 
@@ -80,6 +80,22 @@ export const scenarioCategories: ScenarioCategory_Info[] = [
     description: "Practice the Rapport Pattern, open-ended questions, and discovering hot buttons through genuine conversation.",
     icon: Search,
     color: "indigo",
+  },
+  {
+    id: "bypassing",
+    name: "Bypassing",
+    subtitle: "A.B.C. Price Redirects",
+    description: "Practice Acknowledge, Bridge, and Control when customers lead with price, payments, or trade value questions on the lot.",
+    icon: Shield,
+    color: "teal",
+  },
+  {
+    id: "pencil-negotiation",
+    name: "Pencil & Negotiation",
+    subtitle: "Presenting Numbers",
+    description: "Practice pencil presentation, Wait and Listen, re-commit scripts, and creative deal structuring.",
+    icon: Banknote,
+    color: "sky",
   },
 ];
 

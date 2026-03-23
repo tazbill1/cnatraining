@@ -174,19 +174,21 @@ export function useTrainingSession() {
           checklistState: newChecklistState,
         }));
 
-        // Save to database - convert dates to strings
+        // Save to database in background (non-blocking)
         const conversationForDb = allMessages.map((m) => ({
           ...m,
           timestamp: m.timestamp.toISOString(),
         }));
         
-        await supabase
+        supabase
           .from("training_sessions")
           .update({
             conversation: conversationForDb,
             checklist_state: newChecklistState,
           })
-          .eq("id", sessionState.id);
+          .eq("id", sessionState.id)
+          .then(() => {})
+          .catch((err) => logger.error("Failed to save conversation:", err));
       } catch (error) {
         logger.error("Error sending message:", error);
         toast.error("Failed to get AI response. Please try again.");

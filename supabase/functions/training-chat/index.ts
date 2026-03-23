@@ -161,12 +161,12 @@ serve(async (req) => {
       const { data: profile } = await serviceClient
         .from("profiles")
         .select("dealership_id")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       // Check if user is a super_admin (can access any dealership's scenarios)
       const { data: isSuperAdmin } = await serviceClient
-        .rpc("has_role", { _user_id: user.id, _role: "super_admin" });
+        .rpc("has_role", { _user_id: userId, _role: "super_admin" });
 
       if (!profile?.dealership_id && !isSuperAdmin) {
         return new Response(

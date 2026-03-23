@@ -173,7 +173,7 @@ export default function Learn() {
   }, [completedModules, enabledModules]);
 
   const handleModuleClick = (moduleId: string, isLocked: boolean) => {
-    const bypassLock = window.event && (window.event as MouseEvent).shiftKey;
+    const bypassLock = import.meta.env.DEV && window.event && (window.event as MouseEvent).shiftKey;
 
     if (isLocked && !bypassLock) {
       toast.error("Complete the prerequisites first to unlock this module.");

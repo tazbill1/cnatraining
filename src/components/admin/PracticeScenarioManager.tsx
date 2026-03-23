@@ -80,11 +80,11 @@ export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerPro
   const fetchScenarios = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("dealership_practice_scenarios" as any)
+      .from("dealership_practice_scenarios")
       .select("*")
       .eq("module_id", moduleId)
       .order("sort_order");
-    setScenarios((data as any[]) || []);
+    setScenarios((data || []) as unknown as PracticeScenario[]);
     setLoading(false);
   };
 
@@ -155,9 +155,9 @@ export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerPro
 
     let error;
     if (editing) {
-      ({ error } = await supabase.from("dealership_practice_scenarios" as any).update(payload as any).eq("id", editing.id));
+      ({ error } = await supabase.from("dealership_practice_scenarios").update(payload).eq("id", editing.id));
     } else {
-      ({ error } = await supabase.from("dealership_practice_scenarios" as any).insert(payload as any));
+      ({ error } = await supabase.from("dealership_practice_scenarios").insert(payload));
     }
     setSaving(false);
     if (error) {
@@ -171,7 +171,7 @@ export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerPro
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this practice scenario?")) return;
-    const { error } = await supabase.from("dealership_practice_scenarios" as any).delete().eq("id", id);
+    const { error } = await supabase.from("dealership_practice_scenarios").delete().eq("id", id);
     if (!error) fetchScenarios();
   };
 

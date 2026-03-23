@@ -90,7 +90,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     autoSend: true,
     onAutoSend: async (text) => {
       if (text.trim()) {
-        await sendMessage(text.trim());
+        await sendMessage(text.trim(), { onError: () => toast.error("Voice message failed to send") });
         resetVoiceStatus();
       }
     },
@@ -181,9 +181,9 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     }, 30_000);
 
     try {
-      await sendMessage(message);
+      await sendMessage(message, { onError: (text) => setInputValue(text) });
     } catch {
-      // Re-populate input on error so user can retry without retyping
+      // Fallback: re-populate input on unexpected error
       setInputValue(message);
     } finally {
       clearTimeout(warningTimer);

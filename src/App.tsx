@@ -35,7 +35,6 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Team = lazy(() => import("./pages/Team"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Certificates = lazy(() => import("./pages/Certificates"));
-const Performance = lazy(() => import("./pages/Performance"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -83,7 +82,7 @@ const App = () => (
                   <Route path="/history" element={<SessionHistory />} />
                   <Route path="/history/:sessionId" element={<SessionHistory />} />
                   <Route path="/progress" element={<Progress />} />
-                  <Route path="/performance" element={<Performance />} />
+                  
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/team" element={<Team />} />
                   <Route path="/admin" element={<Admin />} />

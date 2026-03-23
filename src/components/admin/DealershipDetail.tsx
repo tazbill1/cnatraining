@@ -464,6 +464,83 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
   );
 }
 
+/* ─── Invite Section ─── */
+function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId: string; invitations: InvitationRow[]; onRefresh: () => void }) {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleInvite = async () => {
+    if (!email.trim() || !email.includes("@")) return;
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-invite", {
+        body: { email: email.trim(), dealership_id: dealershipId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data?.message || `Invitation sent to ${email.trim()}`);
+      setEmail("");
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send invitation");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">Invitations</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter email address..."
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+          />
+          <Button onClick={handleInvite} disabled={sending || !email.trim()}>
+            {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
+            Send Invite
+          </Button>
+        </div>
+        {invitations.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sent</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invitations.map((inv) => (
+                <TableRow key={inv.id}>
+                  <TableCell className="font-medium">{inv.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={inv.status === "accepted" ? "default" : "secondary"}>
+                      {inv.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDistanceToNow(new Date(inv.created_at), { addSuffix: true })}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+        {invitations.length === 0 && (
+          <p className="text-center text-muted-foreground py-4 text-sm">No invitations yet — enter an email above to invite someone.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ─── Training Config Tab ─── */
 function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: string; settings: DealershipSettings | null; onSaved: () => void }) {
   const [saving, setSaving] = useState(false);

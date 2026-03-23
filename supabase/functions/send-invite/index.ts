@@ -140,6 +140,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("Send invite error:", error instanceof Error ? error.message : error);
     return new Response(
       JSON.stringify({ error: "Failed to send invitation" }),
       {

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { DealershipProvider } from "@/hooks/useDealershipContext";
 import { CrashReporter } from "@/components/debug/CrashReporter";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 
 const Index = lazy(() => import("./pages/Index"));

@@ -88,7 +88,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
     voiceStatusRef.current = voiceStatus;
   }, [voiceStatus]);
 
-
+  const safeCloseAudioContext = useCallback((ctx: AudioContext | null) => {
     if (!ctx) return;
     try {
       // AudioContext.close() returns a Promise and may reject in some browsers

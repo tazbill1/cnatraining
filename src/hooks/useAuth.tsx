@@ -40,6 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const clearAuthState = () => {
+    setProfile(null);
+    setIsManager(false);
+    setIsSuperAdmin(false);
+  };
+
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
@@ -73,38 +79,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener first
+    let isMounted = true;
     let profileFetchedForUser: string | null = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const loadProfile = (userId: string) => {
+      void fetchProfile(userId).finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+    };
 
-        if (session?.user) {
-          // Only fetch profile once per user to avoid duplicate calls
-          // from multiple auth events (INITIAL_SESSION + TOKEN_REFRESHED)
-          if (profileFetchedForUser !== session.user.id) {
-            profileFetchedForUser = session.user.id;
-            setTimeout(() => {
-              fetchProfile(session.user.id);
-            }, 0);
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!isMounted) return;
+
+      if (error) {
+        setError(error.message);
+        clearAuthState();
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const initialSession = data.session;
+      setError(null);
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+
+      if (initialSession?.user) {
+        profileFetchedForUser = initialSession.user.id;
+        loadProfile(initialSession.user.id);
+      } else {
+        clearAuthState();
+        setIsLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        if (!isMounted) return;
+
+        setError(null);
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+
+        if (nextSession?.user) {
+          if (profileFetchedForUser === nextSession.user.id) {
+            setIsLoading(false);
+            return;
           }
+
+          profileFetchedForUser = nextSession.user.id;
+          setIsLoading(true);
+          setTimeout(() => {
+            loadProfile(nextSession.user.id);
+          }, 0);
         } else {
           profileFetchedForUser = null;
-          setProfile(null);
-          setIsManager(false);
-          setIsSuperAdmin(false);
+          clearAuthState();
+          setError(null);
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     );
 
-    // getSession() is intentionally omitted — onAuthStateChange fires
-    // with the initial session automatically, so calling both causes
-    // duplicate fetchProfile calls on every page load.
-
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

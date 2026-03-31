@@ -60,8 +60,6 @@ export default function Auth() {
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
           toast.error(error.message || "Invalid email or password");
-        } else {
-          navigate("/dashboard");
         }
       } else {
         if (!formData.fullName.trim()) {

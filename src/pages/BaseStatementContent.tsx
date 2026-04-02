@@ -83,6 +83,8 @@ export default function BaseStatementContent() {
   const hasCustomScript = !!(settings?.custom_base_statement && settings.custom_base_statement.trim());
   const dealershipName = profile?.dealership_name;
 
+  if (isChecking || !isAllowed) return null;
+
   const handleStart = () => {
     setStage("section1");
   };

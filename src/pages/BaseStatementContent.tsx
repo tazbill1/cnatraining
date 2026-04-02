@@ -12,6 +12,7 @@ import { ModuleProgress } from "@/components/learn/ModuleProgress";
 import { KnowledgeCheck } from "@/components/learn/KnowledgeCheck";
 import { ModuleQuiz } from "@/components/learn/ModuleQuiz";
 import { BaseStatementContextSection } from "@/components/learn/sections/BaseStatementContextSection";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { BaseStatementScriptSection } from "@/components/learn/sections/BaseStatementScriptSection";
 import { BaseStatementPillarsSection } from "@/components/learn/sections/BaseStatementPillarsSection";
 import {

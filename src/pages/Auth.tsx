@@ -257,7 +257,16 @@ export default function Auth() {
               )}
             </Button>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-2">
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
+                >
+                  Forgot your password?
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setMode(mode === "signin" ? "signup" : "signin")}

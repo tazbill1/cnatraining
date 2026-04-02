@@ -291,6 +291,26 @@ export default function SessionHistory() {
                     <X className="w-3.5 h-3.5" /> Clear
                   </button>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => {
+                    const rows = filteredSessions.map((s) => ({
+                      Scenario: getScenarioName(s.scenario_type),
+                      Score: s.score ?? "",
+                      Duration: s.duration_seconds ? `${Math.round(s.duration_seconds / 60)}m` : "",
+                      Date: s.completed_at ? new Date(s.completed_at).toLocaleDateString() : "",
+                      Rapport: s.rapport_score ?? "",
+                      "Info Gathering": s.info_gathering_score ?? "",
+                      "Needs ID": s.needs_identification_score ?? "",
+                      "CNA Completion": s.cna_completion_score ?? "",
+                    }));
+                    downloadCsv(rows, `session-history-${new Date().toISOString().slice(0, 10)}.csv`);
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5 mr-1.5" /> CSV
+                </Button>
               </div>
             </div>
           )}

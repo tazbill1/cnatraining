@@ -55,6 +55,7 @@ const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Quiz"];
 export default function Module2Content() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { isChecking, isAllowed } = useModuleAccessGuard(MODULE_ID);
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});

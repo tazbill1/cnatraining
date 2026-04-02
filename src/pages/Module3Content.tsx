@@ -42,7 +42,7 @@ export default function Module3Content() {
     }
   }, [module, navigate]);
 
-  if (!module) {
+  if (!module || isChecking || !isAllowed) {
     return null;
   }
 

@@ -87,7 +87,7 @@ export default function Module2Content() {
     }
   }, [module, navigate]);
 
-  if (!module) {
+  if (!module || isChecking || !isAllowed) {
     return null;
   }
 

@@ -74,6 +74,7 @@ export default function BaseStatementContent() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { settings } = useDealershipSettings();
+  const { isChecking, isAllowed } = useModuleAccessGuard("base-statement");
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});

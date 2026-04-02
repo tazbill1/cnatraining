@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw, Download, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";

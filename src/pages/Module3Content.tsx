@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -28,6 +29,7 @@ const sectionLabels = ["Intro", "AEAIR Framework", "Objection Examples", "Quiz"]
 export default function Module3Content() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isChecking, isAllowed } = useModuleAccessGuard("objection-handling-framework");
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
@@ -40,7 +42,7 @@ export default function Module3Content() {
     }
   }, [module, navigate]);
 
-  if (!module) {
+  if (!module || isChecking || !isAllowed) {
     return null;
   }
 

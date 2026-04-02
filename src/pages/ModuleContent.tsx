@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -55,13 +56,14 @@ export default function ModuleContent() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const effectiveModuleId = moduleId || "vehicle-selection-fundamentals";
+  const { isChecking, isAllowed } = useModuleAccessGuard(effectiveModuleId);
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [savedStage, setSavedStage] = useState<ModuleStage | null>(null);
 
-  const effectiveModuleId = moduleId || "vehicle-selection-fundamentals";
   const module = getModuleById(effectiveModuleId);
 
   // Check for saved progress on mount
@@ -87,7 +89,7 @@ export default function ModuleContent() {
     }
   }, [module, navigate]);
 
-  if (!module) {
+  if (!module || isChecking || !isAllowed) {
     return null;
   }
 

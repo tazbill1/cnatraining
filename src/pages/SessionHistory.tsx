@@ -1,12 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Calendar, Check, X, MessageSquare } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Check, X, MessageSquare, Search } from "lucide-react";
 import { scenarios } from "@/lib/scenarios";
 
 function getScenarioName(scenarioType: string): string {
@@ -43,6 +51,9 @@ export default function SessionHistory() {
   const [sessions, setSessions] = useState<SessionDetail[]>([]);
   const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [scoreFilter, setScoreFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("newest");
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -94,6 +105,38 @@ export default function SessionHistory() {
 
   const getChecklist = (scenarioType: string) =>
     isPhoneScenario(scenarioType) ? phoneChecklist : cnaChecklist;
+
+  const filteredSessions = useMemo(() => {
+    let result = [...sessions];
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((s) =>
+        getScenarioName(s.scenario_type).toLowerCase().includes(q)
+      );
+    }
+
+    if (scoreFilter !== "all") {
+      result = result.filter((s) => {
+        const score = s.score ?? 0;
+        if (scoreFilter === "90+") return score >= 90;
+        if (scoreFilter === "75-89") return score >= 75 && score < 90;
+        if (scoreFilter === "60-74") return score >= 60 && score < 75;
+        if (scoreFilter === "<60") return score < 60;
+        return true;
+      });
+    }
+
+    if (sortBy === "oldest") {
+      result.reverse();
+    } else if (sortBy === "highest") {
+      result.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+    } else if (sortBy === "lowest") {
+      result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
+    }
+
+    return result;
+  }, [sessions, searchQuery, scoreFilter, sortBy]);
 
   if (selectedSession) {
     const session = selectedSession;
@@ -195,6 +238,62 @@ export default function SessionHistory() {
             <p className="text-sm text-muted-foreground">Review past training conversations and identify patterns</p>
           </div>
 
+          {/* Filters */}
+          {sessions.length > 0 && (
+            <div className="mb-6 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by scenario name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-9"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Select value={scoreFilter} onValueChange={setScoreFilter}>
+                  <SelectTrigger className="w-[140px] h-9 text-sm">
+                    <SelectValue placeholder="Score" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Scores</SelectItem>
+                    <SelectItem value="90+">90+ Excellent</SelectItem>
+                    <SelectItem value="75-89">75-89 Good</SelectItem>
+                    <SelectItem value="60-74">60-74 Needs Work</SelectItem>
+                    <SelectItem value="<60">&lt;60 Practice</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[140px] h-9 text-sm">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="highest">Highest Score</SelectItem>
+                    <SelectItem value="lowest">Lowest Score</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(searchQuery || scoreFilter !== "all" || sortBy !== "newest") && (
+                  <button
+                    onClick={() => { setSearchQuery(""); setScoreFilter("all"); setSortBy("newest"); }}
+                    className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" /> Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <p className="text-muted-foreground text-center py-12">Loading sessions...</p>
           ) : sessions.length === 0 ? (
@@ -203,9 +302,15 @@ export default function SessionHistory() {
               <p className="text-muted-foreground mb-4">No completed sessions yet</p>
               <Button onClick={() => navigate("/scenarios")}>Start Training</Button>
             </div>
+          ) : filteredSessions.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-2">No sessions match your filters</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+            </div>
           ) : (
             <div className="space-y-3">
-              {sessions.map((session) => {
+              <p className="text-xs text-muted-foreground">{filteredSessions.length} session{filteredSessions.length !== 1 ? "s" : ""}</p>
+              {filteredSessions.map((session) => {
                 const scenarioDisplayName = getScenarioName(session.scenario_type);
                 const checklistState = (session.checklist_state || {}) as Record<string, boolean>;
                 const completedItems = Object.values(checklistState).filter(Boolean).length;

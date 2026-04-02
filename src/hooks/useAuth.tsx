@@ -1,19 +1,13 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-
-interface Profile {
-  id: string;
-  user_id: string;
-  full_name: string;
-  email: string;
-  dealership_name: string | null;
-  dealership_id: string | null;
-  voice_enabled: boolean;
-  difficulty_default: string;
-  coaching_intensity: string;
-}
+import {
+  Profile,
+  fetchUserProfile,
+  signInWithPassword,
+  signUpWithEmail,
+  signOutUser,
+} from "@/lib/authOperations";
 
 interface AuthContextType {
   user: User | null;
@@ -46,35 +40,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsSuperAdmin(false);
   };
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!error && data) {
-      setProfile(data as Profile);
-    }
-
-    // Check if user is manager
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-
-    if (roleData) {
-      setIsManager(roleData.some((r) => r.role === "manager"));
-      setIsSuperAdmin(roleData.some((r) => r.role === "super_admin"));
-    } else {
-      setIsManager(false);
-      setIsSuperAdmin(false);
-    }
+  const loadProfile = async (userId: string) => {
+    const result = await fetchUserProfile(userId);
+    setProfile(result.profile);
+    setIsManager(result.isManager);
+    setIsSuperAdmin(result.isSuperAdmin);
   };
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await loadProfile(user.id);
     }
   };
 
@@ -82,19 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
     let profileFetchedForUser: string | null = null;
 
-    const loadProfile = (userId: string) => {
-      void fetchProfile(userId).finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+    const handleProfile = (userId: string) => {
+      void loadProfile(userId).finally(() => {
+        if (isMounted) setIsLoading(false);
       });
     };
 
-    supabase.auth.getSession().then(({ data, error }) => {
+    supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (!isMounted) return;
 
-      if (error) {
-        setError(error.message);
+      if (sessionError) {
+        setError(sessionError.message);
         clearAuthState();
         setSession(null);
         setUser(null);
@@ -109,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (initialSession?.user) {
         profileFetchedForUser = initialSession.user.id;
-        loadProfile(initialSession.user.id);
+        handleProfile(initialSession.user.id);
       } else {
         clearAuthState();
         setIsLoading(false);
@@ -129,12 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsLoading(false);
             return;
           }
-
           profileFetchedForUser = nextSession.user.id;
           setIsLoading(true);
-          setTimeout(() => {
-            loadProfile(nextSession.user.id);
-          }, 0);
+          setTimeout(() => handleProfile(nextSession.user.id), 0);
         } else {
           profileFetchedForUser = null;
           clearAuthState();
@@ -151,62 +121,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error, data } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    // Update last_active_at on successful login
-    if (!error && data.user) {
-      supabase
-        .from("profiles")
-        .update({ last_active_at: new Date().toISOString() })
-        .eq("user_id", data.user.id)
-        .then(() => {});
-    }
-    
-    return { error };
+    return signInWithPassword(email, password);
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
-    return { error };
+    return signUpWithEmail(email, password, fullName);
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await signOutUser();
     setUser(null);
     setSession(null);
-    setProfile(null);
-    setIsManager(false);
-    setIsSuperAdmin(false);
+    clearAuthState();
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        session,
-        profile,
-        isLoading,
-        isManager,
-        isSuperAdmin,
-        error,
-        signIn,
-        signUp,
-        signOut,
-        refreshProfile,
+        user, session, profile, isLoading, isManager, isSuperAdmin,
+        error, signIn, signUp, signOut, refreshProfile,
       }}
     >
       {children}

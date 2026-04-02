@@ -12,6 +12,7 @@ import { ModuleProgress } from "@/components/learn/ModuleProgress";
 import { KnowledgeCheck } from "@/components/learn/KnowledgeCheck";
 import { ModuleQuiz } from "@/components/learn/ModuleQuiz";
 import { BaseStatementContextSection } from "@/components/learn/sections/BaseStatementContextSection";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { BaseStatementScriptSection } from "@/components/learn/sections/BaseStatementScriptSection";
 import { BaseStatementPillarsSection } from "@/components/learn/sections/BaseStatementPillarsSection";
 import {
@@ -73,6 +74,7 @@ export default function BaseStatementContent() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { settings } = useDealershipSettings();
+  const { isChecking, isAllowed } = useModuleAccessGuard("base-statement");
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
@@ -80,6 +82,8 @@ export default function BaseStatementContent() {
   const module = getModuleById("base-statement");
   const hasCustomScript = !!(settings?.custom_base_statement && settings.custom_base_statement.trim());
   const dealershipName = profile?.dealership_name;
+
+  if (isChecking || !isAllowed) return null;
 
   const handleStart = () => {
     setStage("section1");

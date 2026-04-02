@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -54,6 +55,7 @@ const sectionLabels = ["Intro", "Framing", "Evaluation", "Disclosure", "Quiz"];
 export default function Module2Content() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { isChecking, isAllowed } = useModuleAccessGuard(MODULE_ID);
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
@@ -85,7 +87,7 @@ export default function Module2Content() {
     }
   }, [module, navigate]);
 
-  if (!module) {
+  if (!module || isChecking || !isAllowed) {
     return null;
   }
 

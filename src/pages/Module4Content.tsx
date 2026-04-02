@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { ChevronLeft, ChevronRight, Phone, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -24,6 +25,9 @@ type ViewState = "intro" | "content" | "quiz" | "complete";
 export default function Module4Content() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isChecking, isAllowed } = useModuleAccessGuard("phone-sales-fundamentals");
+
+  if (isChecking || !isAllowed) return null;
   const [viewState, setViewState] = useState<ViewState>("intro");
   const [currentSection, setCurrentSection] = useState(0);
   const [completedSections, setCompletedSections] = useState<number[]>([]);

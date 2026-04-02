@@ -51,6 +51,9 @@ export default function SessionHistory() {
   const [sessions, setSessions] = useState<SessionDetail[]>([]);
   const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [scoreFilter, setScoreFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("newest");
 
   useEffect(() => {
     const fetchSessions = async () => {

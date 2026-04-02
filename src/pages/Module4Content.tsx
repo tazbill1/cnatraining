@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useModuleAccessGuard } from "@/hooks/useModuleAccessGuard";
 import { ChevronLeft, ChevronRight, Phone, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/layout/AppLayout";

@@ -20,6 +20,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { logger } from "@/lib/logger";
+import { downloadCsv } from "@/lib/csvExport";
+import { TeamProgressDashboard } from "@/components/team/TeamProgressDashboard";
 
 interface UserEngagement {
   id: string;

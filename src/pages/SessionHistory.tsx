@@ -225,46 +225,6 @@ export default function SessionHistory() {
     );
   }
 
-  // Filtering state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [scoreFilter, setScoreFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("newest");
-
-  const filteredSessions = useMemo(() => {
-    let result = [...sessions];
-
-    // Search by scenario name
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((s) =>
-        getScenarioName(s.scenario_type).toLowerCase().includes(q)
-      );
-    }
-
-    // Score filter
-    if (scoreFilter !== "all") {
-      result = result.filter((s) => {
-        const score = s.score ?? 0;
-        if (scoreFilter === "90+") return score >= 90;
-        if (scoreFilter === "75-89") return score >= 75 && score < 90;
-        if (scoreFilter === "60-74") return score >= 60 && score < 75;
-        if (scoreFilter === "<60") return score < 60;
-        return true;
-      });
-    }
-
-    // Sort
-    if (sortBy === "oldest") {
-      result.reverse();
-    } else if (sortBy === "highest") {
-      result.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-    } else if (sortBy === "lowest") {
-      result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
-    }
-
-    return result;
-  }, [sessions, searchQuery, scoreFilter, sortBy]);
-
   // Session list view
   return (
     <AuthGuard>

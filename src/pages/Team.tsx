@@ -13,13 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw, Download, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { logger } from "@/lib/logger";
+import { downloadCsv } from "@/lib/csvExport";
+import { TeamProgressDashboard } from "@/components/team/TeamProgressDashboard";
 
 interface UserEngagement {
   id: string;
@@ -413,20 +415,44 @@ export default function Team() {
 
           {/* User Tables/Cards */}
           <Tabs defaultValue="all" className="space-y-4">
-            <TabsList className="w-full md:w-auto grid grid-cols-4 md:flex">
-              <TabsTrigger value="all" className="text-xs md:text-sm">
-                All ({users.length})
-              </TabsTrigger>
-              <TabsTrigger value="active" className="text-xs md:text-sm">
-                Active ({activeUsers.length})
-              </TabsTrigger>
-              <TabsTrigger value="inactive" className="text-xs md:text-sm text-destructive">
-                Attention ({inactiveUsers.length})
-              </TabsTrigger>
-              <TabsTrigger value="insights" className="text-xs md:text-sm">
-                <BarChart3 className="w-3 h-3 mr-1" /> Insights
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <TabsList className="w-full md:w-auto grid grid-cols-5 md:flex">
+                <TabsTrigger value="all" className="text-xs md:text-sm">
+                  All ({users.length})
+                </TabsTrigger>
+                <TabsTrigger value="active" className="text-xs md:text-sm">
+                  Active ({activeUsers.length})
+                </TabsTrigger>
+                <TabsTrigger value="inactive" className="text-xs md:text-sm text-destructive">
+                  Attention ({inactiveUsers.length})
+                </TabsTrigger>
+                <TabsTrigger value="progress" className="text-xs md:text-sm">
+                  <GraduationCap className="w-3 h-3 mr-1" /> Progress
+                </TabsTrigger>
+                <TabsTrigger value="insights" className="text-xs md:text-sm">
+                  <BarChart3 className="w-3 h-3 mr-1" /> Insights
+                </TabsTrigger>
+              </TabsList>
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-end md:self-auto"
+                onClick={() => {
+                  const rows = users.map((u) => ({
+                    Name: u.full_name,
+                    Email: u.email,
+                    "Total Sessions": u.total_sessions,
+                    "Avg Score": u.avg_score,
+                    "Last Active": u.last_active_at ? new Date(u.last_active_at).toLocaleDateString() : "Never",
+                    "Last Session": u.last_session_date ? new Date(u.last_session_date).toLocaleDateString() : "Never",
+                  }));
+                  downloadCsv(rows, `team-report-${new Date().toISOString().slice(0, 10)}.csv`);
+                  toast.success("Team report downloaded");
+                }}
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" /> Export CSV
+              </Button>
+            </div>
 
             <TabsContent value="all">
               <UserList 
@@ -469,6 +495,10 @@ export default function Team() {
                   />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="progress">
+              <TeamProgressDashboard userIds={users.map((u) => u.user_id)} />
             </TabsContent>
 
             <TabsContent value="insights">

@@ -89,7 +89,7 @@ export default function ModuleContent() {
     }
   }, [module, navigate]);
 
-  if (!module) {
+  if (!module || isChecking || !isAllowed) {
     return null;
   }
 

@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Calendar, Check, X, MessageSquare, Search } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Check, X, MessageSquare, Search, Download } from "lucide-react";
+import { downloadCsv } from "@/lib/csvExport";
 import { scenarios } from "@/lib/scenarios";
 
 function getScenarioName(scenarioType: string): string {

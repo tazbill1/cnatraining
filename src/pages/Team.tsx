@@ -497,6 +497,10 @@ export default function Team() {
               </Card>
             </TabsContent>
 
+            <TabsContent value="progress">
+              <TeamProgressDashboard userIds={users.map((u) => u.user_id)} />
+            </TabsContent>
+
             <TabsContent value="insights">
               <TeamInsights sessions={teamSessions} users={users} />
             </TabsContent>

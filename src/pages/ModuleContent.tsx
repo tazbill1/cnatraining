@@ -56,13 +56,14 @@ export default function ModuleContent() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const effectiveModuleId = moduleId || "vehicle-selection-fundamentals";
+  const { isChecking, isAllowed } = useModuleAccessGuard(effectiveModuleId);
   const [stage, setStage] = useState<ModuleStage>("intro");
   const [completedSections, setCompletedSections] = useState<number[]>([]);
   const [knowledgeChecksPassed, setKnowledgeChecksPassed] = useState<Record<string, boolean>>({});
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [savedStage, setSavedStage] = useState<ModuleStage | null>(null);
 
-  const effectiveModuleId = moduleId || "vehicle-selection-fundamentals";
   const module = getModuleById(effectiveModuleId);
 
   // Check for saved progress on mount

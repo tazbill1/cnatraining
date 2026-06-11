@@ -338,19 +338,50 @@ export default function Results() {
               onClick={() => setShowTranscript(!showTranscript)}
               className="w-full p-4 flex items-center justify-between text-left"
             >
-              <span className="font-medium text-foreground">Conversation Transcript</span>
+              <span className="font-medium text-foreground">
+                Conversation Transcript
+                {(results.moments?.length || 0) > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground font-normal">
+                    ({results.moments!.length} coaching moment{results.moments!.length === 1 ? "" : "s"})
+                  </span>
+                )}
+              </span>
               <span className="text-sm text-primary">{showTranscript ? "Hide" : "Show"}</span>
             </button>
             {showTranscript && (
-              <div className="px-4 pb-4 space-y-3 border-t border-border pt-4 max-h-96 overflow-auto">
-                {results.conversation.map((msg, i) => (
-                  <div key={i} className={cn("p-3 rounded-lg text-sm", msg.role === "user" ? "bg-primary/10 ml-8" : "bg-muted mr-8")}>
-                    <p className="text-xs text-muted-foreground mb-1 capitalize">
-                      {msg.role === "user" ? "You" : "Customer"}
-                    </p>
-                    <p className="text-foreground">{msg.content}</p>
-                  </div>
-                ))}
+              <div className="px-4 pb-4 space-y-3 border-t border-border pt-4 max-h-[32rem] overflow-auto">
+                {(() => {
+                  let userTurn = -1;
+                  return results.conversation.map((msg, i) => {
+                    if (msg.role === "user") userTurn++;
+                    const moments = msg.role === "user" ? (momentsByTurnIndex.get(userTurn) || []) : [];
+                    return (
+                      <div key={i} className={cn("p-3 rounded-lg text-sm", msg.role === "user" ? "bg-primary/10 ml-8" : "bg-muted mr-8")}>
+                        <p className="text-xs text-muted-foreground mb-1 capitalize">
+                          {msg.role === "user" ? "You" : "Customer"}
+                        </p>
+                        <p className="text-foreground">{msg.content}</p>
+                        {moments.map((m, mi) => (
+                          <div
+                            key={mi}
+                            className={cn(
+                              "mt-2 flex items-start gap-2 rounded-md border p-2 text-xs",
+                              m.sentiment === "positive"
+                                ? "border-success/30 bg-success/5"
+                                : "border-warning/30 bg-warning/5"
+                            )}
+                          >
+                            <span className="text-sm">{m.sentiment === "positive" ? "✓" : "⚠"}</span>
+                            <div className="flex-1">
+                              <p className="font-medium text-foreground capitalize mb-0.5">{m.element}</p>
+                              <p className="text-muted-foreground">{m.note}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
           </div>

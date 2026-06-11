@@ -193,6 +193,38 @@ export default function Results() {
             </div>
           )}
 
+          {/* Personality Type (Module 3) */}
+          {results.personalityType && (
+            <div className={cn(
+              "card-premium p-5 mb-6 border-l-4",
+              results.personalityType.adapted ? "border-success" : "border-warning"
+            )}>
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🎭</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <p className="text-sm font-medium text-foreground">Customer Type Played</p>
+                    <span className="text-sm font-semibold text-primary">{results.personalityType.label}</span>
+                    <span className={cn(
+                      "text-xs px-2 py-0.5 rounded-full font-medium",
+                      results.personalityType.adapted
+                        ? "bg-success/15 text-success"
+                        : "bg-warning/15 text-warning"
+                    )}>
+                      {results.personalityType.adapted ? "You adapted ✓" : "Adapt next time"}
+                    </span>
+                  </div>
+                  {results.personalityType.cue && (
+                    <p className="text-xs text-muted-foreground mb-1"><span className="font-medium">Cue:</span> {results.personalityType.cue}</p>
+                  )}
+                  {results.personalityType.adaptationNote && (
+                    <p className="text-sm text-muted-foreground">{results.personalityType.adaptationNote}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Per-Category Scorecard */}
           <div className="card-premium p-6 mb-6">
             <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">

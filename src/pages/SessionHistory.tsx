@@ -147,6 +147,28 @@ export default function SessionHistory() {
     const checklistState = (session.checklist_state || {}) as Record<string, boolean>;
     const completedCount = Object.values(checklistState).filter(Boolean).length;
 
+    const aiFeedback = (session.ai_feedback || {}) as Record<string, unknown>;
+    const categories = (aiFeedback.categories || null) as Record<string, { score: number; label: string; strengths?: string[]; improvements?: string[]; tip?: string }> | null;
+    const overallTip = (aiFeedback.overallTip as string) || "";
+    const personalityType = aiFeedback.personalityType as
+      | { type: string; label: string; cue?: string; adapted: boolean; adaptationNote?: string }
+      | null
+      | undefined;
+    const moments = (aiFeedback.moments || []) as Array<{ salespersonTurnIndex: number; element: string; sentiment: "positive" | "negative"; note: string }>;
+
+    const phoneOrder = ["name", "information", "engaging", "cta"];
+    const cnaOrder = ["rapport", "infoGathering", "needsIdentification", "cnaCompletion"];
+    const categoryKeys = categories ? Object.keys(categories) : [];
+    const isPhoneEval = phoneOrder.some((k) => categoryKeys.includes(k));
+    const orderedKeys = categories ? (isPhoneEval ? phoneOrder : cnaOrder).filter((k) => categoryKeys.includes(k)) : [];
+
+    const momentsByTurn = new Map<number, typeof moments>();
+    moments.forEach((m) => {
+      const arr = momentsByTurn.get(m.salespersonTurnIndex) || [];
+      arr.push(m);
+      momentsByTurn.set(m.salespersonTurnIndex, arr);
+    });
+
     return (
       <AuthGuard>
         <AppLayout>
@@ -171,6 +193,59 @@ export default function SessionHistory() {
               )}
             </div>
 
+            {/* Key takeaway */}
+            {overallTip && (
+              <div className="card-premium p-4 mb-4 border-l-4 border-primary">
+                <p className="text-xs font-medium text-foreground mb-1">Key Takeaway</p>
+                <p className="text-sm text-muted-foreground">{overallTip}</p>
+              </div>
+            )}
+
+            {/* Personality */}
+            {personalityType && (
+              <div className={cn(
+                "card-premium p-4 mb-4 border-l-4 flex items-start gap-3",
+                personalityType.adapted ? "border-success" : "border-warning"
+              )}>
+                <span className="text-xl">🎭</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <p className="text-xs font-medium text-foreground">Customer Type:</p>
+                    <span className="text-sm font-semibold text-primary">{personalityType.label}</span>
+                    <span className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full font-medium",
+                      personalityType.adapted ? "bg-success/15 text-success" : "bg-warning/15 text-warning"
+                    )}>
+                      {personalityType.adapted ? "Adapted" : "Did not adapt"}
+                    </span>
+                  </div>
+                  {personalityType.adaptationNote && (
+                    <p className="text-sm text-muted-foreground">{personalityType.adaptationNote}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Category scores */}
+            {categories && orderedKeys.length > 0 && (
+              <div className="card-premium p-4 mb-6">
+                <p className="text-sm font-medium text-foreground mb-3">Score Breakdown</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {orderedKeys.map((k) => (
+                    <div key={k} className="rounded-lg border border-border p-3">
+                      <p className="text-xs text-muted-foreground mb-1">{categories[k].label}</p>
+                      <p className={cn("text-xl font-bold", getScoreColor(categories[k].score))}>
+                        {categories[k].score}
+                      </p>
+                      {categories[k].tip && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{categories[k].tip}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Conversation replay */}
               <div className="lg:col-span-2 card-premium p-6">
@@ -182,14 +257,38 @@ export default function SessionHistory() {
                   {conversation.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">No conversation recorded</p>
                   ) : (
-                    conversation.map((msg, i) => (
-                      <div key={i} className={cn("p-3 rounded-lg text-sm", msg.role === "user" ? "bg-primary/10 ml-8" : "bg-muted mr-8")}>
-                        <p className="text-xs text-muted-foreground mb-1 font-medium">
-                          {msg.role === "user" ? "You (Salesperson)" : "Customer"}
-                        </p>
-                        <p className="text-foreground">{msg.content}</p>
-                      </div>
-                    ))
+                    (() => {
+                      let userTurn = -1;
+                      return conversation.map((msg, i) => {
+                        if (msg.role === "user") userTurn++;
+                        const ms = msg.role === "user" ? (momentsByTurn.get(userTurn) || []) : [];
+                        return (
+                          <div key={i} className={cn("p-3 rounded-lg text-sm", msg.role === "user" ? "bg-primary/10 ml-8" : "bg-muted mr-8")}>
+                            <p className="text-xs text-muted-foreground mb-1 font-medium">
+                              {msg.role === "user" ? "You (Salesperson)" : "Customer"}
+                            </p>
+                            <p className="text-foreground">{msg.content}</p>
+                            {ms.map((m, mi) => (
+                              <div
+                                key={mi}
+                                className={cn(
+                                  "mt-2 flex items-start gap-2 rounded-md border p-2 text-xs",
+                                  m.sentiment === "positive"
+                                    ? "border-success/30 bg-success/5"
+                                    : "border-warning/30 bg-warning/5"
+                                )}
+                              >
+                                <span>{m.sentiment === "positive" ? "✓" : "⚠"}</span>
+                                <div className="flex-1">
+                                  <p className="font-medium text-foreground capitalize mb-0.5">{m.element}</p>
+                                  <p className="text-muted-foreground">{m.note}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      });
+                    })()
                   )}
                 </div>
               </div>

@@ -276,6 +276,8 @@ export function useTrainingSession() {
         ...evaluation,
         categories: evaluation.categories || null,
         overallTip: evaluation.overallTip || null,
+        personalityType: evaluation.personalityType || null,
+        moments: evaluation.moments || [],
         conversation: sessionState.messages,
         checklistState: sessionState.checklistState,
         durationSeconds: sessionState.elapsedSeconds,

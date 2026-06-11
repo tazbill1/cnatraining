@@ -17,6 +17,8 @@ import {
   ScenarioCategory,
   BuyerType,
   Scenario,
+  normalizeScenarioCategory,
+  normalizeBuyerType,
 } from "@/lib/scenarios";
 
 export default function Scenarios() {
@@ -41,22 +43,28 @@ export default function Scenarios() {
         .eq("is_active", true);
       if (data) {
         setCustomScenarios(
-          data.map((row) => ({
-            id: `custom-${row.id}`,
-            name: row.name,
-            description: row.description || "",
-            personality: row.personality || "",
-            difficulty: row.difficulty as Scenario["difficulty"],
-            estimatedTime: row.estimated_time || "8-12 min",
-            icon: Users,
-            systemPrompt: row.system_prompt,
-            openingLine: row.opening_line,
-            category: row.category as ScenarioCategory,
-            buyerType: row.buyer_type as BuyerType,
-            customerName: row.customer_name,
-            tradeVehicle: row.trade_vehicle || undefined,
-            tradeValue: row.trade_value || undefined,
-          }))
+          data.flatMap((row) => {
+              const category = normalizeScenarioCategory(row.category);
+
+              if (!category) return [];
+
+              return [{
+                id: `custom-${row.id}`,
+                name: row.name,
+                description: row.description || "",
+                personality: row.personality || "",
+                difficulty: row.difficulty as Scenario["difficulty"],
+                estimatedTime: row.estimated_time || "8-12 min",
+                icon: Users,
+                systemPrompt: row.system_prompt,
+                openingLine: row.opening_line,
+                category,
+                buyerType: normalizeBuyerType(row.buyer_type),
+                customerName: row.customer_name,
+                tradeVehicle: row.trade_vehicle || undefined,
+                tradeValue: row.trade_value || undefined,
+              }];
+            })
         );
       }
       setIsLoading(false);

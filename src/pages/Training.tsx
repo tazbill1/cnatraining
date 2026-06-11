@@ -3,7 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Users, Loader2 } from "lucide-react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TrainingInterface } from "@/components/training/TrainingInterface";
-import { getScenarioById, Scenario, ScenarioCategory, BuyerType } from "@/lib/scenarios";
+import {
+  getScenarioById,
+  Scenario,
+  normalizeScenarioCategory,
+  normalizeBuyerType,
+} from "@/lib/scenarios";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Training() {
@@ -34,7 +39,14 @@ export default function Training() {
         }
 
         const row = data;
-        const isObjectionHandling = row.category === "objection-handling";
+        const category = normalizeScenarioCategory(row.category);
+
+        if (!category) {
+          navigate("/scenarios");
+          return;
+        }
+
+        const isObjectionHandling = category === "objection-handling";
         setScenario({
           id: `custom-${row.id}`,
           name: row.name,
@@ -45,8 +57,8 @@ export default function Training() {
           icon: Users,
           systemPrompt: row.system_prompt,
           openingLine: row.opening_line,
-          category: row.category as ScenarioCategory,
-          buyerType: row.buyer_type as BuyerType,
+          category,
+          buyerType: normalizeBuyerType(row.buyer_type),
           customerName: row.customer_name,
           tradeVehicle: row.trade_vehicle || undefined,
           tradeValue: row.trade_value || undefined,

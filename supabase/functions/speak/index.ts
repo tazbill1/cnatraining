@@ -84,7 +84,7 @@ serve(async (req) => {
     console.log("Generating speech via ElevenLabs for text:", text.substring(0, 50) + "...", "user:", user.id);
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32&optimize_streaming_latency=3`,
       {
         method: "POST",
         headers: {
@@ -95,30 +95,30 @@ serve(async (req) => {
           text,
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.4,
+            stability: 0.4,
+            similarity_boost: 0.7,
+            style: 0.3,
             use_speaker_boost: true,
           },
         }),
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    if (!response.ok || !response.body) {
+      const errorText = await response.text().catch(() => "");
       console.error("ElevenLabs TTS API error:", response.status, errorText);
       throw new Error(`TTS API error: ${response.status}`);
     }
 
-    const audioBuffer = await response.arrayBuffer();
-    console.log("Speech generated successfully, size:", audioBuffer.byteLength);
-
-    return new Response(audioBuffer, {
+    // Stream audio directly to client for low latency
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
+        "Cache-Control": "no-store",
       },
     });
+
   } catch (error) {
     console.error("Speech generation error:", error);
     console.error("Speech generation error details:", error instanceof Error ? error.message : error);

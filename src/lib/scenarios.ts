@@ -1255,6 +1255,26 @@ export const getScenarioById = (id: string): Scenario | undefined => {
   return scenarios.find((s) => s.id === id);
 };
 
+export const normalizeScenarioCategory = (category: string): ScenarioCategory | null => {
+  const normalized = category.trim().toLowerCase();
+
+  if (normalized === "phone") return "inbound-call";
+
+  return scenarioCategories.some((item) => item.id === normalized)
+    ? (normalized as ScenarioCategory)
+    : null;
+};
+
+export const normalizeBuyerType = (buyerType: string): BuyerType => {
+  const normalized = buyerType.trim().toLowerCase().replace(/[\s_]+/g, "-");
+
+  if (normalized === "price-shopper") return "price-buyer";
+
+  return buyerTypes.some((item) => item.id === normalized)
+    ? (normalized as BuyerType)
+    : "general";
+};
+
 export const getScenariosByCategory = (category: ScenarioCategory): Scenario[] => {
   return scenarios.filter((s) => s.category === category);
 };

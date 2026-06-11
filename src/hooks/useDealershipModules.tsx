@@ -89,9 +89,9 @@ function toTrainingModule(dm: DealershipModule): TrainingModule {
 
 export function useDealershipModules() {
   const { profile } = useAuth();
-  const { previewDealershipId } = useDealershipContext();
-  // Preview mode overrides the user's own dealership
-  const dealershipId = previewDealershipId || profile?.dealership_id;
+  const { previewDealershipId, selectedDealershipId } = useDealershipContext();
+  // Preview mode overrides selection, which overrides the user's own dealership
+  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id;
 
   const { data, isLoading } = useQuery({
     queryKey: ["dealership-modules", dealershipId],

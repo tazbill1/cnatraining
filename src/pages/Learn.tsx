@@ -198,6 +198,7 @@ export default function Learn() {
   const completedCount = completedModules.filter(id => enabledModules.some(m => m.id === id)).length;
   const progressPercent = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
   const hasActiveFilters = search || difficultyFilter !== "all" || completionFilter !== "all" || sortOption !== "recommended";
+  const pageLoading = isLoading || settingsLoading || dmLoading;
 
   return (
     <AuthGuard>
@@ -321,7 +322,7 @@ export default function Learn() {
 
           {/* Modules List */}
           <div className="space-y-4">
-            {isLoading ? (
+            {pageLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="card-premium p-4 sm:p-6 flex items-start gap-4">

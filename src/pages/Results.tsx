@@ -116,17 +116,28 @@ export default function Results() {
     return `${mins}m ${secs}s`;
   };
 
-  const categoryOrder = ["rapport", "infoGathering", "needsIdentification", "cnaCompletion"];
+  const phoneOrder = ["name", "information", "engaging", "cta"];
+  const cnaOrder = ["rapport", "infoGathering", "needsIdentification", "cnaCompletion"];
   const categoryIcons: Record<string, string> = {
     rapport: "🤝",
     infoGathering: "🔍",
     needsIdentification: "🎯",
     cnaCompletion: "📋",
+    name: "👤",
+    information: "🔍",
+    engaging: "💬",
+    cta: "📅",
   };
 
-  // Fallback to legacy layout if no categories
+  // Determine which category set we're showing
+  const categoryKeys = hasCategories ? Object.keys(results.categories!) : [];
+  const isPhoneEval = phoneOrder.some((k) => categoryKeys.includes(k));
+  const orderedKeys = hasCategories
+    ? (isPhoneEval ? phoneOrder : cnaOrder).filter((k) => categoryKeys.includes(k))
+    : cnaOrder;
+
   const scoreCategories = hasCategories
-    ? categoryOrder.map((key) => ({
+    ? orderedKeys.map((key) => ({
         key,
         label: results.categories![key]?.label || key,
         score: results.categories![key]?.score || 0,
@@ -137,6 +148,14 @@ export default function Results() {
         { key: "needsIdentification", label: "Needs Identification", score: results.needsIdentificationScore },
         { key: "cnaCompletion", label: "CNA Completion", score: results.cnaCompletionScore },
       ];
+
+  // Build map of salesperson-turn-index -> Moment for transcript annotation
+  const momentsByTurnIndex = new Map<number, Moment[]>();
+  (results.moments || []).forEach((m) => {
+    const arr = momentsByTurnIndex.get(m.salespersonTurnIndex) || [];
+    arr.push(m);
+    momentsByTurnIndex.set(m.salespersonTurnIndex, arr);
+  });
 
   return (
     <AuthGuard>

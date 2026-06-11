@@ -1,0 +1,1 @@
+UPDATE public.dealership_settings SET logo_url = NULL WHERE dealership_id = '8b22831e-9967-4a5f-b3f4-e1274bc5993c';

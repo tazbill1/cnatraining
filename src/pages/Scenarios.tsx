@@ -43,13 +43,12 @@ export default function Scenarios() {
         .eq("is_active", true);
       if (data) {
         setCustomScenarios(
-          data
-            .map((row) => {
+          data.flatMap((row) => {
               const category = normalizeScenarioCategory(row.category);
 
-              if (!category) return null;
+              if (!category) return [];
 
-              return {
+              return [{
                 id: `custom-${row.id}`,
                 name: row.name,
                 description: row.description || "",
@@ -64,9 +63,8 @@ export default function Scenarios() {
                 customerName: row.customer_name,
                 tradeVehicle: row.trade_vehicle || undefined,
                 tradeValue: row.trade_value || undefined,
-              };
+              }];
             })
-            .filter((scenario): scenario is Scenario => scenario !== null)
         );
       }
       setIsLoading(false);

@@ -198,7 +198,7 @@ IMPORTANT: Stay in character as the customer. Keep replies SHORT — 1-2 sentenc
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: apiMessages,
-        max_tokens: 300,
+        max_tokens: 180,
       }),
     });
 

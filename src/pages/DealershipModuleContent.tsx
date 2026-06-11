@@ -262,6 +262,29 @@ export default function DealershipModuleContent() {
           {/* Practice scenario stage */}
           {current.type === "practice" && current.index !== undefined && (() => {
             const ps = practiceScenarios[current.index];
+            const hasDecisionPoints = Array.isArray(ps.decision_points) && ps.decision_points.length > 0;
+
+            if (!hasDecisionPoints) {
+              return (
+                <div className="space-y-4">
+                  <Badge variant="outline" className="capitalize">{ps.difficulty}</Badge>
+                  <div className="card-premium p-6 space-y-4">
+                    <h3 className="text-lg font-semibold text-foreground">{ps.title}</h3>
+                    <p className="text-sm text-muted-foreground">{ps.customer_setup}</p>
+                    {ps.customer_quote && (
+                      <div className="p-3 md:p-4 rounded-lg bg-muted/50 border border-border italic text-sm md:text-base text-foreground">
+                        "{ps.customer_quote}"
+                      </div>
+                    )}
+                    <Button onClick={() => navigate("/scenarios")} className="w-full sm:w-auto gap-2">
+                      <Play className="w-4 h-4" />
+                      Start Roleplay
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+
             const scenarioData: PracticeScenarioData = {
               id: ps.id,
               title: ps.title,

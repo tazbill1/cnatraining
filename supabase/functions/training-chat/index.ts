@@ -15,60 +15,13 @@ const MAX_MESSAGE_LENGTH = 2000;
 const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 // Decode and verify JWT using HMAC-SHA256
-async function verifyJwt(token: string, secret: string): Promise<{ sub: string } | null> {
-  try {
-    const [headerB64, payloadB64, sigB64] = token.split(".");
-    if (!headerB64 || !payloadB64 || !sigB64) return null;
-
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["verify"],
-    );
-
-    // Base64url decode the signature
-    const sig = Uint8Array.from(
-      atob(sigB64.replace(/-/g, "+").replace(/_/g, "/")),
-      (c) => c.charCodeAt(0),
-    );
-
-    const valid = await crypto.subtle.verify(
-      "HMAC",
-      key,
-      sig,
-      encoder.encode(`${headerB64}.${payloadB64}`),
-    );
-
-    if (!valid) return null;
-
-    const payload = JSON.parse(
-      new TextDecoder().decode(
-        Uint8Array.from(
-          atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")),
-          (c) => c.charCodeAt(0),
-        ),
-      ),
-    );
-
-    // Check expiry
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-
-    return payload as { sub: string };
-  } catch {
-    return null;
-  }
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Authentication — decode JWT locally (no network call)
+    // Authentication — verify token via Supabase Auth
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -78,20 +31,19 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET");
-    if (!jwtSecret) {
-      throw new Error("SUPABASE_JWT_SECRET is not configured");
-    }
-
-    const jwtPayload = await verifyJwt(token, jwtSecret);
-    if (!jwtPayload?.sub) {
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    if (userError || !userData?.user?.id) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userId = jwtPayload.sub;
+    const userId = userData.user.id;
 
     // Parse and validate input
     const body = await req.json();

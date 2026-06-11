@@ -1,0 +1,1 @@
+DELETE FROM public.dealerships WHERE id = '61b12a2a-eb59-44b0-ad02-9eb865e07d57';

@@ -10,7 +10,7 @@ const MAX_MESSAGES = 100;
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_DURATION_SECONDS = 7200;
 
-const EVALUATION_PROMPT = `You are an expert automotive sales trainer evaluating a Customer Needs Analysis (CNA) conversation.
+const CNA_EVALUATION_PROMPT = `You are an expert automotive sales trainer evaluating a Customer Needs Analysis (CNA) conversation.
 
 Analyze this conversation and score the salesperson's performance.
 
@@ -24,46 +24,61 @@ For each category, provide:
 - A score (0-100)
 - 1-2 specific strengths referencing actual conversation moments
 - 1-2 specific improvements with actionable coaching advice
-
-Also provide an overall coaching tip.
+- A one-sentence coaching tip
 
 Provide your evaluation in this exact JSON format:
 {
   "overallScore": 75,
   "categories": {
-    "rapport": {
-      "score": 80,
-      "label": "Rapport Building",
-      "strengths": ["Specific strength referencing conversation"],
-      "improvements": ["Specific actionable improvement"],
-      "tip": "One sentence coaching tip for this category"
-    },
-    "infoGathering": {
-      "score": 70,
-      "label": "Information Gathering",
-      "strengths": ["Specific strength"],
-      "improvements": ["Specific improvement"],
-      "tip": "Coaching tip"
-    },
-    "needsIdentification": {
-      "score": 72,
-      "label": "Needs Identification",
-      "strengths": ["Specific strength"],
-      "improvements": ["Specific improvement"],
-      "tip": "Coaching tip"
-    },
-    "cnaCompletion": {
-      "score": 78,
-      "label": "CNA Completion",
-      "strengths": ["Specific strength"],
-      "improvements": ["Specific improvement"],
-      "tip": "Coaching tip"
-    }
+    "rapport": { "score": 80, "label": "Rapport Building", "strengths": [], "improvements": [], "tip": "" },
+    "infoGathering": { "score": 70, "label": "Information Gathering", "strengths": [], "improvements": [], "tip": "" },
+    "needsIdentification": { "score": 72, "label": "Needs Identification", "strengths": [], "improvements": [], "tip": "" },
+    "cnaCompletion": { "score": 78, "label": "CNA Completion", "strengths": [], "improvements": [], "tip": "" }
   },
   "overallTip": "One key takeaway for the salesperson to focus on next session"
 }
 
 Be specific and reference actual parts of the conversation. Use encouraging but honest language.`;
+
+const PHONE_EVALUATION_PROMPT = `You are an expert automotive sales phone coach evaluating an inbound sales call.
+
+The call should follow the Phone Skills framework (Module 1):
+1. NAME — Did the rep get the caller's name early and use it?
+2. INFORMATION — Did the rep gather what they needed (vehicle, timeline, trade, etc.) before giving info?
+3. ENGAGING — Was the rep warm, energetic, conversational? Did they listen? Did they personalize?
+4. CALL TO ACTION — Did the rep close for a specific appointment (either/or time) and make any micro-commitments?
+
+ALSO ASSESS (Module 3 — Tailor Your Process):
+- Identify which personality type the caller behaved like: "driver", "expressive", "amiable", or "analytical".
+- Judge whether the rep adapted their pace, tone, and ask to that type. Return adapted: true/false with a one-sentence note.
+
+ALSO PROVIDE MOMENTS (for the transcript replay):
+- Pick 3–6 specific salesperson turns that stand out (good or bad). Index them by their position (0-based) in the SALESPERSON-only turns in the transcript order. Label each moment with the framework element it relates to ("name", "information", "engaging", "cta", or "tailoring"), a sentiment ("positive" or "negative"), and a one-sentence note.
+
+Return ONLY this JSON shape, no markdown:
+{
+  "overallScore": 78,
+  "categories": {
+    "name": { "score": 85, "label": "Name", "strengths": [], "improvements": [], "tip": "" },
+    "information": { "score": 70, "label": "Information", "strengths": [], "improvements": [], "tip": "" },
+    "engaging": { "score": 80, "label": "Engaging", "strengths": [], "improvements": [], "tip": "" },
+    "cta": { "score": 75, "label": "Call to Action", "strengths": [], "improvements": [], "tip": "" }
+  },
+  "personalityType": {
+    "type": "driver",
+    "label": "Driver",
+    "cue": "Caller talked fast and led with price.",
+    "adapted": true,
+    "adaptationNote": "You matched their pace and went straight to an either/or appointment ask."
+  },
+  "moments": [
+    { "salespersonTurnIndex": 1, "element": "name", "sentiment": "positive", "note": "Got the name in the first exchange." },
+    { "salespersonTurnIndex": 3, "element": "cta", "sentiment": "negative", "note": "Quoted a price instead of asking for the appointment." }
+  ],
+  "overallTip": "One key takeaway focused on the weakest framework element."
+}
+
+Scores: 0-100. Be specific and reference actual lines. Be honest but constructive.`;
 
 function validateRequest(body: Record<string, unknown>) {
   const { messages, durationSeconds } = body;
@@ -89,7 +104,7 @@ function validateRequest(body: Record<string, unknown>) {
   return { valid: true, validatedDuration };
 }
 
-function buildFallbackEvaluation() {
+function buildCnaFallback() {
   const fallbackCategory = (label: string) => ({
     score: 65,
     label,
@@ -107,7 +122,6 @@ function buildFallbackEvaluation() {
       cnaCompletion: { ...fallbackCategory("CNA Completion"), score: 50 },
     },
     overallTip: "Keep practicing — consistency is key to improvement.",
-    // Legacy fields for backward compat
     rapportScore: 65,
     infoGatheringScore: 65,
     needsIdentificationScore: 65,
@@ -121,14 +135,45 @@ function buildFallbackEvaluation() {
   };
 }
 
-function formatResponse(evaluation: Record<string, unknown>) {
+function buildPhoneFallback() {
+  const cat = (label: string) => ({
+    score: 65,
+    label,
+    strengths: ["Completed the call"],
+    improvements: ["Practice the framework more"],
+    tip: "Run the four-part framework on every call.",
+  });
+  return {
+    overallScore: 65,
+    categories: {
+      name: cat("Name"),
+      information: cat("Information"),
+      engaging: cat("Engaging"),
+      cta: cat("Call to Action"),
+    },
+    personalityType: null,
+    moments: [],
+    overallTip: "Keep reps short and always close for a specific either/or appointment time.",
+    rapportScore: 65,
+    infoGatheringScore: 65,
+    needsIdentificationScore: 65,
+    cnaCompletionScore: 65,
+    feedback: {
+      strengths: ["Completed the call"],
+      improvements: ["Practice the framework more"],
+      coachingTips: ["Always end with an either/or appointment ask."],
+      examples: [],
+    },
+  };
+}
+
+function formatCnaResponse(evaluation: Record<string, unknown>) {
   const cats = evaluation.categories as Record<string, Record<string, unknown>> | undefined;
   const rapport = cats?.rapport as Record<string, unknown> | undefined;
   const info = cats?.infoGathering as Record<string, unknown> | undefined;
   const needs = cats?.needsIdentification as Record<string, unknown> | undefined;
   const cna = cats?.cnaCompletion as Record<string, unknown> | undefined;
 
-  // Collect all strengths/improvements for legacy fields
   const allStrengths: string[] = [];
   const allImprovements: string[] = [];
   for (const cat of [rapport, info, needs, cna]) {
@@ -140,7 +185,6 @@ function formatResponse(evaluation: Record<string, unknown>) {
     overallScore: evaluation.overallScore || 65,
     categories: evaluation.categories || {},
     overallTip: evaluation.overallTip || "",
-    // Legacy compat
     rapportScore: (rapport?.score as number) || 65,
     infoGatheringScore: (info?.score as number) || 65,
     needsIdentificationScore: (needs?.score as number) || 65,
@@ -148,6 +192,40 @@ function formatResponse(evaluation: Record<string, unknown>) {
     feedback: {
       strengths: allStrengths.length > 0 ? allStrengths : ["Completed the session"],
       improvements: allImprovements.length > 0 ? allImprovements : ["Practice more"],
+      coachingTips: evaluation.overallTip ? [evaluation.overallTip as string] : [],
+      examples: [],
+    },
+  };
+}
+
+function formatPhoneResponse(evaluation: Record<string, unknown>) {
+  const cats = evaluation.categories as Record<string, Record<string, unknown>> | undefined;
+  const name = cats?.name as Record<string, unknown> | undefined;
+  const information = cats?.information as Record<string, unknown> | undefined;
+  const engaging = cats?.engaging as Record<string, unknown> | undefined;
+  const cta = cats?.cta as Record<string, unknown> | undefined;
+
+  const allStrengths: string[] = [];
+  const allImprovements: string[] = [];
+  for (const cat of [name, information, engaging, cta]) {
+    if (cat?.strengths) allStrengths.push(...(cat.strengths as string[]));
+    if (cat?.improvements) allImprovements.push(...(cat.improvements as string[]));
+  }
+
+  return {
+    overallScore: evaluation.overallScore || 65,
+    categories: evaluation.categories || {},
+    personalityType: evaluation.personalityType || null,
+    moments: Array.isArray(evaluation.moments) ? evaluation.moments : [],
+    overallTip: evaluation.overallTip || "",
+    // Map phone categories into legacy score columns so the DB columns stay populated.
+    rapportScore: (engaging?.score as number) || 65,
+    infoGatheringScore: (information?.score as number) || 65,
+    needsIdentificationScore: (name?.score as number) || 65,
+    cnaCompletionScore: (cta?.score as number) || 65,
+    feedback: {
+      strengths: allStrengths.length > 0 ? allStrengths : ["Completed the call"],
+      improvements: allImprovements.length > 0 ? allImprovements : ["Practice more calls"],
       coachingTips: evaluation.overallTip ? [evaluation.overallTip as string] : [],
       examples: [],
     },
@@ -189,20 +267,31 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const isPhone = scenario?.category === "phone";
+
+    // For phone scoring, also tag the salesperson turn index so the AI can reference it in `moments`.
+    let salespersonTurnCounter = 0;
     const conversationText = messages
       .map((msg: { role: string; content: string }) => {
-        const role = msg.role === "user" ? "SALESPERSON" : "CUSTOMER";
-        return `${role}: ${msg.content}`;
+        if (msg.role === "user") {
+          const tag = isPhone ? ` [salesperson_turn_index=${salespersonTurnCounter++}]` : "";
+          return `SALESPERSON${tag}: ${msg.content}`;
+        }
+        return `CUSTOMER: ${msg.content}`;
       })
       .join("\n\n");
 
-    const contextInfo = `
-Scenario: ${scenario?.name || "Unknown"}
-Duration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes
-Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).length}/16
-`;
+    const checklistCount = Object.values(checklistState || {}).filter(Boolean).length;
+    const contextInfo = isPhone
+      ? `Scenario: ${scenario?.name || "Unknown"}\nDuration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes\n`
+      : `Scenario: ${scenario?.name || "Unknown"}\nDuration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes\nChecklist items checked: ${checklistCount}/16\n`;
 
-    console.log("Calling Lovable AI for evaluation, user:", claimsData.claims.sub);
+    const systemPrompt = isPhone ? PHONE_EVALUATION_PROMPT : CNA_EVALUATION_PROMPT;
+    const userTask = isPhone
+      ? `${contextInfo}\nEvaluate this inbound phone call:\n\n${conversationText}`
+      : `${contextInfo}\nEvaluate this CNA conversation:\n\n${conversationText}`;
+
+    console.log(`Calling Lovable AI for ${isPhone ? "phone" : "CNA"} evaluation, user: ${user.id}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -212,10 +301,10 @@ Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).l
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [
-          { role: "system", content: EVALUATION_PROMPT },
-          { role: "user", content: `${contextInfo}\n\nEvaluate this CNA conversation:\n\n${conversationText}` },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userTask },
         ],
       }),
     });
@@ -243,16 +332,18 @@ Checklist items checked: ${Object.values(checklistState || {}).filter(Boolean).l
     }
 
     if (!evaluation || !evaluation.categories) {
-      return new Response(JSON.stringify(buildFallbackEvaluation()),
+      return new Response(JSON.stringify(isPhone ? buildPhoneFallback() : buildCnaFallback()),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    return new Response(JSON.stringify(formatResponse(evaluation)),
+    const formatted = isPhone ? formatPhoneResponse(evaluation) : formatCnaResponse(evaluation);
+    return new Response(JSON.stringify(formatted),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (error) {
     console.error("Evaluation error:", error);
-    return new Response(JSON.stringify(buildFallbackEvaluation()),
+    // Best-effort fallback — we don't know scenario category here, default to CNA.
+    return new Response(JSON.stringify(buildCnaFallback()),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

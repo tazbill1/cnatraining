@@ -176,7 +176,7 @@ serve(async (req) => {
     // Use server-side system prompt — never trust client-provided prompts
     const systemPrompt = `${basePrompt}
 
-IMPORTANT: Stay in character as the customer. Respond naturally based on the salesperson's questions. Keep responses concise (1-3 sentences typically). Show emotional reactions appropriate to your character. Speak conversationally like a real person would - use contractions, filler words occasionally, and natural speech patterns.`;
+IMPORTANT: Stay in character as the customer. Keep replies SHORT — 1-2 sentences, under 40 words. Speak conversationally with contractions and natural speech. Show emotion appropriate to your character. Never break character or explain yourself.`;
 
     // Convert messages to Lovable AI format (OpenAI-compatible)
     const apiMessages = [
@@ -198,7 +198,7 @@ IMPORTANT: Stay in character as the customer. Respond naturally based on the sal
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: apiMessages,
-        max_tokens: 300,
+        max_tokens: 180,
       }),
     });
 

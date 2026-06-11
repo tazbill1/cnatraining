@@ -241,6 +241,15 @@ export function useTrainingSession() {
         },
       };
 
+      // Save full evaluation (categories, personality, moments) so history replay can show it.
+      const aiFeedbackPayload = {
+        ...(evaluation.feedback || {}),
+        categories: evaluation.categories || null,
+        overallTip: evaluation.overallTip || null,
+        personalityType: evaluation.personalityType || null,
+        moments: evaluation.moments || [],
+      };
+
       // Update session in database
       await supabase
         .from("training_sessions")
@@ -253,7 +262,7 @@ export function useTrainingSession() {
           info_gathering_score: evaluation.infoGatheringScore,
           needs_identification_score: evaluation.needsIdentificationScore,
           cna_completion_score: evaluation.cnaCompletionScore,
-          ai_feedback: evaluation.feedback,
+          ai_feedback: aiFeedbackPayload,
         })
         .eq("id", sessionState.id);
 
@@ -267,6 +276,8 @@ export function useTrainingSession() {
         ...evaluation,
         categories: evaluation.categories || null,
         overallTip: evaluation.overallTip || null,
+        personalityType: evaluation.personalityType || null,
+        moments: evaluation.moments || [],
         conversation: sessionState.messages,
         checklistState: sessionState.checklistState,
         durationSeconds: sessionState.elapsedSeconds,

@@ -533,9 +533,29 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
         await audio.play();
       } catch (error) {
-        console.error("ElevenLabs speech error:", error);
-        setIsSpeaking(false);
-        toast.error("Failed to generate speech. Please try again.");
+        console.error("ElevenLabs speech error, falling back to browser TTS:", error);
+        // Fallback to browser speechSynthesis
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = "en-US";
+          utterance.rate = 1.0;
+          utterance.onend = () => {
+            setIsSpeaking(false);
+            if (handsFreeModeEnabled) {
+              setTimeout(() => startRecording(), 300);
+            }
+          };
+          utterance.onerror = () => {
+            setIsSpeaking(false);
+            toast.error("Failed to generate speech.");
+          };
+          window.speechSynthesis.speak(utterance);
+        } catch (fallbackErr) {
+          console.error("Browser TTS fallback failed:", fallbackErr);
+          setIsSpeaking(false);
+          toast.error("Failed to generate speech. Please try again.");
+        }
       }
     },
     [isSpeaking, toast, handsFreeModeEnabled, startRecording]

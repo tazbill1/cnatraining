@@ -1,0 +1,1 @@
+DELETE FROM public.dealerships WHERE id = 'bde3595f-ada4-4f73-9a98-8b034b89a0f2';

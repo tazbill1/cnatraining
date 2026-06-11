@@ -22,6 +22,21 @@ interface CategoryFeedback {
   tip: string;
 }
 
+interface PersonalityType {
+  type: string;
+  label: string;
+  cue?: string;
+  adapted: boolean;
+  adaptationNote?: string;
+}
+
+interface Moment {
+  salespersonTurnIndex: number;
+  element: string;
+  sentiment: "positive" | "negative";
+  note: string;
+}
+
 interface ResultsState {
   results: {
     sessionId: string;
@@ -32,6 +47,8 @@ interface ResultsState {
     cnaCompletionScore: number;
     categories?: Record<string, CategoryFeedback>;
     overallTip?: string;
+    personalityType?: PersonalityType | null;
+    moments?: Moment[];
     feedback: {
       strengths: string[];
       improvements: string[];

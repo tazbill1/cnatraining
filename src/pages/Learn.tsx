@@ -49,6 +49,9 @@ export default function Learn() {
   const difficultyFilter = (searchParams.get("difficulty") || "all") as ModuleDifficulty | "all";
   const completionFilter = (searchParams.get("status") || "all") as CompletionFilter;
   const sortOption = (searchParams.get("sort") || "recommended") as SortOption;
+  const categoryParam = searchParams.get("cat") || "";
+  const activeCategory = isValidChannelCategory(categoryParam) ? categoryParam : null;
+  const activeCategoryInfo = activeCategory ? getCategoryBySlug(activeCategory) : null;
 
   const updateParam = (key: string, value: string) => {
     setSearchParams((prev) => {

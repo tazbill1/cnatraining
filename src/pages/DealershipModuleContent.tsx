@@ -58,6 +58,15 @@ export default function DealershipModuleContent() {
   const [currentStage, setCurrentStage] = useState(0); // 0 = intro/video, 1..n = sections, last = quiz
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
+
+  const markVideoWatched = (key: string) =>
+    setWatchedVideos((prev) => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
 
   const dbId = moduleId || "";
 
@@ -229,8 +238,13 @@ export default function DealershipModuleContent() {
                 <VideoPlayer
                   videoUrl={module.video_url!}
                   title={module.video_title || module.title}
-                  onComplete={() => {}}
+                  onComplete={() => markVideoWatched("intro")}
                 />
+              )}
+              {hasVideo && !watchedVideos.has("intro") && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Watch the video to continue.
+                </p>
               )}
             </div>
           )}
@@ -242,9 +256,15 @@ export default function DealershipModuleContent() {
                 <VideoPlayer
                   videoUrl={sections[current.index].video_url!}
                   title={sections[current.index].title}
-                  onComplete={() => {}}
+                  onComplete={() => markVideoWatched(`section-${current.index}`)}
                 />
               )}
+              {sections[current.index].video_url &&
+                !watchedVideos.has(`section-${current.index}`) && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Watch the video to continue.
+                  </p>
+                )}
               {sections[current.index].content_html && (
                 <div
                   className="card-premium p-6 prose prose-sm dark:prose-invert max-w-none"
@@ -379,10 +399,27 @@ export default function DealershipModuleContent() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               {currentStage === 0 ? "Back to Learn" : "Previous"}
             </Button>
-            <Button onClick={handleNext}>
-              {currentStage === totalStages - 1 ? "Complete Module" : "Continue"}
-              {currentStage < totalStages - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
-            </Button>
+            {(() => {
+              const videoKey =
+                current.type === "intro" && hasVideo
+                  ? "intro"
+                  : current.type === "section" &&
+                    current.index !== undefined &&
+                    sections[current.index].video_url
+                  ? `section-${current.index}`
+                  : null;
+              const blocked = videoKey !== null && !watchedVideos.has(videoKey);
+              return (
+                <Button
+                  onClick={handleNext}
+                  disabled={blocked}
+                  title={blocked ? "Finish watching the video first" : undefined}
+                >
+                  {currentStage === totalStages - 1 ? "Complete Module" : "Continue"}
+                  {currentStage < totalStages - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
+                </Button>
+              );
+            })()}
           </div>
         </div>
       </AppLayout>

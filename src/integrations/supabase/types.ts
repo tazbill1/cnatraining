@@ -530,6 +530,7 @@ export type Database = {
           email: string
           id: string
           invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
           status: string
           used_at: string | null
         }
@@ -539,6 +540,7 @@ export type Database = {
           email: string
           id?: string
           invited_by: string
+          role?: Database["public"]["Enums"]["app_role"]
           status?: string
           used_at?: string | null
         }
@@ -548,6 +550,7 @@ export type Database = {
           email?: string
           id?: string
           invited_by?: string
+          role?: Database["public"]["Enums"]["app_role"]
           status?: string
           used_at?: string | null
         }

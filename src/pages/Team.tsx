@@ -50,6 +50,7 @@ export default function Team() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"salesperson" | "manager">("salesperson");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<{ userId: string; name: string } | null>(null);
@@ -108,12 +109,13 @@ export default function Team() {
     setIsSendingInvite(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: inviteEmail.trim() },
+        body: { email: inviteEmail.trim(), role: inviteRole },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`Invite sent to ${inviteEmail.trim()}`);
+      toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole}`);
       setInviteEmail("");
+      setInviteRole("salesperson");
       fetchInvitations();
     } catch (err: any) {
       toast.error(`Failed to send invite: ${err.message}`);
@@ -336,7 +338,7 @@ export default function Team() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -348,6 +350,15 @@ export default function Team() {
                     onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
                   />
                 </div>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as "salesperson" | "manager")}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  aria-label="Role"
+                >
+                  <option value="salesperson">User</option>
+                  <option value="manager">Manager</option>
+                </select>
                 <Button onClick={handleSendInvite} disabled={isSendingInvite}>
                   {isSendingInvite ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -359,6 +370,9 @@ export default function Team() {
                   )}
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                <strong>User</strong> = trainee. <strong>Manager</strong> = can invite/remove users and view team progress.
+              </p>
 
               {invitations.length > 0 && (
                 <div className="mt-4">

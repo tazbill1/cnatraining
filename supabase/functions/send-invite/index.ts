@@ -105,8 +105,13 @@ Deno.serve(async (req) => {
     if (!existing) {
       const { error: insertError } = await adminClient
         .from("invitations")
-        .insert({ email: trimmedEmail, invited_by: user.id, dealership_id: inviteDealershipId });
+        .insert({ email: trimmedEmail, invited_by: user.id, dealership_id: inviteDealershipId, role: inviteRole });
       if (insertError) throw insertError;
+    } else {
+      await adminClient
+        .from("invitations")
+        .update({ role: inviteRole })
+        .eq("email", trimmedEmail);
     }
 
     // Send invite via Supabase Auth admin API

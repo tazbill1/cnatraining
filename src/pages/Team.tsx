@@ -743,6 +743,17 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
                     <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
                       {status.label}
                     </Badge>
+                    {onRemoveUser && user.user_id !== currentUserId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 ml-auto text-destructive hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); onRemoveUser(user.email, user.full_name); }}
+                        title="Remove user"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{maskEmail(user.email)}</p>
                   

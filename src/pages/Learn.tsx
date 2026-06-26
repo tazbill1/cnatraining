@@ -450,6 +450,7 @@ export default function Learn() {
               })
             )}
           </div>
+          </>)}
         </div>
       </AppLayout>
     </AuthGuard>

@@ -165,7 +165,7 @@ export default function Team() {
     setResendingId(inv.id);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: inv.email, resend: true },
+        body: { email: inv.email, resend: true, dealershipId: inv.dealership_id, role: inv.role },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

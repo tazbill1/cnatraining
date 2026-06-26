@@ -65,6 +65,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Script Part 2: Two Pillars & Close" },
     ],
     prerequisiteIds: ["base-statement-video"],
+    category: "showroom",
   },
   {
     id: "vehicle-selection-fundamentals",

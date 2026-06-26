@@ -126,6 +126,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Handling Inbound Objections" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+    category: "phone",
   },
   {
     id: "quick-reference-library",

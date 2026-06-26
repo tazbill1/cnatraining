@@ -474,15 +474,18 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
             {isMobile && (
               <Drawer>
                 <DrawerTrigger asChild>
-                  <button className="p-3 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground shrink-0">
+                  <button
+                    className="rounded-full bg-muted hover:bg-muted/80 text-muted-foreground shrink-0 min-w-[48px] min-h-[48px] flex items-center justify-center"
+                    aria-label="Open session checklist"
+                  >
                     <ClipboardList className="w-5 h-5" />
                   </button>
                 </DrawerTrigger>
-                <DrawerContent className="max-h-[80vh]">
+                <DrawerContent className="max-h-[85vh]">
                   <DrawerHeader>
                     <DrawerTitle>Session Progress</DrawerTitle>
                   </DrawerHeader>
-                  <div className="overflow-auto">
+                  <div className="overflow-auto pb-[env(safe-area-inset-bottom)]">
                     <ChecklistPanel
                       scenario={sessionState.scenario}
                       checklistState={sessionState.checklistState}
@@ -493,6 +496,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 </DrawerContent>
               </Drawer>
             )}
+
             {voiceEnabled && (
               <Tooltip>
                 <TooltipTrigger asChild>

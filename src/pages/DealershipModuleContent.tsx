@@ -125,7 +125,7 @@ export default function DealershipModuleContent() {
         return;
       }
 
-      const [secRes, quizRes, practiceRes] = await Promise.all([
+      const [secRes, quizRes, practiceRes, progressRes] = await Promise.all([
         supabase
           .from("dealership_module_sections")
           .select("*")
@@ -142,7 +142,24 @@ export default function DealershipModuleContent() {
           .eq("module_id", dbId)
           .eq("is_active", true)
           .order("sort_order"),
+        user
+          ? supabase
+              .from("module_section_progress")
+              .select("section_key")
+              .eq("user_id", user.id)
+              .eq("module_id", dbId)
+          : Promise.resolve({ data: [] as { section_key: string }[] }),
       ]);
+
+      // Merge DB-persisted progress with any local cache
+      if (progressRes.data && progressRes.data.length > 0) {
+        setWatchedVideos((prev) => {
+          const next = new Set(prev);
+          progressRes.data.forEach((r) => next.add(r.section_key));
+          persistWatched(next);
+          return next;
+        });
+      }
 
       setModule({
         ...mod,
@@ -156,7 +173,8 @@ export default function DealershipModuleContent() {
       setLoading(false);
     }
     load();
-  }, [dbId]);
+  }, [dbId, user]);
+
 
   if (loading) {
     return (

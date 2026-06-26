@@ -146,9 +146,21 @@ Deno.serve(async (req) => {
         await adminClient.from("invitations").delete().eq("email", trimmedEmail);
       }
       const msg = (inviteError as any)?.message || "";
-      if (msg.toLowerCase().includes("already been registered")) {
+      if (msg.toLowerCase().includes("already been registered") || msg.toLowerCase().includes("already exists")) {
+        const { data: list } = await adminClient.auth.admin.listUsers();
+        const found = list.users.find((u) => (u.email || "").toLowerCase() === trimmedEmail);
+        if (found) {
+          await adminClient.from("profiles").update({ dealership_id: inviteDealershipId }).eq("user_id", found.id);
+          await adminClient.from("user_roles").delete().eq("user_id", found.id).eq("role", inviteRole);
+          await adminClient.from("user_roles").insert({ user_id: found.id, role: inviteRole });
+          await adminClient.from("invitations").update({ status: "accepted", used_at: new Date().toISOString(), dealership_id: inviteDealershipId, role: inviteRole }).eq("email", trimmedEmail);
+          return new Response(
+            JSON.stringify({ success: true, message: `${trimmedEmail} already had an account — assigned to dealership.` }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
         return new Response(
-          JSON.stringify({ error: "This user already has an account — no invite needed." }),
+          JSON.stringify({ error: "This user already has an account." }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

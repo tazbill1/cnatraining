@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { DealershipDetail } from "@/components/admin/DealershipDetail";
+import { ErrorLogsPanel } from "@/components/admin/ErrorLogsPanel";
 
 interface Dealership {
   id: string;

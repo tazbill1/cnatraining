@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, Search, X, Eye } from "lucide-react";
+import { BookOpen, Search, X, Eye, ArrowLeft, ChevronRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ModuleCard } from "@/components/learn/ModuleCard";
 import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/modules";
+import { channelCategories, getCategoryBySlug, isValidChannelCategory } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules";
@@ -14,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -46,6 +49,9 @@ export default function Learn() {
   const difficultyFilter = (searchParams.get("difficulty") || "all") as ModuleDifficulty | "all";
   const completionFilter = (searchParams.get("status") || "all") as CompletionFilter;
   const sortOption = (searchParams.get("sort") || "recommended") as SortOption;
+  const categoryParam = searchParams.get("cat") || "";
+  const activeCategory = isValidChannelCategory(categoryParam) ? categoryParam : null;
+  const activeCategoryInfo = activeCategory ? getCategoryBySlug(activeCategory) : null;
 
   const updateParam = (key: string, value: string) => {
     setSearchParams((prev) => {
@@ -120,8 +126,14 @@ export default function Learn() {
     return mergeModules(trainingModules, dealershipModules, enabledIds);
   }, [settings, dealershipModules]);
 
+  // Modules scoped to the active category (default to all if "phone" is the only data we have, etc.)
+  const categoryModules = useMemo(() => {
+    if (!activeCategory) return enabledModules;
+    return enabledModules.filter((m) => (m.category || "phone") === activeCategory);
+  }, [enabledModules, activeCategory]);
+
   const filteredModules = useMemo(() => {
-    let modules = enabledModules.map((m, i) => ({ ...m, originalIndex: i }));
+    let modules = categoryModules.map((m, i) => ({ ...m, originalIndex: i }));
 
     // Search
     if (search) {
@@ -154,24 +166,37 @@ export default function Learn() {
     }
 
     return modules;
-  }, [search, difficultyFilter, completionFilter, sortOption, completedModules, enabledModules]);
+  }, [search, difficultyFilter, completionFilter, sortOption, completedModules, categoryModules]);
 
-  // Counts for filter badges
-  const difficultyCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: enabledModules.length };
+  // Per-category counts for the gallery view
+  const categoryStats = useMemo(() => {
+    const stats: Record<string, { total: number; completed: number }> = {};
+    channelCategories.forEach((c) => (stats[c.id] = { total: 0, completed: 0 }));
     enabledModules.forEach((m) => {
+      const cat = m.category || "phone";
+      if (!stats[cat]) stats[cat] = { total: 0, completed: 0 };
+      stats[cat].total += 1;
+      if (completedModules.includes(m.id)) stats[cat].completed += 1;
+    });
+    return stats;
+  }, [enabledModules, completedModules]);
+
+  // Counts for filter badges (scoped to active category)
+  const difficultyCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: categoryModules.length };
+    categoryModules.forEach((m) => {
       counts[m.difficulty] = (counts[m.difficulty] || 0) + 1;
     });
     return counts;
-  }, [enabledModules]);
+  }, [categoryModules]);
 
   const completionCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: enabledModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
-    enabledModules.forEach((m) => {
+    const counts: Record<string, number> = { all: categoryModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
+    categoryModules.forEach((m) => {
       counts[getModuleStatus(m.id)]++;
     });
     return counts;
-  }, [completedModules, enabledModules]);
+  }, [completedModules, categoryModules]);
 
   const handleModuleClick = (moduleId: string, isLocked: boolean) => {
     const bypassLock = import.meta.env.DEV && window.event && (window.event as MouseEvent).shiftKey;
@@ -216,14 +241,29 @@ export default function Learn() {
 
           {/* Header */}
           <div className="mb-6 sm:mb-8">
+            {activeCategoryInfo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => updateParam("cat", "")}
+                className="mb-3 -ml-2 h-8 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                All categories
+              </Button>
+            )}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-primary" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Learn</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                {activeCategoryInfo ? activeCategoryInfo.name : "Learn"}
+              </h1>
             </div>
             <p className="text-muted-foreground">
-              Complete training modules to build your automotive sales expertise
+              {activeCategoryInfo
+                ? activeCategoryInfo.description
+                : "Pick a training channel to start building expertise"}
             </p>
           </div>
 
@@ -250,7 +290,52 @@ export default function Learn() {
             </div>
           </div>
 
-          {/* Search & Filters */}
+          {/* Category Gallery (shown when no category selected) */}
+          {!activeCategory && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {channelCategories.map((cat) => {
+                const stats = categoryStats[cat.id] || { total: 0, completed: 0 };
+                const Icon = cat.icon;
+                const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => updateParam("cat", cat.id)}
+                    className={cn(
+                      "card-premium p-5 text-left transition-all border-2 group",
+                      cat.accent
+                    )}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", cat.iconBg)}>
+                        <Icon className={cn("w-6 h-6", cat.iconColor)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="font-semibold text-foreground">{cat.name}</h3>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{cat.description}</p>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {stats.total === 0
+                              ? "No modules yet"
+                              : `${stats.completed} of ${stats.total} complete`}
+                          </span>
+                          {stats.total > 0 && (
+                            <span className="font-medium text-primary">{pct}%</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeCategory && (<>
+
           <div className="mb-6 space-y-3">
             {/* Search bar */}
             <div className="relative">
@@ -365,6 +450,7 @@ export default function Learn() {
               })
             )}
           </div>
+          </>)}
         </div>
       </AppLayout>
     </AuthGuard>

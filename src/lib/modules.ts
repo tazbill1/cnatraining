@@ -1,4 +1,5 @@
 import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, PlayCircle, LucideIcon } from "lucide-react";
+import type { ChannelCategory } from "./categories";
 
 export type ModuleDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -16,6 +17,7 @@ export interface TrainingModule {
   sections: ModuleSection[];
   prerequisiteIds: string[];
   alwaysAccessible?: boolean;
+  category?: ChannelCategory;
 }
 
 export const trainingModules: TrainingModule[] = [
@@ -35,6 +37,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "The Life-Event Buyer" },
     ],
     prerequisiteIds: [],
+    category: "showroom",
   },
   {
     id: "base-statement-video",
@@ -47,6 +50,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Watch Video" },
     ],
     prerequisiteIds: [],
+    category: "showroom",
   },
   {
     id: "base-statement",
@@ -61,6 +65,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Script Part 2: Two Pillars & Close" },
     ],
     prerequisiteIds: ["base-statement-video"],
+    category: "showroom",
   },
   {
     id: "vehicle-selection-fundamentals",
@@ -76,6 +81,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Vehicle Presentation & Key Management" },
     ],
     prerequisiteIds: ["base-statement"],
+    category: "showroom",
   },
   {
     id: "trade-appraisal-process",
@@ -90,6 +96,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Step 3: Purchase Disclosure & AEAIR" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+    category: "showroom",
   },
   {
     id: "objection-handling-framework",
@@ -103,6 +110,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Real objection examples" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+    category: "showroom",
   },
   {
     id: "phone-sales-fundamentals",
@@ -118,6 +126,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Handling Inbound Objections" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+    category: "phone",
   },
   {
     id: "quick-reference-library",

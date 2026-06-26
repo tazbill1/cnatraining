@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { TrainingModule, trainingModules, ModuleDifficulty } from "@/lib/modules";
+import type { ChannelCategory } from "@/lib/categories";
 import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, PlayCircle, LucideIcon } from "lucide-react";
 
 const iconMap: Record<string, LucideIcon> = {
@@ -21,6 +22,7 @@ export interface DealershipModule {
   video_title: string | null;
   sort_order: number;
   is_active: boolean;
+  category: ChannelCategory;
   sections: { id: string; title: string; content_type: string; content_html: string | null; video_url: string | null; sort_order: number }[];
   quiz_questions: { id: string; question: string; options: any; explanation: string | null; sort_order: number }[];
 }
@@ -84,6 +86,7 @@ function toTrainingModule(dm: DealershipModule): TrainingModule {
     sections: dm.sections.map((s) => ({ title: s.title })),
     prerequisiteIds: [],
     alwaysAccessible: true,
+    category: dm.category,
   };
 }
 
@@ -141,6 +144,7 @@ export function mergeModules(
       description: override.description || m.description,
       icon: iconMap[override.icon || ""] || m.icon,
       estimatedTime: override.estimated_time || m.estimatedTime,
+      category: override.category || m.category,
       _dealershipModuleId: override.id,
       _hasCustomContent: override.sections.length > 0,
     } as TrainingModule & { _dealershipModuleId?: string; _hasCustomContent?: boolean };

@@ -47,10 +47,13 @@ export default function Team() {
   
   const isMobile = useIsMobile();
   const [isManager, setIsManager] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"salesperson" | "manager">("salesperson");
+  const [inviteDealershipId, setInviteDealershipId] = useState<string>("");
+  const [dealerships, setDealerships] = useState<Array<{ id: string; name: string }>>([]);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<{ userId: string; name: string } | null>(null);
@@ -78,17 +81,43 @@ export default function Team() {
   const checkManagerRole = async () => {
     if (!user) return;
 
-    const { data } = await supabase
+    const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "manager")
-      .maybeSingle();
+      .eq("user_id", user.id);
 
-    if (data?.role === "manager") {
+    const roleList = (roles || []).map((r: any) => r.role);
+    const manager = roleList.includes("manager");
+    const superAdmin = roleList.includes("super_admin");
+
+    if (manager || superAdmin) {
       setIsManager(true);
+      setIsSuperAdmin(superAdmin);
       fetchEngagementData();
       fetchInvitations();
+
+      if (superAdmin) {
+        const { data: deals } = await supabase
+          .from("dealerships")
+          .select("id, name")
+          .order("name");
+        if (deals) {
+          setDealerships(deals);
+          if (deals.length > 0) setInviteDealershipId(deals[0].id);
+        }
+      } else {
+        // Manager: lock to their own dealership
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("dealership_id, dealerships(id, name)")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (profile?.dealership_id) {
+          setInviteDealershipId(profile.dealership_id);
+          const d = (profile as any).dealerships;
+          if (d) setDealerships([{ id: d.id, name: d.name }]);
+        }
+      }
     } else {
       setLoading(false);
     }

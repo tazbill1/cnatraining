@@ -396,6 +396,18 @@ export default function Team() {
                   <option value="salesperson">User</option>
                   <option value="manager">Manager</option>
                 </select>
+                {isSuperAdmin && (
+                  <select
+                    value={inviteDealershipId}
+                    onChange={(e) => setInviteDealershipId(e.target.value)}
+                    className="h-10 rounded-md border-2 border-primary bg-background px-3 text-sm font-medium"
+                    aria-label="Dealership"
+                  >
+                    {dealerships.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                )}
                 <Button onClick={handleSendInvite} disabled={isSendingInvite}>
                   {isSendingInvite ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

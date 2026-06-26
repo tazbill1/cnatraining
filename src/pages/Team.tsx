@@ -369,19 +369,30 @@ export default function Team() {
                         <span className="truncate">{inv.email}</span>
                         <div className="flex items-center gap-2">
                           {inv.status !== "accepted" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              disabled={resendingId === inv.id}
-                              onClick={() => handleResendInvite(inv)}
-                            >
-                              {resendingId === inv.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <><RefreshCw className="w-3 h-3 mr-1" /> Resend</>
-                              )}
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                disabled={resendingId === inv.id}
+                                onClick={() => handleResendInvite(inv)}
+                              >
+                                {resendingId === inv.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <><RefreshCw className="w-3 h-3 mr-1" /> Resend</>
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                                onClick={() => handleCancelInvite(inv.email)}
+                                title="Cancel invitation"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </>
                           )}
                           <Badge variant={inv.status === "accepted" ? "default" : "secondary"} className="text-xs">
                             {inv.status === "accepted" ? (

@@ -91,14 +91,15 @@ export default function VideoPlayer({
           e.preventDefault();
           video.currentTime = Math.max(0, video.currentTime - 5);
           break;
-        case "ArrowRight":
-          e.preventDefault();
-          video.currentTime = Math.min(
-            video.duration,
-            video.currentTime + 5
-          );
-          break;
+        // ArrowRight skip disabled to prevent fast-forwarding
         case "m":
+        case "M":
+          e.preventDefault();
+          video.muted = !video.muted;
+          setIsMuted(video.muted);
+          break;
+      }
+
         case "M":
           e.preventDefault();
           video.muted = !video.muted;

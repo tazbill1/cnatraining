@@ -122,7 +122,16 @@ Deno.serve(async (req) => {
 
     if (inviteError) {
       // Clean up invitation record if email fails
-      await adminClient.from("invitations").delete().eq("email", trimmedEmail);
+      if (!existing) {
+        await adminClient.from("invitations").delete().eq("email", trimmedEmail);
+      }
+      const msg = (inviteError as any)?.message || "";
+      if (msg.toLowerCase().includes("already been registered")) {
+        return new Response(
+          JSON.stringify({ error: "This user already has an account — no invite needed." }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       throw inviteError;
     }
 

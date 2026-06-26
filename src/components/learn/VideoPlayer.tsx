@@ -152,6 +152,13 @@ export default function VideoPlayer({
             ref={videoRef}
             src={videoUrl}
             controls
+            controlsList="nodownload noplaybackrate"
+            disablePictureInPicture
+            onRateChange={() => {
+              if (videoRef.current && videoRef.current.playbackRate !== 1) {
+                videoRef.current.playbackRate = 1;
+              }
+            }}
             playsInline
             preload={isMobile ? "none" : "metadata"}
             crossOrigin="anonymous"

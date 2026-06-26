@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, Search, X, Eye } from "lucide-react";
+import { BookOpen, Search, X, Eye, ArrowLeft, ChevronRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ModuleCard } from "@/components/learn/ModuleCard";
 import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/modules";
+import { channelCategories, getCategoryBySlug, isValidChannelCategory } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules";
@@ -14,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,

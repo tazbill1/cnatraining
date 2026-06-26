@@ -444,6 +444,18 @@ export default function Team() {
                                 variant="ghost"
                                 size="sm"
                                 className="h-7 px-2 text-xs"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${window.location.origin}/auth`);
+                                  toast.success(`Signup link copied — share with ${inv.email}`);
+                                }}
+                                title="Copy signup link"
+                              >
+                                Copy link
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
                                 disabled={resendingId === inv.id}
                                 onClick={() => handleResendInvite(inv)}
                               >
@@ -464,6 +476,7 @@ export default function Team() {
                               </Button>
                             </>
                           )}
+
                           <Badge variant={inv.status === "accepted" ? "default" : "secondary"} className="text-xs">
                             {inv.status === "accepted" ? (
                               <><Check className="w-3 h-3 mr-1" /> Joined</>

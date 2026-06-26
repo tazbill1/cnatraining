@@ -272,6 +272,7 @@ export default function Admin() {
               )}
             </>
           )}
+          <ErrorLogsPanel />
         </div>
 
         {/* Add Dealership Modal */}

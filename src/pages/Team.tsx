@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw, Download, GraduationCap } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw, Download, GraduationCap, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -136,6 +136,37 @@ export default function Team() {
       toast.error(`Failed to resend: ${err.message}`);
     } finally {
       setResendingId(null);
+    }
+  };
+
+  const handleRemoveUser = async (email: string, name: string) => {
+    if (!window.confirm(`Remove ${name || email}? This permanently deletes their account and all their data.`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Removed ${email}`);
+      fetchEngagementData();
+      fetchInvitations();
+    } catch (err: any) {
+      toast.error(`Failed to remove: ${err.message}`);
+    }
+  };
+
+  const handleCancelInvite = async (email: string) => {
+    if (!window.confirm(`Cancel invitation to ${email}?`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Invitation cancelled`);
+      fetchInvitations();
+    } catch (err: any) {
+      toast.error(`Failed to cancel: ${err.message}`);
     }
   };
 
@@ -338,19 +369,30 @@ export default function Team() {
                         <span className="truncate">{inv.email}</span>
                         <div className="flex items-center gap-2">
                           {inv.status !== "accepted" && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              disabled={resendingId === inv.id}
-                              onClick={() => handleResendInvite(inv)}
-                            >
-                              {resendingId === inv.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <><RefreshCw className="w-3 h-3 mr-1" /> Resend</>
-                              )}
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                disabled={resendingId === inv.id}
+                                onClick={() => handleResendInvite(inv)}
+                              >
+                                {resendingId === inv.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <><RefreshCw className="w-3 h-3 mr-1" /> Resend</>
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                                onClick={() => handleCancelInvite(inv.email)}
+                                title="Cancel invitation"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </>
                           )}
                           <Badge variant={inv.status === "accepted" ? "default" : "secondary"} className="text-xs">
                             {inv.status === "accepted" ? (
@@ -461,6 +503,8 @@ export default function Team() {
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
                 onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
+                onRemoveUser={handleRemoveUser}
+                currentUserId={user?.id}
               />
             </TabsContent>
 
@@ -471,6 +515,8 @@ export default function Team() {
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
                 onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
+                onRemoveUser={handleRemoveUser}
+                currentUserId={user?.id}
               />
             </TabsContent>
 
@@ -492,6 +538,8 @@ export default function Team() {
                     getScoreBadge={getScoreBadge}
                     isMobile={isMobile}
                     onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
+                    onRemoveUser={handleRemoveUser}
+                    currentUserId={user?.id}
                   />
                 </CardContent>
               </Card>
@@ -653,6 +701,8 @@ interface UserListProps {
   getScoreBadge: (score: number) => { color: string };
   isMobile: boolean;
   onSelectUser?: (userId: string, name: string) => void;
+  onRemoveUser?: (email: string, name: string) => void;
+  currentUserId?: string;
 }
 
 function maskEmail(email: string): string {
@@ -662,7 +712,7 @@ function maskEmail(email: string): string {
   return `${maskedUser}@${domain}`;
 }
 
-function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser }: UserListProps) {
+function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser, onRemoveUser, currentUserId }: UserListProps) {
   if (users.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">
@@ -693,6 +743,17 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
                     <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
                       {status.label}
                     </Badge>
+                    {onRemoveUser && user.user_id !== currentUserId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 ml-auto text-destructive hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); onRemoveUser(user.email, user.full_name); }}
+                        title="Remove user"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{maskEmail(user.email)}</p>
                   
@@ -740,6 +801,7 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
           <TableHead>Sessions</TableHead>
           <TableHead>Avg Score</TableHead>
           <TableHead>Last Practice</TableHead>
+          <TableHead></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -784,6 +846,19 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
                 {user.last_session_date
                   ? formatDistanceToNow(new Date(user.last_session_date), { addSuffix: true })
                   : "Never"}
+              </TableCell>
+              <TableCell className="text-right">
+                {onRemoveUser && user.user_id !== currentUserId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); onRemoveUser(user.email, user.full_name); }}
+                    title="Remove user"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           );

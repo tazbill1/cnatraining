@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
     const managerDealershipId = profileData?.dealership_id;
 
-    const { email, resend } = await req.json();
+    const { email, resend, role } = await req.json();
     // Temporary: force all invites to My Lakeshore Subaru (only active dealership)
     const inviteDealershipId = "8b22831e-9967-4a5f-b3f4-e1274bc5993c";
     if (!email || typeof email !== "string" || !email.includes("@")) {
@@ -74,6 +74,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const allowedRoles = ["salesperson", "manager"] as const;
+    const inviteRole = allowedRoles.includes(role) ? role : "salesperson";
 
     const trimmedEmail = email.trim().toLowerCase();
 

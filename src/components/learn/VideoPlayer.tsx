@@ -186,6 +186,8 @@ export default function VideoPlayer({
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onTimeUpdate={handleTimeUpdate}
+            onSeeking={handleSeeking}
+
           />
         </AspectRatio>
 

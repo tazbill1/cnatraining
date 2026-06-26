@@ -181,22 +181,22 @@ export default function Learn() {
     return stats;
   }, [enabledModules, completedModules]);
 
-  // Counts for filter badges
+  // Counts for filter badges (scoped to active category)
   const difficultyCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: enabledModules.length };
-    enabledModules.forEach((m) => {
+    const counts: Record<string, number> = { all: categoryModules.length };
+    categoryModules.forEach((m) => {
       counts[m.difficulty] = (counts[m.difficulty] || 0) + 1;
     });
     return counts;
-  }, [enabledModules]);
+  }, [categoryModules]);
 
   const completionCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: enabledModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
-    enabledModules.forEach((m) => {
+    const counts: Record<string, number> = { all: categoryModules.length, completed: 0, "in-progress": 0, "not-started": 0 };
+    categoryModules.forEach((m) => {
       counts[getModuleStatus(m.id)]++;
     });
     return counts;
-  }, [completedModules, enabledModules]);
+  }, [completedModules, categoryModules]);
 
   const handleModuleClick = (moduleId: string, isLocked: boolean) => {
     const bypassLock = import.meta.env.DEV && window.event && (window.event as MouseEvent).shiftKey;

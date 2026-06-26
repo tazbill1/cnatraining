@@ -50,6 +50,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Watch Video" },
     ],
     prerequisiteIds: [],
+    category: "showroom",
   },
   {
     id: "base-statement",

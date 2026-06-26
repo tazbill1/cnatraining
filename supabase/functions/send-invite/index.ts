@@ -65,8 +65,9 @@ Deno.serve(async (req) => {
 
     const managerDealershipId = profileData?.dealership_id;
 
-    const { email, resend, dealership_id } = await req.json();
-    const inviteDealershipId = isSuperAdmin && dealership_id ? dealership_id : managerDealershipId;
+    const { email, resend } = await req.json();
+    // Temporary: force all invites to My Lakeshore Subaru (only active dealership)
+    const inviteDealershipId = "8b22831e-9967-4a5f-b3f4-e1274bc5993c";
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email required" }), {
         status: 400,

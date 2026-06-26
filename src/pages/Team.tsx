@@ -421,6 +421,11 @@ export default function Team() {
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 <strong>User</strong> = trainee. <strong>Manager</strong> = can invite/remove users and view team progress.
+                {isSuperAdmin && dealerships.find((d) => d.id === inviteDealershipId) && (
+                  <span className="block mt-1 text-primary">
+                    Inviting to: <strong>{dealerships.find((d) => d.id === inviteDealershipId)?.name}</strong>
+                  </span>
+                )}
               </p>
 
               {invitations.length > 0 && (

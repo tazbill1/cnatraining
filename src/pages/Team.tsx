@@ -39,6 +39,8 @@ interface Invitation {
   email: string;
   status: string;
   created_at: string;
+  dealership_id?: string | null;
+  role?: string | null;
 }
 
 export default function Team() {

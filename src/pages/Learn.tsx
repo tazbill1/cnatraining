@@ -290,7 +290,52 @@ export default function Learn() {
             </div>
           </div>
 
-          {/* Search & Filters */}
+          {/* Category Gallery (shown when no category selected) */}
+          {!activeCategory && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {channelCategories.map((cat) => {
+                const stats = categoryStats[cat.id] || { total: 0, completed: 0 };
+                const Icon = cat.icon;
+                const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => updateParam("cat", cat.id)}
+                    className={cn(
+                      "card-premium p-5 text-left transition-all border-2 group",
+                      cat.accent
+                    )}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", cat.iconBg)}>
+                        <Icon className={cn("w-6 h-6", cat.iconColor)} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="font-semibold text-foreground">{cat.name}</h3>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{cat.description}</p>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {stats.total === 0
+                              ? "No modules yet"
+                              : `${stats.completed} of ${stats.total} complete`}
+                          </span>
+                          {stats.total > 0 && (
+                            <span className="font-medium text-primary">{pct}%</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeCategory && (<>
+
           <div className="mb-6 space-y-3">
             {/* Search bar */}
             <div className="relative">

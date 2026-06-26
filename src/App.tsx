@@ -8,6 +8,10 @@ import { DealershipProvider } from "@/hooks/useDealershipContext";
 import { CrashReporter } from "@/components/debug/CrashReporter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
+import { BugReportButton } from "@/components/BugReportButton";
+import { installGlobalActionLogger } from "@/lib/actionLog";
+
+installGlobalActionLogger();
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -94,6 +98,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              <BugReportButton />
             </DealershipProvider>
           </AuthProvider>
         </ErrorBoundary>

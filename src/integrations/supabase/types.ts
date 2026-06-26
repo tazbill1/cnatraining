@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      bug_reports: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          description: string
+          device_info: Json | null
+          id: string
+          recent_actions: Json | null
+          screenshot_path: string | null
+          status: string
+          url: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+          viewport: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          description: string
+          device_info?: Json | null
+          id?: string
+          recent_actions?: Json | null
+          screenshot_path?: string | null
+          status?: string
+          url?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          viewport?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          description?: string
+          device_info?: Json | null
+          id?: string
+          recent_actions?: Json | null
+          screenshot_path?: string | null
+          status?: string
+          url?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          viewport?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_reports_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_scenarios: {
         Row: {
           buyer_type: string

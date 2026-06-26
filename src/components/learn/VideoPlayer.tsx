@@ -100,12 +100,7 @@ export default function VideoPlayer({
           break;
       }
 
-        case "M":
-          e.preventDefault();
-          video.muted = !video.muted;
-          setIsMuted(video.muted);
-          break;
-      }
+
     };
 
     window.addEventListener("keydown", handleKeyDown);

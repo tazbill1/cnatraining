@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play, AlertCircle, RotateCcw } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";

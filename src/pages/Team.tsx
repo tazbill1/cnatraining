@@ -701,6 +701,8 @@ interface UserListProps {
   getScoreBadge: (score: number) => { color: string };
   isMobile: boolean;
   onSelectUser?: (userId: string, name: string) => void;
+  onRemoveUser?: (email: string, name: string) => void;
+  currentUserId?: string;
 }
 
 function maskEmail(email: string): string {
@@ -710,7 +712,7 @@ function maskEmail(email: string): string {
   return `${maskedUser}@${domain}`;
 }
 
-function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser }: UserListProps) {
+function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser, onRemoveUser, currentUserId }: UserListProps) {
   if (users.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">

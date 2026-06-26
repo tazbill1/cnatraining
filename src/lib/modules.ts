@@ -110,6 +110,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Real objection examples" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+    category: "showroom",
   },
   {
     id: "phone-sales-fundamentals",

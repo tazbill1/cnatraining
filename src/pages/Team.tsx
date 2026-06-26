@@ -139,6 +139,37 @@ export default function Team() {
     }
   };
 
+  const handleRemoveUser = async (email: string, name: string) => {
+    if (!window.confirm(`Remove ${name || email}? This permanently deletes their account and all their data.`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Removed ${email}`);
+      fetchEngagementData();
+      fetchInvitations();
+    } catch (err: any) {
+      toast.error(`Failed to remove: ${err.message}`);
+    }
+  };
+
+  const handleCancelInvite = async (email: string) => {
+    if (!window.confirm(`Cancel invitation to ${email}?`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Invitation cancelled`);
+      fetchInvitations();
+    } catch (err: any) {
+      toast.error(`Failed to cancel: ${err.message}`);
+    }
+  };
+
   const fetchEngagementData = async () => {
     try {
       const { data: profiles, error: profilesError } = await supabase

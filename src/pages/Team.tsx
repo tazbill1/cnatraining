@@ -109,12 +109,13 @@ export default function Team() {
     setIsSendingInvite(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: inviteEmail.trim() },
+        body: { email: inviteEmail.trim(), role: inviteRole },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`Invite sent to ${inviteEmail.trim()}`);
+      toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole}`);
       setInviteEmail("");
+      setInviteRole("salesperson");
       fetchInvitations();
     } catch (err: any) {
       toast.error(`Failed to send invite: ${err.message}`);

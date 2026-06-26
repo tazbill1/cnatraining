@@ -10,8 +10,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { BugReportButton } from "@/components/BugReportButton";
 import { installGlobalActionLogger } from "@/lib/actionLog";
+import { installGlobalErrorCapture } from "@/lib/errorCapture";
 
 installGlobalActionLogger();
+installGlobalErrorCapture();
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));

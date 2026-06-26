@@ -159,20 +159,31 @@ export default function DealershipModuleContent() {
   const handleComplete = async () => {
     if (!user) return;
     const moduleKey = `dealership-${dbId}`;
+    const score = hasQuiz ? calculateScore() : null;
     try {
-      await supabase.from("module_completions").upsert(
+      const { error } = await supabase.from("module_completions").upsert(
         {
           user_id: user.id,
           module_id: moduleKey,
           dealership_id: profile?.dealership_id || null,
-          quiz_score: hasQuiz ? calculateScore() : null,
+          quiz_score: score,
         },
         { onConflict: "user_id,module_id" }
       );
+      if (error) throw error;
       toast.success("Module completed!");
       navigate("/learn");
-    } catch {
-      toast.error("Failed to save completion.");
+    } catch (err) {
+      const { captureError } = await import("@/lib/errorCapture");
+      await captureError(err, {
+        where: "DealershipModuleContent.handleComplete",
+        moduleKey,
+        dbId,
+        quizScore: score,
+        stage: currentStage,
+        totalStages,
+      });
+      toast.error("Failed to save completion. The error has been logged.");
     }
   };
 

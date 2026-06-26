@@ -1,0 +1,1 @@
+UPDATE public.dealership_modules SET video_url='/__l5e/assets-v1/2cc0c955-3a79-401d-8d0d-1b30494c1c78/phone-skills-2.mp4' WHERE id='b6cc1b32-9cc7-4798-9297-c946b62cc47d';

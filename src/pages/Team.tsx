@@ -47,10 +47,13 @@ export default function Team() {
   
   const isMobile = useIsMobile();
   const [isManager, setIsManager] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"salesperson" | "manager">("salesperson");
+  const [inviteDealershipId, setInviteDealershipId] = useState<string>("");
+  const [dealerships, setDealerships] = useState<Array<{ id: string; name: string }>>([]);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<{ userId: string; name: string } | null>(null);
@@ -78,17 +81,43 @@ export default function Team() {
   const checkManagerRole = async () => {
     if (!user) return;
 
-    const { data } = await supabase
+    const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "manager")
-      .maybeSingle();
+      .eq("user_id", user.id);
 
-    if (data?.role === "manager") {
+    const roleList = (roles || []).map((r: any) => r.role);
+    const manager = roleList.includes("manager");
+    const superAdmin = roleList.includes("super_admin");
+
+    if (manager || superAdmin) {
       setIsManager(true);
+      setIsSuperAdmin(superAdmin);
       fetchEngagementData();
       fetchInvitations();
+
+      if (superAdmin) {
+        const { data: deals } = await supabase
+          .from("dealerships")
+          .select("id, name")
+          .order("name");
+        if (deals) {
+          setDealerships(deals);
+          if (deals.length > 0) setInviteDealershipId(deals[0].id);
+        }
+      } else {
+        // Manager: lock to their own dealership
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("dealership_id, dealerships(id, name)")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (profile?.dealership_id) {
+          setInviteDealershipId(profile.dealership_id);
+          const d = (profile as any).dealerships;
+          if (d) setDealerships([{ id: d.id, name: d.name }]);
+        }
+      }
     } else {
       setLoading(false);
     }
@@ -106,14 +135,22 @@ export default function Team() {
       toast.error("Please enter a valid email");
       return;
     }
+    if (!inviteDealershipId) {
+      toast.error("Please select a dealership");
+      return;
+    }
+    const dealershipName = dealerships.find((d) => d.id === inviteDealershipId)?.name || "this dealership";
+    if (isSuperAdmin && !window.confirm(`Send invite to ${inviteEmail.trim()} as ${inviteRole} for ${dealershipName}?`)) {
+      return;
+    }
     setIsSendingInvite(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: inviteEmail.trim(), role: inviteRole },
+        body: { email: inviteEmail.trim(), role: inviteRole, dealershipId: inviteDealershipId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole}`);
+      toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole} (${dealershipName})`);
       setInviteEmail("");
       setInviteRole("salesperson");
       fetchInvitations();
@@ -359,6 +396,18 @@ export default function Team() {
                   <option value="salesperson">User</option>
                   <option value="manager">Manager</option>
                 </select>
+                {isSuperAdmin && (
+                  <select
+                    value={inviteDealershipId}
+                    onChange={(e) => setInviteDealershipId(e.target.value)}
+                    className="h-10 rounded-md border-2 border-primary bg-background px-3 text-sm font-medium"
+                    aria-label="Dealership"
+                  >
+                    {dealerships.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                )}
                 <Button onClick={handleSendInvite} disabled={isSendingInvite}>
                   {isSendingInvite ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -372,6 +421,11 @@ export default function Team() {
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 <strong>User</strong> = trainee. <strong>Manager</strong> = can invite/remove users and view team progress.
+                {isSuperAdmin && dealerships.find((d) => d.id === inviteDealershipId) && (
+                  <span className="block mt-1 text-primary">
+                    Inviting to: <strong>{dealerships.find((d) => d.id === inviteDealershipId)?.name}</strong>
+                  </span>
+                )}
               </p>
 
               {invitations.length > 0 && (

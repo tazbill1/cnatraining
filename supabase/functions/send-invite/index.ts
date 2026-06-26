@@ -65,9 +65,7 @@ Deno.serve(async (req) => {
 
     const managerDealershipId = profileData?.dealership_id;
 
-    const { email, resend, role } = await req.json();
-    // Temporary: force all invites to My Lakeshore Subaru (only active dealership)
-    const inviteDealershipId = "8b22831e-9967-4a5f-b3f4-e1274bc5993c";
+    const { email, resend, role, dealershipId } = await req.json();
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email required" }), {
         status: 400,
@@ -76,6 +74,28 @@ Deno.serve(async (req) => {
     }
     const allowedRoles = ["salesperson", "manager"] as const;
     const inviteRole = allowedRoles.includes(role) ? role : "salesperson";
+
+    // Resolve target dealership with authorization
+    let inviteDealershipId: string | null = null;
+    if (isSuperAdmin) {
+      // Super admin can invite to any dealership; must provide one
+      inviteDealershipId = dealershipId || managerDealershipId || null;
+    } else {
+      // Manager: always pinned to their own dealership, ignore any client-provided value
+      inviteDealershipId = managerDealershipId || null;
+      if (dealershipId && dealershipId !== managerDealershipId) {
+        return new Response(
+          JSON.stringify({ error: "Managers can only invite to their own dealership" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    if (!inviteDealershipId) {
+      return new Response(JSON.stringify({ error: "Dealership is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const trimmedEmail = email.trim().toLowerCase();
 
@@ -110,7 +130,7 @@ Deno.serve(async (req) => {
     } else {
       await adminClient
         .from("invitations")
-        .update({ role: inviteRole })
+        .update({ role: inviteRole, dealership_id: inviteDealershipId })
         .eq("email", trimmedEmail);
     }
 

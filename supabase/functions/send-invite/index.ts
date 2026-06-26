@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
     } else {
       await adminClient
         .from("invitations")
-        .update({ role: inviteRole })
+        .update({ role: inviteRole, dealership_id: inviteDealershipId })
         .eq("email", trimmedEmail);
     }
 

@@ -509,6 +509,44 @@ export type Database = {
           },
         ]
       }
+      module_section_progress: {
+        Row: {
+          created_at: string
+          id: string
+          module_id: string
+          section_key: string
+          updated_at: string
+          user_id: string
+          watched_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module_id: string
+          section_key: string
+          updated_at?: string
+          user_id: string
+          watched_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module_id?: string
+          section_key?: string
+          updated_at?: string
+          user_id?: string
+          watched_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_section_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

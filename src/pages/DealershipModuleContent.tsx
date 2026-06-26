@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play, AlertCircle, RotateCcw } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,8 @@ interface ModuleData {
   practice_scenarios: DBPracticeScenario[];
 }
 
+const QUIZ_PASS_THRESHOLD = 80;
+
 export default function DealershipModuleContent() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -69,18 +71,41 @@ export default function DealershipModuleContent() {
     }
   });
 
-  const markVideoWatched = (key: string) =>
+  const persistWatched = (next: Set<string>) => {
+    try {
+      window.localStorage.setItem(watchedStorageKey, JSON.stringify([...next]));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const markVideoWatched = (key: string) => {
     setWatchedVideos((prev) => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
-      try {
-        window.localStorage.setItem(watchedStorageKey, JSON.stringify([...next]));
-      } catch {
-        /* ignore */
-      }
+      persistWatched(next);
       return next;
     });
+    // Persist to DB so progress survives across devices
+    if (user && moduleId) {
+      supabase
+        .from("module_section_progress")
+        .upsert(
+          {
+            user_id: user.id,
+            module_id: moduleId,
+            section_key: key,
+            watched_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,module_id,section_key" }
+        )
+        .then(({ error }) => {
+          if (error) console.warn("Failed to save section progress", error);
+        });
+    }
+  };
+
 
 
   const dbId = moduleId || "";
@@ -100,7 +125,7 @@ export default function DealershipModuleContent() {
         return;
       }
 
-      const [secRes, quizRes, practiceRes] = await Promise.all([
+      const [secRes, quizRes, practiceRes, progressRes] = await Promise.all([
         supabase
           .from("dealership_module_sections")
           .select("*")
@@ -117,7 +142,24 @@ export default function DealershipModuleContent() {
           .eq("module_id", dbId)
           .eq("is_active", true)
           .order("sort_order"),
+        user
+          ? supabase
+              .from("module_section_progress")
+              .select("section_key")
+              .eq("user_id", user.id)
+              .eq("module_id", dbId)
+          : Promise.resolve({ data: [] as { section_key: string }[] }),
       ]);
+
+      // Merge DB-persisted progress with any local cache
+      if (progressRes.data && progressRes.data.length > 0) {
+        setWatchedVideos((prev) => {
+          const next = new Set(prev);
+          progressRes.data.forEach((r) => next.add(r.section_key));
+          persistWatched(next);
+          return next;
+        });
+      }
 
       setModule({
         ...mod,
@@ -131,7 +173,8 @@ export default function DealershipModuleContent() {
       setLoading(false);
     }
     load();
-  }, [dbId]);
+  }, [dbId, user]);
+
 
   if (loading) {
     return (
@@ -408,14 +451,49 @@ export default function DealershipModuleContent() {
                   Submit Answers
                 </Button>
               )}
-              {quizSubmitted && (
-                <div className="card-premium p-6 text-center">
-                  <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-2" />
-                  <p className="text-lg font-semibold text-foreground">
-                    Score: {calculateScore()}%
-                  </p>
-                </div>
-              )}
+              {quizSubmitted && (() => {
+                const score = calculateScore();
+                const passed = score >= QUIZ_PASS_THRESHOLD;
+                return (
+                  <div className="card-premium p-6 text-center space-y-3">
+                    {passed ? (
+                      <>
+                        <CheckCircle2 className="w-10 h-10 text-success mx-auto" />
+                        <p className="text-lg font-semibold text-foreground">
+                          Passed — Score: {score}%
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Need {QUIZ_PASS_THRESHOLD}% to complete this module.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
+                        <p className="text-lg font-semibold text-foreground">
+                          Not quite — Score: {score}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          You need at least {QUIZ_PASS_THRESHOLD}% to finish. Review the
+                          explanations above and try again.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => {
+                            setQuizAnswers({});
+                            setQuizSubmitted(false);
+                            window.scrollTo(0, 0);
+                          }}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Retake Quiz
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
             </div>
           )}
 
@@ -434,18 +512,28 @@ export default function DealershipModuleContent() {
                     sections[current.index].video_url
                   ? `section-${current.index}`
                   : null;
-              const blocked = videoKey !== null && !watchedVideos.has(videoKey);
+              const videoBlocked = videoKey !== null && !watchedVideos.has(videoKey);
+              const isQuizStage = current.type === "quiz";
+              const quizBlocked =
+                isQuizStage &&
+                hasQuiz &&
+                (!quizSubmitted || calculateScore() < QUIZ_PASS_THRESHOLD);
+              const blocked = videoBlocked || quizBlocked;
+              const title = videoBlocked
+                ? "Finish watching the video first"
+                : quizBlocked
+                ? !quizSubmitted
+                  ? "Submit the quiz first"
+                  : `Score ${QUIZ_PASS_THRESHOLD}% or higher to complete`
+                : undefined;
               return (
-                <Button
-                  onClick={handleNext}
-                  disabled={blocked}
-                  title={blocked ? "Finish watching the video first" : undefined}
-                >
+                <Button onClick={handleNext} disabled={blocked} title={title}>
                   {currentStage === totalStages - 1 ? "Complete Module" : "Continue"}
                   {currentStage < totalStages - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               );
             })()}
+
           </div>
         </div>
       </AppLayout>

@@ -474,15 +474,18 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
             {isMobile && (
               <Drawer>
                 <DrawerTrigger asChild>
-                  <button className="p-3 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground shrink-0">
+                  <button
+                    className="rounded-full bg-muted hover:bg-muted/80 text-muted-foreground shrink-0 min-w-[48px] min-h-[48px] flex items-center justify-center"
+                    aria-label="Open session checklist"
+                  >
                     <ClipboardList className="w-5 h-5" />
                   </button>
                 </DrawerTrigger>
-                <DrawerContent className="max-h-[80vh]">
+                <DrawerContent className="max-h-[85vh]">
                   <DrawerHeader>
                     <DrawerTitle>Session Progress</DrawerTitle>
                   </DrawerHeader>
-                  <div className="overflow-auto">
+                  <div className="overflow-auto pb-[env(safe-area-inset-bottom)]">
                     <ChecklistPanel
                       scenario={sessionState.scenario}
                       checklistState={sessionState.checklistState}
@@ -493,6 +496,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 </DrawerContent>
               </Drawer>
             )}
+
             {voiceEnabled && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -524,7 +528,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               </Tooltip>
             )}
             
-            {voiceEnabled && (
+            {/* Replay-last button: desktop only (auto-speak handles mobile) */}
+            {voiceEnabled && !isMobile && (
               <button
                 onClick={handleSpeakLastMessage}
                 className={`p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center shrink-0 ${
@@ -541,6 +546,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 )}
               </button>
             )}
+
             <Input
               ref={inputRef}
               value={inputValue}
@@ -548,16 +554,19 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               onKeyDown={handleKeyDown}
               placeholder={!voiceEnabled ? "Type your response..." : isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or tap mic..."}
               disabled={isTyping || isRecording || voiceStatus === "sending"}
-              className="flex-1 min-w-0"
+              className="flex-1 min-w-0 min-h-[48px] text-base"
+
             />
             <Button
               onClick={handleSend}
               disabled={!inputValue.trim() || isTyping || voiceStatus === "sending"}
-              className="btn-gradient px-3 sm:px-6 shrink-0"
+              className="btn-gradient px-3 sm:px-6 shrink-0 min-h-[48px]"
+              aria-label="Send message"
             >
               <Send className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Send</span>
             </Button>
+
           </div>
         </div>
       </div>

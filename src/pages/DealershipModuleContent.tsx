@@ -58,15 +58,30 @@ export default function DealershipModuleContent() {
   const [currentStage, setCurrentStage] = useState(0); // 0 = intro/video, 1..n = sections, last = quiz
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
+  const watchedStorageKey = `module-watched-videos:${moduleId || ""}`;
+  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = window.localStorage.getItem(`module-watched-videos:${moduleId || ""}`);
+      return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   const markVideoWatched = (key: string) =>
     setWatchedVideos((prev) => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
+      try {
+        window.localStorage.setItem(watchedStorageKey, JSON.stringify([...next]));
+      } catch {
+        /* ignore */
+      }
       return next;
     });
+
 
   const dbId = moduleId || "";
 

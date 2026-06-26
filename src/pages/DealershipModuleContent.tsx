@@ -58,6 +58,15 @@ export default function DealershipModuleContent() {
   const [currentStage, setCurrentStage] = useState(0); // 0 = intro/video, 1..n = sections, last = quiz
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
+
+  const markVideoWatched = (key: string) =>
+    setWatchedVideos((prev) => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
 
   const dbId = moduleId || "";
 

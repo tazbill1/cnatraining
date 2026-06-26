@@ -50,6 +50,7 @@ export default function Team() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"salesperson" | "manager">("salesperson");
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<{ userId: string; name: string } | null>(null);

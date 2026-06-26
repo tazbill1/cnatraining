@@ -49,6 +49,8 @@ interface ModuleData {
   practice_scenarios: DBPracticeScenario[];
 }
 
+const QUIZ_PASS_THRESHOLD = 80;
+
 export default function DealershipModuleContent() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -69,18 +71,41 @@ export default function DealershipModuleContent() {
     }
   });
 
-  const markVideoWatched = (key: string) =>
+  const persistWatched = (next: Set<string>) => {
+    try {
+      window.localStorage.setItem(watchedStorageKey, JSON.stringify([...next]));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const markVideoWatched = (key: string) => {
     setWatchedVideos((prev) => {
       if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
-      try {
-        window.localStorage.setItem(watchedStorageKey, JSON.stringify([...next]));
-      } catch {
-        /* ignore */
-      }
+      persistWatched(next);
       return next;
     });
+    // Persist to DB so progress survives across devices
+    if (user && moduleId) {
+      supabase
+        .from("module_section_progress")
+        .upsert(
+          {
+            user_id: user.id,
+            module_id: moduleId,
+            section_key: key,
+            watched_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,module_id,section_key" }
+        )
+        .then(({ error }) => {
+          if (error) console.warn("Failed to save section progress", error);
+        });
+    }
+  };
+
 
 
   const dbId = moduleId || "";

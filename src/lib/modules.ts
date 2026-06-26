@@ -96,6 +96,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Step 3: Purchase Disclosure & AEAIR" },
     ],
     prerequisiteIds: ["vehicle-selection-fundamentals"],
+    category: "showroom",
   },
   {
     id: "objection-handling-framework",

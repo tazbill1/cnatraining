@@ -37,6 +37,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "The Life-Event Buyer" },
     ],
     prerequisiteIds: [],
+    category: "showroom",
   },
   {
     id: "base-statement-video",

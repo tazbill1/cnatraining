@@ -238,8 +238,13 @@ export default function DealershipModuleContent() {
                 <VideoPlayer
                   videoUrl={module.video_url!}
                   title={module.video_title || module.title}
-                  onComplete={() => {}}
+                  onComplete={() => markVideoWatched("intro")}
                 />
+              )}
+              {hasVideo && !watchedVideos.has("intro") && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Watch the video to continue.
+                </p>
               )}
             </div>
           )}
@@ -251,9 +256,15 @@ export default function DealershipModuleContent() {
                 <VideoPlayer
                   videoUrl={sections[current.index].video_url!}
                   title={sections[current.index].title}
-                  onComplete={() => {}}
+                  onComplete={() => markVideoWatched(`section-${current.index}`)}
                 />
               )}
+              {sections[current.index].video_url &&
+                !watchedVideos.has(`section-${current.index}`) && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Watch the video to continue.
+                  </p>
+                )}
               {sections[current.index].content_html && (
                 <div
                   className="card-premium p-6 prose prose-sm dark:prose-invert max-w-none"

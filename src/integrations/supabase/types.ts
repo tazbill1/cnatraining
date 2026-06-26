@@ -18,11 +18,16 @@ export type Database = {
         Row: {
           created_at: string
           dealership_id: string | null
-          description: string
+          description: string | null
           device_info: Json | null
+          error_context: Json | null
+          error_message: string | null
+          error_stack: string | null
+          error_type: string | null
           id: string
           recent_actions: Json | null
           screenshot_path: string | null
+          source: string
           status: string
           url: string | null
           user_agent: string | null
@@ -33,11 +38,16 @@ export type Database = {
         Insert: {
           created_at?: string
           dealership_id?: string | null
-          description: string
+          description?: string | null
           device_info?: Json | null
+          error_context?: Json | null
+          error_message?: string | null
+          error_stack?: string | null
+          error_type?: string | null
           id?: string
           recent_actions?: Json | null
           screenshot_path?: string | null
+          source?: string
           status?: string
           url?: string | null
           user_agent?: string | null
@@ -48,11 +58,16 @@ export type Database = {
         Update: {
           created_at?: string
           dealership_id?: string | null
-          description?: string
+          description?: string | null
           device_info?: Json | null
+          error_context?: Json | null
+          error_message?: string | null
+          error_stack?: string | null
+          error_type?: string | null
           id?: string
           recent_actions?: Json | null
           screenshot_path?: string | null
+          source?: string
           status?: string
           url?: string | null
           user_agent?: string | null

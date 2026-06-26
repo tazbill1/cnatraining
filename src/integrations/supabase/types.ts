@@ -200,6 +200,7 @@ export type Database = {
       dealership_modules: {
         Row: {
           base_module_id: string | null
+          category: string
           created_at: string
           dealership_id: string
           description: string | null
@@ -215,6 +216,7 @@ export type Database = {
         }
         Insert: {
           base_module_id?: string | null
+          category?: string
           created_at?: string
           dealership_id: string
           description?: string | null
@@ -230,6 +232,7 @@ export type Database = {
         }
         Update: {
           base_module_id?: string | null
+          category?: string
           created_at?: string
           dealership_id?: string
           description?: string | null
@@ -255,6 +258,7 @@ export type Database = {
       }
       dealership_practice_scenarios: {
         Row: {
+          category: string
           created_at: string
           customer_quote: string
           customer_setup: string
@@ -268,6 +272,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string
           created_at?: string
           customer_quote: string
           customer_setup: string
@@ -281,6 +286,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string
           created_at?: string
           customer_quote?: string
           customer_setup?: string

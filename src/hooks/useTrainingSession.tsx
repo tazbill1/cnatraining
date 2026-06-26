@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { Scenario } from "@/lib/scenarios";
 import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
 import { analyzePhoneChecklistFromConversation, calculatePhoneChecklistProgress } from "@/lib/phoneChecklist";
+import { analyzePhoneModule1Checklist, phoneModule1Checklist } from "@/lib/phoneModule1Checklist";
 import { analyzeCricChecklistFromConversation } from "@/lib/cricChecklist";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -158,15 +159,13 @@ export function useTrainingSession() {
 
         // Analyze checklist based on scenario category
         const isObjectionHandling = sessionState.scenario?.category === "objection-handling";
+        const isPhone = sessionState.scenario?.category === "inbound-call";
+        const convo = allMessages.map((m) => ({ role: m.role, content: m.content }));
         const newChecklistState = isObjectionHandling
-          ? analyzeCricChecklistFromConversation(
-              allMessages.map((m) => ({ role: m.role, content: m.content })),
-              sessionState.checklistState
-            )
-          : analyzeChecklistFromConversation(
-              allMessages.map((m) => ({ role: m.role, content: m.content })),
-              sessionState.checklistState
-            );
+          ? analyzeCricChecklistFromConversation(convo, sessionState.checklistState)
+          : isPhone
+            ? analyzePhoneModule1Checklist(convo, sessionState.checklistState)
+            : analyzeChecklistFromConversation(convo, sessionState.checklistState);
 
         setSessionState((prev) => ({
           ...prev,

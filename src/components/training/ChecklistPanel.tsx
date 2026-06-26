@@ -3,6 +3,7 @@ import { cnaChecklist, categoryLabels as cnaCategoryLabels } from "@/lib/checkli
 import { tradeAppraisalChecklist, vehicleSelectionChecklist } from "@/lib/tradeChecklist";
 import { cricChecklist, cricCategoryLabels } from "@/lib/cricChecklist";
 import { phoneChecklist, phoneCategoryLabels } from "@/lib/phoneChecklist";
+import { phoneModule1Checklist, phoneModule1CategoryLabels } from "@/lib/phoneModule1Checklist";
 import { cn } from "@/lib/utils";
 import { Scenario } from "@/lib/scenarios";
 import { Progress } from "@/components/ui/progress";
@@ -25,6 +26,19 @@ function getChecklistForScenario(scenario: Scenario) {
         category: cat,
         label,
         items: cricChecklist.filter((item) => item.category === cat),
+      })).filter((g) => g.items.length > 0),
+    };
+  }
+  // Phone scenarios use the Module 1 beginner checklist (6 fundamentals)
+  if (scenario.category === "inbound-call") {
+    return {
+      checklist: phoneModule1Checklist,
+      title: "Phone Call Basics",
+      progressLabel: "Call Progress",
+      grouped: Object.entries(phoneModule1CategoryLabels).map(([cat, label]) => ({
+        category: cat,
+        label,
+        items: phoneModule1Checklist.filter((item) => item.category === cat),
       })).filter((g) => g.items.length > 0),
     };
   }

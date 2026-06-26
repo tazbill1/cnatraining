@@ -524,7 +524,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               </Tooltip>
             )}
             
-            {voiceEnabled && (
+            {/* Replay-last button: desktop only (auto-speak handles mobile) */}
+            {voiceEnabled && !isMobile && (
               <button
                 onClick={handleSpeakLastMessage}
                 className={`p-3 rounded-full transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center shrink-0 ${
@@ -541,6 +542,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 )}
               </button>
             )}
+
             <Input
               ref={inputRef}
               value={inputValue}

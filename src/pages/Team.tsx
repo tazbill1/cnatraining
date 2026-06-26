@@ -503,6 +503,8 @@ export default function Team() {
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
                 onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
+                onRemoveUser={handleRemoveUser}
+                currentUserId={user?.id}
               />
             </TabsContent>
 
@@ -513,6 +515,8 @@ export default function Team() {
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
                 onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
+                onRemoveUser={handleRemoveUser}
+                currentUserId={user?.id}
               />
             </TabsContent>
 
@@ -534,6 +538,8 @@ export default function Team() {
                     getScoreBadge={getScoreBadge}
                     isMobile={isMobile}
                     onSelectUser={(userId, name) => setSelectedUser({ userId, name })}
+                    onRemoveUser={handleRemoveUser}
+                    currentUserId={user?.id}
                   />
                 </CardContent>
               </Card>

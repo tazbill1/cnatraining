@@ -87,16 +87,6 @@ Deno.serve(async (req) => {
       .eq("email", trimmedEmail)
       .maybeSingle();
 
-    if (existing && !resend) {
-      return new Response(
-        JSON.stringify({ error: "This email has already been invited" }),
-        {
-          status: 409,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
     if (existing && existing.status === "accepted") {
       return new Response(
         JSON.stringify({ error: "This user has already joined" }),
@@ -106,6 +96,8 @@ Deno.serve(async (req) => {
         }
       );
     }
+
+    // If already invited but not accepted, treat as resend automatically
 
     // Insert or update invitation record
     if (!existing) {

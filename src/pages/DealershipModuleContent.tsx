@@ -451,14 +451,49 @@ export default function DealershipModuleContent() {
                   Submit Answers
                 </Button>
               )}
-              {quizSubmitted && (
-                <div className="card-premium p-6 text-center">
-                  <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-2" />
-                  <p className="text-lg font-semibold text-foreground">
-                    Score: {calculateScore()}%
-                  </p>
-                </div>
-              )}
+              {quizSubmitted && (() => {
+                const score = calculateScore();
+                const passed = score >= QUIZ_PASS_THRESHOLD;
+                return (
+                  <div className="card-premium p-6 text-center space-y-3">
+                    {passed ? (
+                      <>
+                        <CheckCircle2 className="w-10 h-10 text-success mx-auto" />
+                        <p className="text-lg font-semibold text-foreground">
+                          Passed — Score: {score}%
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Need {QUIZ_PASS_THRESHOLD}% to complete this module.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
+                        <p className="text-lg font-semibold text-foreground">
+                          Not quite — Score: {score}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          You need at least {QUIZ_PASS_THRESHOLD}% to finish. Review the
+                          explanations above and try again.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => {
+                            setQuizAnswers({});
+                            setQuizSubmitted(false);
+                            window.scrollTo(0, 0);
+                          }}
+                        >
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Retake Quiz
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
             </div>
           )}
 

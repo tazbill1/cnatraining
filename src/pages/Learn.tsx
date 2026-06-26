@@ -241,14 +241,29 @@ export default function Learn() {
 
           {/* Header */}
           <div className="mb-6 sm:mb-8">
+            {activeCategoryInfo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => updateParam("cat", "")}
+                className="mb-3 -ml-2 h-8 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                All categories
+              </Button>
+            )}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-primary" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Learn</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                {activeCategoryInfo ? activeCategoryInfo.label : "Learn"}
+              </h1>
             </div>
             <p className="text-muted-foreground">
-              Complete training modules to build your automotive sales expertise
+              {activeCategoryInfo
+                ? activeCategoryInfo.description
+                : "Pick a training channel to start building expertise"}
             </p>
           </div>
 

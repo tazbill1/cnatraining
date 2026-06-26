@@ -801,6 +801,7 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
           <TableHead>Sessions</TableHead>
           <TableHead>Avg Score</TableHead>
           <TableHead>Last Practice</TableHead>
+          <TableHead></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

@@ -86,6 +86,7 @@ function toTrainingModule(dm: DealershipModule): TrainingModule {
     sections: dm.sections.map((s) => ({ title: s.title })),
     prerequisiteIds: [],
     alwaysAccessible: true,
+    category: dm.category,
   };
 }
 

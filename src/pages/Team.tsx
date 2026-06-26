@@ -135,14 +135,22 @@ export default function Team() {
       toast.error("Please enter a valid email");
       return;
     }
+    if (!inviteDealershipId) {
+      toast.error("Please select a dealership");
+      return;
+    }
+    const dealershipName = dealerships.find((d) => d.id === inviteDealershipId)?.name || "this dealership";
+    if (isSuperAdmin && !window.confirm(`Send invite to ${inviteEmail.trim()} as ${inviteRole} for ${dealershipName}?`)) {
+      return;
+    }
     setIsSendingInvite(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: inviteEmail.trim(), role: inviteRole },
+        body: { email: inviteEmail.trim(), role: inviteRole, dealershipId: inviteDealershipId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole}`);
+      toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole} (${dealershipName})`);
       setInviteEmail("");
       setInviteRole("salesperson");
       fetchInvitations();

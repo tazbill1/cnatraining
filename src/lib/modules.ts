@@ -1,4 +1,5 @@
 import { BookOpen, Car, MessageSquare, FileText, Phone, Handshake, Users, PlayCircle, LucideIcon } from "lucide-react";
+import type { ChannelCategory } from "./categories";
 
 export type ModuleDifficulty = "beginner" | "intermediate" | "advanced";
 
@@ -16,6 +17,7 @@ export interface TrainingModule {
   sections: ModuleSection[];
   prerequisiteIds: string[];
   alwaysAccessible?: boolean;
+  category?: ChannelCategory;
 }
 
 export const trainingModules: TrainingModule[] = [

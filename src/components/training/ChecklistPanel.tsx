@@ -30,7 +30,7 @@ function getChecklistForScenario(scenario: Scenario) {
     };
   }
   // Phone scenarios use the Module 1 beginner checklist (6 fundamentals)
-  if (scenario.category === "phone") {
+  if (scenario.category === "inbound-call") {
     return {
       checklist: phoneModule1Checklist,
       title: "Phone Call Basics",

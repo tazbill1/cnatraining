@@ -257,7 +257,7 @@ export default function Learn() {
                 <BookOpen className="w-5 h-5 text-primary" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                {activeCategoryInfo ? activeCategoryInfo.label : "Learn"}
+                {activeCategoryInfo ? activeCategoryInfo.name : "Learn"}
               </h1>
             </div>
             <p className="text-muted-foreground">

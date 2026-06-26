@@ -126,8 +126,14 @@ export default function Learn() {
     return mergeModules(trainingModules, dealershipModules, enabledIds);
   }, [settings, dealershipModules]);
 
+  // Modules scoped to the active category (default to all if "phone" is the only data we have, etc.)
+  const categoryModules = useMemo(() => {
+    if (!activeCategory) return enabledModules;
+    return enabledModules.filter((m) => (m.category || "phone") === activeCategory);
+  }, [enabledModules, activeCategory]);
+
   const filteredModules = useMemo(() => {
-    let modules = enabledModules.map((m, i) => ({ ...m, originalIndex: i }));
+    let modules = categoryModules.map((m, i) => ({ ...m, originalIndex: i }));
 
     // Search
     if (search) {
@@ -160,7 +166,20 @@ export default function Learn() {
     }
 
     return modules;
-  }, [search, difficultyFilter, completionFilter, sortOption, completedModules, enabledModules]);
+  }, [search, difficultyFilter, completionFilter, sortOption, completedModules, categoryModules]);
+
+  // Per-category counts for the gallery view
+  const categoryStats = useMemo(() => {
+    const stats: Record<string, { total: number; completed: number }> = {};
+    channelCategories.forEach((c) => (stats[c.id] = { total: 0, completed: 0 }));
+    enabledModules.forEach((m) => {
+      const cat = m.category || "phone";
+      if (!stats[cat]) stats[cat] = { total: 0, completed: 0 };
+      stats[cat].total += 1;
+      if (completedModules.includes(m.id)) stats[cat].completed += 1;
+    });
+    return stats;
+  }, [enabledModules, completedModules]);
 
   // Counts for filter badges
   const difficultyCounts = useMemo(() => {

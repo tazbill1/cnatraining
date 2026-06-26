@@ -342,6 +342,38 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Evaluation error:", error);
+    // Best-effort log of the server-side stack trace to bug_reports for stack-trace visibility.
+    try {
+      const err = error instanceof Error ? error : new Error(String(error));
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      let userId: string | null = null;
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const authed = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        const { data } = await authed.auth.getUser();
+        userId = data.user?.id ?? null;
+      }
+      if (userId) {
+        await serviceClient.from("bug_reports").insert({
+          user_id: userId,
+          source: "auto-edge",
+          error_type: err.name || "Error",
+          error_message: err.message,
+          error_stack: err.stack ?? null,
+          error_context: { function: "evaluate-session" },
+          url: req.url,
+        });
+      }
+    } catch (logErr) {
+      console.error("Failed to log error to bug_reports:", logErr);
+    }
     // Best-effort fallback — we don't know scenario category here, default to CNA.
     return new Response(JSON.stringify(buildCnaFallback()),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });

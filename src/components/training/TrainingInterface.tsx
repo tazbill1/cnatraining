@@ -554,7 +554,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
               onKeyDown={handleKeyDown}
               placeholder={!voiceEnabled ? "Type your response..." : isRecording ? "Listening..." : isMicUnavailable ? "Type your response..." : "Type or tap mic..."}
               disabled={isTyping || isRecording || voiceStatus === "sending"}
-              className="flex-1 min-w-0"
+              className="flex-1 min-w-0 min-h-[48px] text-base"
+
             />
             <Button
               onClick={handleSend}

@@ -81,6 +81,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Vehicle Presentation & Key Management" },
     ],
     prerequisiteIds: ["base-statement"],
+    category: "showroom",
   },
   {
     id: "trade-appraisal-process",

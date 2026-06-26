@@ -555,11 +555,13 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
             <Button
               onClick={handleSend}
               disabled={!inputValue.trim() || isTyping || voiceStatus === "sending"}
-              className="btn-gradient px-3 sm:px-6 shrink-0"
+              className="btn-gradient px-3 sm:px-6 shrink-0 min-h-[48px]"
+              aria-label="Send message"
             >
               <Send className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Send</span>
             </Button>
+
           </div>
         </div>
       </div>

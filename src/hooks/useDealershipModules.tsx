@@ -144,6 +144,7 @@ export function mergeModules(
       description: override.description || m.description,
       icon: iconMap[override.icon || ""] || m.icon,
       estimatedTime: override.estimated_time || m.estimatedTime,
+      category: override.category || m.category,
       _dealershipModuleId: override.id,
       _hasCustomContent: override.sections.length > 0,
     } as TrainingModule & { _dealershipModuleId?: string; _hasCustomContent?: boolean };

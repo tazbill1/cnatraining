@@ -512,18 +512,28 @@ export default function DealershipModuleContent() {
                     sections[current.index].video_url
                   ? `section-${current.index}`
                   : null;
-              const blocked = videoKey !== null && !watchedVideos.has(videoKey);
+              const videoBlocked = videoKey !== null && !watchedVideos.has(videoKey);
+              const isQuizStage = current.type === "quiz";
+              const quizBlocked =
+                isQuizStage &&
+                hasQuiz &&
+                (!quizSubmitted || calculateScore() < QUIZ_PASS_THRESHOLD);
+              const blocked = videoBlocked || quizBlocked;
+              const title = videoBlocked
+                ? "Finish watching the video first"
+                : quizBlocked
+                ? !quizSubmitted
+                  ? "Submit the quiz first"
+                  : `Score ${QUIZ_PASS_THRESHOLD}% or higher to complete`
+                : undefined;
               return (
-                <Button
-                  onClick={handleNext}
-                  disabled={blocked}
-                  title={blocked ? "Finish watching the video first" : undefined}
-                >
+                <Button onClick={handleNext} disabled={blocked} title={title}>
                   {currentStage === totalStages - 1 ? "Complete Module" : "Continue"}
                   {currentStage < totalStages - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               );
             })()}
+
           </div>
         </div>
       </AppLayout>

@@ -36,6 +36,7 @@ export default function VideoPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [hasCompleted, setHasCompleted] = useState(false);
+  const maxWatchedRef = useRef(0);
 
   const handleComplete = useCallback(() => {
     if (!hasCompleted && onComplete) {
@@ -44,14 +45,30 @@ export default function VideoPlayer({
     }
   }, [hasCompleted, onComplete]);
 
-  // Track 90% completion
+  // Track 90% completion + furthest watched point
   const handleTimeUpdate = useCallback(() => {
     const video = videoRef.current;
-    if (!video || hasCompleted) return;
+    if (!video) return;
+    if (video.currentTime > maxWatchedRef.current) {
+      maxWatchedRef.current = video.currentTime;
+    }
+    if (hasCompleted) return;
     if (video.duration > 0 && video.currentTime / video.duration >= 0.9) {
       handleComplete();
     }
   }, [hasCompleted, handleComplete]);
+
+  // Prevent seeking forward past the furthest watched point
+  const handleSeeking = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || hasCompleted) return;
+    // Allow a small buffer (1s) for natural playback
+    const allowedMax = maxWatchedRef.current + 1;
+    if (video.currentTime > allowedMax) {
+      video.currentTime = maxWatchedRef.current;
+    }
+  }, [hasCompleted]);
+
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -74,13 +91,7 @@ export default function VideoPlayer({
           e.preventDefault();
           video.currentTime = Math.max(0, video.currentTime - 5);
           break;
-        case "ArrowRight":
-          e.preventDefault();
-          video.currentTime = Math.min(
-            video.duration,
-            video.currentTime + 5
-          );
-          break;
+        // ArrowRight skip disabled to prevent fast-forwarding
         case "m":
         case "M":
           e.preventDefault();
@@ -88,6 +99,8 @@ export default function VideoPlayer({
           setIsMuted(video.muted);
           break;
       }
+
+
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -173,6 +186,8 @@ export default function VideoPlayer({
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onTimeUpdate={handleTimeUpdate}
+            onSeeking={handleSeeking}
+
           />
         </AspectRatio>
 

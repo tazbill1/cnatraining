@@ -847,6 +847,19 @@ function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectU
                   ? formatDistanceToNow(new Date(user.last_session_date), { addSuffix: true })
                   : "Never"}
               </TableCell>
+              <TableCell className="text-right">
+                {onRemoveUser && user.user_id !== currentUserId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); onRemoveUser(user.email, user.full_name); }}
+                    title="Remove user"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </TableCell>
             </TableRow>
           );
         })}

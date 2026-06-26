@@ -8,6 +8,7 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Link,
   Preview,
@@ -27,24 +28,32 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>Your {siteName} training account is ready to set up</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Heading style={h1}>Welcome to {siteName}</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          Hi there,
+        </Text>
+        <Text style={text}>
+          Your manager has set up a {siteName} account for you so you can start
+          your phone-skills and sales training. To get started, please confirm
+          your email and choose a password using the link below.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Accept Invitation
+          Set up my account
         </Button>
+        <Text style={text}>
+          Or copy and paste this link into your browser:
+          <br />
+          <Link href={confirmationUrl} style={link}>{confirmationUrl}</Link>
+        </Text>
+        <Hr style={hr} />
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          You're receiving this because your manager invited you to{' '}
+          <Link href={siteUrl} style={link}>{siteName}</Link>. If this wasn't
+          expected, you can safely ignore this email and no account will be
+          created.
         </Text>
       </Container>
     </Body>
@@ -54,7 +63,7 @@ export const InviteEmail = ({
 export default InviteEmail
 
 const main = { backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const container = { padding: '20px 25px', maxWidth: '560px' }
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
@@ -62,18 +71,22 @@ const h1 = {
   margin: '0 0 20px',
 }
 const text = {
-  fontSize: '14px',
-  color: 'hsl(215, 16%, 47%)',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: 'hsl(215, 16%, 30%)',
+  lineHeight: '1.6',
+  margin: '0 0 18px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: 'hsl(217, 91%, 45%)', textDecoration: 'underline', wordBreak: 'break-all' as const }
 const button = {
   backgroundColor: 'hsl(217, 91%, 60%)',
   color: '#ffffff',
-  fontSize: '14px',
+  fontSize: '15px',
+  fontWeight: 'bold' as const,
   borderRadius: '12px',
-  padding: '12px 20px',
+  padding: '14px 24px',
   textDecoration: 'none',
+  display: 'inline-block',
+  margin: '8px 0 20px',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const hr = { borderColor: '#eaeaea', margin: '28px 0 16px' }
+const footer = { fontSize: '12px', color: '#777777', lineHeight: '1.5', margin: 0 }

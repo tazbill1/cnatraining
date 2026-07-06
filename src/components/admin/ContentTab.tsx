@@ -176,10 +176,21 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     };
 
     let error;
+    let newModuleId: string | null = null;
+    let newModuleTitle: string = payload.title;
     if (editingModule) {
       ({ error } = await supabase.from("dealership_modules").update(payload).eq("id", editingModule.id));
     } else {
-      ({ error } = await supabase.from("dealership_modules").insert(payload));
+      const insertRes = await supabase
+        .from("dealership_modules")
+        .insert(payload)
+        .select("id, title")
+        .single();
+      error = insertRes.error;
+      if (insertRes.data) {
+        newModuleId = insertRes.data.id;
+        newModuleTitle = insertRes.data.title;
+      }
     }
     setSaving(false);
     if (error) {
@@ -188,6 +199,32 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       toast.success(editingModule ? "Module updated" : "Module created");
       setModuleDialogOpen(false);
       fetchModules();
+      if (!editingModule && newModuleId && formIsActive) {
+        setNotifyPrompt({ id: newModuleId, title: newModuleTitle });
+      }
+    }
+  };
+
+  const handleNotifyUsers = async () => {
+    if (!notifyPrompt) return;
+    setNotifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-new-module", {
+        body: { moduleId: notifyPrompt.id, siteUrl: window.location.origin },
+      });
+      if (error) throw error;
+      const sent = (data as any)?.sent ?? 0;
+      const failed = (data as any)?.failed ?? 0;
+      toast.success(
+        failed > 0
+          ? `Sent to ${sent} user(s), ${failed} failed`
+          : `Notification sent to ${sent} user(s)`,
+      );
+    } catch (err: any) {
+      toast.error(`Failed to send notifications: ${err?.message || "unknown error"}`);
+    } finally {
+      setNotifying(false);
+      setNotifyPrompt(null);
     }
   };
 

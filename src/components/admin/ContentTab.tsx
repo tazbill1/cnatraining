@@ -74,6 +74,8 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
   const [sections, setSections] = useState<Record<string, ModuleSection[]>>({});
   const [quizzes, setQuizzes] = useState<Record<string, QuizQuestion[]>>({});
   const [saving, setSaving] = useState(false);
+  const [notifyPrompt, setNotifyPrompt] = useState<{ id: string; title: string } | null>(null);
+  const [notifying, setNotifying] = useState(false);
 
   // Module form state
   const [formTitle, setFormTitle] = useState("");
@@ -174,10 +176,21 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     };
 
     let error;
+    let newModuleId: string | null = null;
+    let newModuleTitle: string = payload.title;
     if (editingModule) {
       ({ error } = await supabase.from("dealership_modules").update(payload).eq("id", editingModule.id));
     } else {
-      ({ error } = await supabase.from("dealership_modules").insert(payload));
+      const insertRes = await supabase
+        .from("dealership_modules")
+        .insert(payload)
+        .select("id, title")
+        .single();
+      error = insertRes.error;
+      if (insertRes.data) {
+        newModuleId = insertRes.data.id;
+        newModuleTitle = insertRes.data.title;
+      }
     }
     setSaving(false);
     if (error) {
@@ -186,6 +199,32 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       toast.success(editingModule ? "Module updated" : "Module created");
       setModuleDialogOpen(false);
       fetchModules();
+      if (!editingModule && newModuleId && formIsActive) {
+        setNotifyPrompt({ id: newModuleId, title: newModuleTitle });
+      }
+    }
+  };
+
+  const handleNotifyUsers = async () => {
+    if (!notifyPrompt) return;
+    setNotifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-new-module", {
+        body: { moduleId: notifyPrompt.id, siteUrl: window.location.origin },
+      });
+      if (error) throw error;
+      const sent = (data as any)?.sent ?? 0;
+      const failed = (data as any)?.failed ?? 0;
+      toast.success(
+        failed > 0
+          ? `Sent to ${sent} user(s), ${failed} failed`
+          : `Notification sent to ${sent} user(s)`,
+      );
+    } catch (err: any) {
+      toast.error(`Failed to send notifications: ${err?.message || "unknown error"}`);
+    } finally {
+      setNotifying(false);
+      setNotifyPrompt(null);
     }
   };
 
@@ -676,6 +715,31 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
             <Button onClick={handleSaveQuiz} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
               {editingQuiz ? "Save" : "Add Question"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notify users about the newly created module */}
+      <Dialog open={!!notifyPrompt} onOpenChange={(open) => !open && !notifying && setNotifyPrompt(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Notify users about this new module?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-sm text-muted-foreground">
+              Send an email to everyone at this dealership letting them know{" "}
+              <span className="font-medium text-foreground">{notifyPrompt?.title}</span>{" "}
+              is now available in their training.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" disabled={notifying} onClick={() => setNotifyPrompt(null)}>
+              Not now
+            </Button>
+            <Button onClick={handleNotifyUsers} disabled={notifying}>
+              {notifying && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+              Send notification
             </Button>
           </DialogFooter>
         </DialogContent>

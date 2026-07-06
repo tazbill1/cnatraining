@@ -1,0 +1,1 @@
+UPDATE public.profiles SET dealership_name = 'My Auto Group' WHERE dealership_name ILIKE '%subaru of ann arbor%';

@@ -719,6 +719,31 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Notify users about the newly created module */}
+      <Dialog open={!!notifyPrompt} onOpenChange={(open) => !open && !notifying && setNotifyPrompt(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Notify users about this new module?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-sm text-muted-foreground">
+              Send an email to everyone at this dealership letting them know{" "}
+              <span className="font-medium text-foreground">{notifyPrompt?.title}</span>{" "}
+              is now available in their training.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" disabled={notifying} onClick={() => setNotifyPrompt(null)}>
+              Not now
+            </Button>
+            <Button onClick={handleNotifyUsers} disabled={notifying}>
+              {notifying && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+              Send notification
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

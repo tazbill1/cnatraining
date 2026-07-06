@@ -74,6 +74,8 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
   const [sections, setSections] = useState<Record<string, ModuleSection[]>>({});
   const [quizzes, setQuizzes] = useState<Record<string, QuizQuestion[]>>({});
   const [saving, setSaving] = useState(false);
+  const [notifyPrompt, setNotifyPrompt] = useState<{ id: string; title: string } | null>(null);
+  const [notifying, setNotifying] = useState(false);
 
   // Module form state
   const [formTitle, setFormTitle] = useState("");

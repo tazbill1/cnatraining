@@ -137,8 +137,8 @@ Deno.serve(async (req) => {
               recipientEmail: email,
               idempotencyKey: `new-module-${moduleRow.id}-${email}`,
               templateData: {
-                siteName: 'Sales Training',
-                siteUrl: siteUrl || 'https://cnatraining.lovable.app',
+                siteName: 'Automotive Sales Pro',
+                siteUrl: siteUrl || 'https://automotivesalespro.com',
                 moduleTitle: moduleRow.title,
                 moduleDescription: moduleRow.description || '',
                 moduleUrl,

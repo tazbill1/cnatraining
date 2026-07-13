@@ -19,12 +19,12 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
       `New training available: ${data?.moduleTitle || 'A new module'}`,
     displayName: 'New Module Notification',
     previewData: {
-      siteName: 'cnatraining',
-      siteUrl: 'https://cnatraining.lovable.app',
+      siteName: 'Automotive Sales Pro',
+      siteUrl: 'https://automotivesalespro.com',
       moduleTitle: 'Video Walkarounds That Win',
       moduleDescription:
         'Learn how to record video walkarounds that build trust and close more deals.',
-      moduleUrl: 'https://cnatraining.lovable.app/learn',
+      moduleUrl: 'https://automotivesalespro.com/learn',
       dealershipName: 'My Auto Group',
     },
   },

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -180,6 +180,15 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /presentation|demonstration/i,
     },
+    {
+      id: "either-or-close",
+      title: "Either/Or Close Match",
+      description: "Pick the strongest either/or close for each moment.",
+      href: "/drills/either-or-close",
+      icon: Handshake,
+      channel: "showroom",
+      matchModule: /closing/i,
+    },
   ];
 
   const renderFeaturedDrills = () => (
@@ -328,6 +337,27 @@ export default function Scenarios() {
                         </div>
                       </div>
                       <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/spaced-match"); }}>
+                        Start Drill
+                      </Button>
+                    </div>
+                  )}
+                  {/closing/i.test(mod.title) && (
+                    <div
+                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
+                      onClick={() => navigate("/drills/either-or-close")}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                        <Handshake className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground text-sm sm:text-base">
+                          Either/Or Close Match
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Pick the strongest either/or close for each moment.
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/either-or-close"); }}>
                         Start Drill
                       </Button>
                     </div>

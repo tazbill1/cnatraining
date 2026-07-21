@@ -36,6 +36,7 @@ const BypassDrill = lazy(() => import("./pages/BypassDrill"));
 const PhoneOpenerDrill = lazy(() => import("./pages/PhoneOpenerDrill"));
 const SpotTheMistakeDrill = lazy(() => import("./pages/SpotTheMistakeDrill"));
 const SpacedMatchDrill = lazy(() => import("./pages/SpacedMatchDrill"));
+const EitherOrCloseDrill = lazy(() => import("./pages/EitherOrCloseDrill"));
 const Training = lazy(() => import("./pages/Training"));
 const VoiceTraining = lazy(() => import("./pages/VoiceTraining"));
 const Results = lazy(() => import("./pages/Results"));

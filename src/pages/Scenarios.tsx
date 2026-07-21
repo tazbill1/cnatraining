@@ -36,8 +36,8 @@ const categoryOrder: ChannelCategory[] = ["phone", "internet", "showroom", "foll
 export default function Scenarios() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { previewDealershipId, selectedDealershipId } = useDealershipContext();
-  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id;
+  const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
+  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id || (dealerships.length === 1 ? dealerships[0].id : null);
 
   const [scenarios, setScenarios] = useState<ScenarioWithModule[]>([]);
   const [modules, setModules] = useState<ModuleRow[]>([]);
@@ -136,6 +136,30 @@ export default function Scenarios() {
   const handleSelectScenario = (scenarioId: string) => {
     navigate(`/training/${scenarioId}`);
   };
+
+  const renderFeaturedDrill = () => (
+    <button
+      type="button"
+      onClick={() => navigate("/drills/bypass")}
+      className="w-full mb-6 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 text-left hover:bg-primary/10 transition-colors"
+    >
+      <div className="w-11 h-11 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+        <Flame className="w-5 h-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <span className="font-semibold text-foreground text-sm sm:text-base">Bypass Streak Drill</span>
+          <Badge variant="outline" className="text-xs">Game</Badge>
+        </div>
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Practice the Bypassing module with 10 quick objections and instant feedback.
+        </p>
+      </div>
+      <Button size="sm" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate("/drills/bypass"); }}>
+        Start Drill
+      </Button>
+    </button>
+  );
 
   const renderChannel = (channel: ChannelCategory) => {
     const items = scenariosByChannel.map.get(channel) || [];
@@ -315,6 +339,7 @@ export default function Scenarios() {
             </div>
           ) : (
             <>
+              {renderFeaturedDrill()}
               {availableChannels.length > 0 && (
                 <Tabs
                   value={effectiveChannel ?? undefined}

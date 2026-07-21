@@ -38,6 +38,8 @@ const SpotTheMistakeDrill = lazy(() => import("./pages/SpotTheMistakeDrill"));
 const SpacedMatchDrill = lazy(() => import("./pages/SpacedMatchDrill"));
 const EitherOrCloseDrill = lazy(() => import("./pages/EitherOrCloseDrill"));
 const CricMatchDrill = lazy(() => import("./pages/CricMatchDrill"));
+const HotButtonDrill = lazy(() => import("./pages/HotButtonDrill"));
+const DrillLeaderboard = lazy(() => import("./pages/DrillLeaderboard"));
 const Training = lazy(() => import("./pages/Training"));
 const VoiceTraining = lazy(() => import("./pages/VoiceTraining"));
 const Results = lazy(() => import("./pages/Results"));
@@ -99,6 +101,8 @@ const App = () => (
                   <Route path="/drills/spaced-match" element={<SpacedMatchDrill />} />
                   <Route path="/drills/either-or-close" element={<EitherOrCloseDrill />} />
                   <Route path="/drills/cric-match" element={<CricMatchDrill />} />
+                  <Route path="/drills/hot-button" element={<HotButtonDrill />} />
+                  <Route path="/drills/leaderboard" element={<DrillLeaderboard />} />
                   <Route path="/training/:scenarioId" element={<Training />} />
                   <Route path="/voice-training" element={<VoiceTraining />} />
                   <Route path="/results" element={<Results />} />

@@ -105,6 +105,7 @@ export function StreakDrill({
   const handleNext = () => {
     if (index + 1 >= total) {
       setFinished(true);
+      saveDrillScore(bestStreakKey, streak);
     } else {
       setIndex(index + 1);
       setSelected(null);

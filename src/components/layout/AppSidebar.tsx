@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, History, Shield, Award } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, History, Shield, Award, Bug } from "lucide-react";
+import { openBugReport } from "@/components/BugReportButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { useDealershipContext } from "@/hooks/useDealershipContext";

@@ -307,10 +307,14 @@ export default function Scenarios() {
           className="space-y-3"
         >
           {orderedModules.map((mod) => {
-            const modScenarios = (byModule.get(mod.id) || []).sort(
-              (a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
-            );
+            const modScenarios = (byModule.get(mod.id) || [])
+              .filter((s) => difficultyFilter === "all" || s.difficulty === difficultyFilter)
+              .sort(
+                (a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
+              );
+            if (modScenarios.length === 0) return null;
             return (
+
               <AccordionItem
                 key={mod.id}
                 value={mod.id}

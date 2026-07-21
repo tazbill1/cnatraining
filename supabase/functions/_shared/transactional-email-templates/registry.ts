@@ -17,17 +17,34 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-module-notification': {
     component: NewModuleNotificationEmail,
-    subject: (data) =>
-      `New training available: ${data?.moduleTitle || 'A new module'}`,
+    subject: (data) => {
+      const count = Array.isArray(data?.modules) ? data.modules.length : 0
+      if (count > 1) return `${count} new training modules available`
+      const title =
+        (Array.isArray(data?.modules) && data.modules[0]?.title) ||
+        data?.moduleTitle ||
+        'A new module'
+      return `New training available: ${title}`
+    },
     displayName: 'New Module Notification',
     previewData: {
       siteName: 'Automotive Sales Pro',
       siteUrl: 'https://automotivesalespro.com',
-      moduleTitle: 'Video Walkarounds That Win',
-      moduleDescription:
-        'Learn how to record video walkarounds that build trust and close more deals.',
-      moduleUrl: 'https://automotivesalespro.com/learn',
       dealershipName: 'My Auto Group',
+      learnUrl: 'https://automotivesalespro.com/learn',
+      modules: [
+        {
+          title: 'Video Walkarounds That Win',
+          description:
+            'Learn how to record video walkarounds that build trust and close more deals.',
+          url: 'https://automotivesalespro.com/learn',
+        },
+        {
+          title: 'Showroom: Meet and Greet',
+          description: 'Master the first 10 seconds with L.A.S.T.',
+          url: 'https://automotivesalespro.com/learn',
+        },
+      ],
     },
   },
   'manager-weekly-digest': {

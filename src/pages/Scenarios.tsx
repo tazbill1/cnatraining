@@ -205,6 +205,27 @@ export default function Scenarios() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
+                  {/bypass/i.test(mod.title) && (
+                    <div
+                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
+                      onClick={() => navigate("/drills/bypass")}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                        <Flame className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground text-sm sm:text-base">
+                          Bypass Streak Drill
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          10 quick objections. Build your streak.
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/bypass"); }}>
+                        Start Drill
+                      </Button>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
                     {modScenarios.map((scenario) => (
                       <ScenarioCard

@@ -176,6 +176,13 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             </div>
           </div>
           <button
+            onClick={() => { onOpenChange(false); openBugReport(); }}
+            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg transition-colors mb-1"
+          >
+            <Bug className="w-4 h-4" />
+            Report a bug
+          </button>
+          <button
             onClick={handleSignOut}
             className="flex items-center gap-2 w-full px-4 py-2 text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg transition-colors"
           >

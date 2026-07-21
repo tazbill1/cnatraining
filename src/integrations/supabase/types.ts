@@ -209,6 +209,7 @@ export type Database = {
       }
       dealership_modules: {
         Row: {
+          announced_at: string | null
           base_module_id: string | null
           category: string
           created_at: string
@@ -225,6 +226,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          announced_at?: string | null
           base_module_id?: string | null
           category?: string
           created_at?: string
@@ -241,6 +243,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          announced_at?: string | null
           base_module_id?: string | null
           category?: string
           created_at?: string

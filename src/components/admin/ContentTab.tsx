@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Loader2, Pencil, Trash2, GripVertical, Upload, BookOpen, Video, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Pencil, Trash2, GripVertical, Upload, BookOpen, Video, FileText, ChevronDown, ChevronRight, Mail } from "lucide-react";
 import { PracticeScenarioManager } from "./PracticeScenarioManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ interface DealershipModule {
   estimated_time: string | null;
   video_url: string | null;
   video_title: string | null;
+  announced_at: string | null;
 }
 
 interface ModuleSection {
@@ -74,7 +75,6 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
   const [sections, setSections] = useState<Record<string, ModuleSection[]>>({});
   const [quizzes, setQuizzes] = useState<Record<string, QuizQuestion[]>>({});
   const [saving, setSaving] = useState(false);
-  const [notifyPrompt, setNotifyPrompt] = useState<{ id: string; title: string } | null>(null);
   const [notifying, setNotifying] = useState(false);
 
   // Module form state
@@ -176,21 +176,11 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     };
 
     let error;
-    let newModuleId: string | null = null;
-    let newModuleTitle: string = payload.title;
     if (editingModule) {
       ({ error } = await supabase.from("dealership_modules").update(payload).eq("id", editingModule.id));
     } else {
-      const insertRes = await supabase
-        .from("dealership_modules")
-        .insert(payload)
-        .select("id, title")
-        .single();
+      const insertRes = await supabase.from("dealership_modules").insert(payload);
       error = insertRes.error;
-      if (insertRes.data) {
-        newModuleId = insertRes.data.id;
-        newModuleTitle = insertRes.data.title;
-      }
     }
     setSaving(false);
     if (error) {
@@ -199,32 +189,36 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       toast.success(editingModule ? "Module updated" : "Module created");
       setModuleDialogOpen(false);
       fetchModules();
-      if (!editingModule && newModuleId && formIsActive) {
-        setNotifyPrompt({ id: newModuleId, title: newModuleTitle });
-      }
     }
   };
 
+  const pendingModules = modules.filter((m) => m.is_active && !m.announced_at);
+
   const handleNotifyUsers = async () => {
-    if (!notifyPrompt) return;
+    if (pendingModules.length === 0) return;
     setNotifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("notify-new-module", {
-        body: { moduleId: notifyPrompt.id, siteUrl: window.location.origin },
+        body: {
+          dealershipId,
+          moduleIds: pendingModules.map((m) => m.id),
+          siteUrl: window.location.origin,
+        },
       });
       if (error) throw error;
       const sent = (data as any)?.sent ?? 0;
       const failed = (data as any)?.failed ?? 0;
+      const count = (data as any)?.modules ?? pendingModules.length;
       toast.success(
         failed > 0
-          ? `Sent to ${sent} user(s), ${failed} failed`
-          : `Notification sent to ${sent} user(s)`,
+          ? `Sent ${count} module(s) to ${sent} user(s), ${failed} failed`
+          : `Notified ${sent} user(s) about ${count} new module(s)`,
       );
+      fetchModules();
     } catch (err: any) {
       toast.error(`Failed to send notifications: ${err?.message || "unknown error"}`);
     } finally {
       setNotifying(false);
-      setNotifyPrompt(null);
     }
   };
 
@@ -417,6 +411,29 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
           <Plus className="w-4 h-4 mr-1" /> Add Module
         </Button>
       </div>
+
+      {pendingModules.length > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <Mail className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="font-medium text-sm">
+                  {pendingModules.length} new module{pendingModules.length === 1 ? "" : "s"} not yet announced
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {pendingModules.map((m) => m.title).join(" • ")}
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleNotifyUsers} disabled={notifying} size="sm">
+              {notifying ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
+              Notify users in one email
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       {modules.length === 0 ? (
         <Card>
@@ -720,30 +737,6 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Notify users about the newly created module */}
-      <Dialog open={!!notifyPrompt} onOpenChange={(open) => !open && !notifying && setNotifyPrompt(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Notify users about this new module?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <p className="text-sm text-muted-foreground">
-              Send an email to everyone at this dealership letting them know{" "}
-              <span className="font-medium text-foreground">{notifyPrompt?.title}</span>{" "}
-              is now available in their training.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" disabled={notifying} onClick={() => setNotifyPrompt(null)}>
-              Not now
-            </Button>
-            <Button onClick={handleNotifyUsers} disabled={notifying}>
-              {notifying && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              Send notification
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

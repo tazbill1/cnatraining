@@ -1,0 +1,1 @@
+ALTER TABLE public.dealership_modules ADD COLUMN IF NOT EXISTS announced_at timestamptz;

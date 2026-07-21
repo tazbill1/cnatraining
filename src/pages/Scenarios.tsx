@@ -386,7 +386,7 @@ export default function Scenarios() {
             </div>
           ) : (
             <>
-              {renderFeaturedDrill()}
+              {renderFeaturedDrills()}
               {availableChannels.length > 0 && (
                 <Tabs
                   value={effectiveChannel ?? undefined}

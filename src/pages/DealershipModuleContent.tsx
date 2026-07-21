@@ -58,6 +58,7 @@ export default function DealershipModuleContent() {
   const [module, setModule] = useState<ModuleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentStage, setCurrentStage] = useState(0); // 0 = intro/video, 1..n = sections, last = quiz
+  const [resumeApplied, setResumeApplied] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const watchedStorageKey = `module-watched-videos:${moduleId || ""}`;

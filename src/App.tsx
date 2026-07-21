@@ -37,6 +37,7 @@ const PhoneOpenerDrill = lazy(() => import("./pages/PhoneOpenerDrill"));
 const SpotTheMistakeDrill = lazy(() => import("./pages/SpotTheMistakeDrill"));
 const SpacedMatchDrill = lazy(() => import("./pages/SpacedMatchDrill"));
 const EitherOrCloseDrill = lazy(() => import("./pages/EitherOrCloseDrill"));
+const CricMatchDrill = lazy(() => import("./pages/CricMatchDrill"));
 const Training = lazy(() => import("./pages/Training"));
 const VoiceTraining = lazy(() => import("./pages/VoiceTraining"));
 const Results = lazy(() => import("./pages/Results"));
@@ -97,6 +98,7 @@ const App = () => (
                   <Route path="/drills/spot-the-mistake" element={<SpotTheMistakeDrill />} />
                   <Route path="/drills/spaced-match" element={<SpacedMatchDrill />} />
                   <Route path="/drills/either-or-close" element={<EitherOrCloseDrill />} />
+                  <Route path="/drills/cric-match" element={<CricMatchDrill />} />
                   <Route path="/training/:scenarioId" element={<Training />} />
                   <Route path="/voice-training" element={<VoiceTraining />} />
                   <Route path="/results" element={<Results />} />

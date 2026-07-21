@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -189,6 +189,15 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /closing/i,
     },
+    {
+      id: "cric-match",
+      title: "C.R.I.C. Category Match",
+      description: "Budget, Decision, or Deal? Categorize the objection fast.",
+      href: "/drills/cric-match",
+      icon: MessageCircleQuestion,
+      channel: "showroom",
+      matchModule: /objection/i,
+    },
   ];
 
   const renderFeaturedDrills = () => (
@@ -358,6 +367,27 @@ export default function Scenarios() {
                         </div>
                       </div>
                       <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/either-or-close"); }}>
+                        Start Drill
+                      </Button>
+                    </div>
+                  )}
+                  {/objection/i.test(mod.title) && (
+                    <div
+                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
+                      onClick={() => navigate("/drills/cric-match")}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                        <MessageCircleQuestion className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-foreground text-sm sm:text-base">
+                          C.R.I.C. Category Match
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Budget, Decision, or Deal? Categorize the objection fast.
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/cric-match"); }}>
                         Start Drill
                       </Button>
                     </div>

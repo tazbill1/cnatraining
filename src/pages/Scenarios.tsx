@@ -171,6 +171,15 @@ export default function Scenarios() {
       icon: Search,
       channel: "showroom",
     },
+    {
+      id: "spaced-match",
+      title: "S.P.A.C.E.D. Match",
+      description: "Match F.A.B. statements to the right customer need.",
+      href: "/drills/spaced-match",
+      icon: Target,
+      channel: "showroom",
+      matchModule: /presentation|demonstration/i,
+    },
   ];
 
   const renderFeaturedDrills = () => (

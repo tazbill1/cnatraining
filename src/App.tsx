@@ -32,6 +32,7 @@ const CNAForm = lazy(() => import("./pages/CNAForm"));
 const PhoneScripts = lazy(() => import("./pages/PhoneScripts"));
 const ConsultativeCallGuide = lazy(() => import("./pages/ConsultativeCallGuide"));
 const Scenarios = lazy(() => import("./pages/Scenarios"));
+const BypassDrill = lazy(() => import("./pages/BypassDrill"));
 const Training = lazy(() => import("./pages/Training"));
 const VoiceTraining = lazy(() => import("./pages/VoiceTraining"));
 const Results = lazy(() => import("./pages/Results"));
@@ -87,6 +88,7 @@ const App = () => (
                   <Route path="/toolbox/consultative-call-guide" element={<ConsultativeCallGuide />} />
                   <Route path="/cna-form" element={<Navigate to="/toolbox/cna-form" replace />} />
                   <Route path="/scenarios" element={<Scenarios />} />
+                  <Route path="/drills/bypass" element={<BypassDrill />} />
                   <Route path="/training/:scenarioId" element={<Training />} />
                   <Route path="/voice-training" element={<VoiceTraining />} />
                   <Route path="/results" element={<Results />} />

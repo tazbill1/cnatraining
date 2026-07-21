@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bug, Loader2, Camera, X } from "lucide-react";
+
+export const BUG_REPORT_EVENT = "open-bug-report";
+export const openBugReport = () => window.dispatchEvent(new Event(BUG_REPORT_EVENT));
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import {

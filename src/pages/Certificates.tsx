@@ -48,9 +48,10 @@ export default function Certificates() {
   );
 
   const earned = completions.filter((c) => {
-    const mod = certifiableModules.find((m) => m.id === c.module_id || `dealership-${m._dealershipModuleId}` === `dealership-${c.module_id}`);
+    const mod = certifiableModules.find((m) => m.id === c.module_id);
     return mod && (c.quiz_score === null || c.quiz_score >= 80);
   });
+
 
   // Category-level rollups: category is "mastered" when every module in it is complete
   const categoryRollups = useMemo(() => {

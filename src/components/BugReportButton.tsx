@@ -54,8 +54,7 @@ export function BugReportButton() {
     setDescription("");
     setIncludeScreenshot(true);
   };
-    setIncludeScreenshot(true);
-  };
+
 
   const handleSubmit = async () => {
     if (!user) {

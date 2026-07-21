@@ -176,21 +176,11 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     };
 
     let error;
-    let newModuleId: string | null = null;
-    let newModuleTitle: string = payload.title;
     if (editingModule) {
       ({ error } = await supabase.from("dealership_modules").update(payload).eq("id", editingModule.id));
     } else {
-      const insertRes = await supabase
-        .from("dealership_modules")
-        .insert(payload)
-        .select("id, title")
-        .single();
+      const insertRes = await supabase.from("dealership_modules").insert(payload);
       error = insertRes.error;
-      if (insertRes.data) {
-        newModuleId = insertRes.data.id;
-        newModuleTitle = insertRes.data.title;
-      }
     }
     setSaving(false);
     if (error) {

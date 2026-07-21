@@ -44,8 +44,16 @@ export function BugReportButton() {
   const [submitting, setSubmitting] = useState(false);
   const [capturing, setCapturing] = useState(false);
 
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener(BUG_REPORT_EVENT, handler);
+    return () => window.removeEventListener(BUG_REPORT_EVENT, handler);
+  }, []);
+
   const reset = () => {
     setDescription("");
+    setIncludeScreenshot(true);
+  };
     setIncludeScreenshot(true);
   };
 

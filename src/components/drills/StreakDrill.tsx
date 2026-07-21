@@ -194,8 +194,8 @@ export function StreakDrill({
                         onClick={() => handleSelect(i)}
                         disabled={showResult}
                         className={cn(
-                          "w-full text-left p-4 rounded-xl border-2 transition-all",
-                          "min-h-[56px] flex items-start gap-3",
+                          "w-full text-left p-4 sm:p-4 rounded-xl border-2 transition-all",
+                          "min-h-[64px] flex items-start gap-3 active:scale-[0.99]",
                           !showResult && "border-border hover:border-primary/50 hover:bg-muted/40",
                           showResult && isCorrect && "border-success bg-success/10",
                           showResult && isSelected && !isCorrect && "border-destructive bg-destructive/10",
@@ -208,7 +208,7 @@ export function StreakDrill({
                         {showResult && isSelected && !isCorrect && (
                           <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
                         )}
-                        <span className="text-sm sm:text-base text-foreground">{choice.text}</span>
+                        <span className="text-base sm:text-base text-foreground leading-snug">{choice.text}</span>
                       </button>
                     );
                   })}
@@ -234,12 +234,15 @@ export function StreakDrill({
               </Card>
 
               {selected !== null && (
-                <Button onClick={handleNext} size="lg" className="w-full sm:w-auto">
-                  {index + 1 >= total ? "See Results" : "Next Question"}
-                </Button>
+                <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-gradient-to-t from-background via-background to-transparent sm:bg-none">
+                  <Button onClick={handleNext} size="lg" className="w-full sm:w-auto min-h-[52px] text-base">
+                    {index + 1 >= total ? "See Results" : "Next Question"}
+                  </Button>
+                </div>
               )}
             </>
           )}
+
 
           {finished && (
             <Card className="p-6 sm:p-8 text-center">

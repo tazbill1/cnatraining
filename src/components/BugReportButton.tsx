@@ -129,17 +129,7 @@ export function BugReportButton() {
 
   return (
     <>
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-40 shadow-lg gap-2 rounded-full h-11 px-4"
-        aria-label="Report a bug"
-      >
-        <Bug className="h-4 w-4" />
-        <span className="hidden sm:inline">Report bug</span>
-      </Button>
+
 
       <Dialog open={open} onOpenChange={(v) => !submitting && setOpen(v)}>
         <DialogContent className="sm:max-w-lg">

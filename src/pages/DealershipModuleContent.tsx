@@ -58,6 +58,7 @@ export default function DealershipModuleContent() {
   const [module, setModule] = useState<ModuleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentStage, setCurrentStage] = useState(0); // 0 = intro/video, 1..n = sections, last = quiz
+  const [resumeApplied, setResumeApplied] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const watchedStorageKey = `module-watched-videos:${moduleId || ""}`;
@@ -212,6 +213,26 @@ export default function DealershipModuleContent() {
   if (hasQuiz) stages.push({ type: "quiz", title: "Knowledge Check" });
 
   const totalStages = stages.length;
+
+  // Auto-resume to the first unwatched stage (once per load)
+  if (!resumeApplied && !loading && totalStages > 0) {
+    let resumeIndex = 0;
+    for (let i = 0; i < stages.length; i++) {
+      const st = stages[i];
+      const key = st.type === "intro" ? "intro" : st.type === "section" ? `section-${st.index}` : null;
+      if (key === null) break; // practice/quiz — stop here
+      if (!watchedVideos.has(key)) {
+        resumeIndex = i;
+        break;
+      }
+      resumeIndex = Math.min(i + 1, stages.length - 1);
+    }
+    setResumeApplied(true);
+    if (resumeIndex !== currentStage) {
+      setCurrentStage(resumeIndex);
+    }
+  }
+
   const current = stages[currentStage] || stages[0];
 
   const handleComplete = async () => {

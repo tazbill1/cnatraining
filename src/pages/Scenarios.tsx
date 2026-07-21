@@ -75,7 +75,9 @@ export default function Scenarios() {
       const rows = scenariosRes.data || [];
       setScenarios(
         rows.flatMap((row: any) => {
-          const category = normalizeScenarioCategory(row.category);
+          // Fall back to the raw DB category (e.g. "showroom", "internet") so scenarios
+          // aren't silently dropped when their category isn't in scenarioCategories.
+          const category = (normalizeScenarioCategory(row.category) || row.category) as ScenarioWithModule["category"];
           if (!category) return [];
           return [{
             id: `custom-${row.id}`,

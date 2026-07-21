@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -198,13 +198,33 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /objection/i,
     },
+    {
+      id: "hot-button",
+      title: "Hot Button Detector",
+      description: "Listen to the customer. Tag the S.P.A.C.E.D. hot button.",
+      href: "/drills/hot-button",
+      icon: Ear,
+      channel: "showroom",
+      matchModule: /presentation|demonstration|rapport|investigate/i,
+    },
   ];
 
   const renderFeaturedDrills = () => (
     <div className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick Games</h2>
-        <Badge variant="outline" className="text-xs">New</Badge>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick Games</h2>
+          <Badge variant="outline" className="text-xs">New</Badge>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/drills/leaderboard")}
+          className="text-primary"
+        >
+          <Trophy className="w-4 h-4 mr-1.5" />
+          Leaderboard
+        </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {drills.map((d) => {

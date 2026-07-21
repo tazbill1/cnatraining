@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { saveDrillScore } from "@/lib/drillScores";
 
 export interface DrillChoice {
   text: string;
@@ -104,6 +105,7 @@ export function StreakDrill({
   const handleNext = () => {
     if (index + 1 >= total) {
       setFinished(true);
+      saveDrillScore(bestStreakKey, streak);
     } else {
       setIndex(index + 1);
       setSelected(null);

@@ -452,6 +452,50 @@ export type Database = {
         }
         Relationships: []
       }
+      drill_scores: {
+        Row: {
+          best_streak: number
+          created_at: string
+          dealership_id: string | null
+          drill_key: string
+          id: string
+          last_streak: number
+          plays: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number
+          created_at?: string
+          dealership_id?: string | null
+          drill_key: string
+          id?: string
+          last_streak?: number
+          plays?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_streak?: number
+          created_at?: string
+          dealership_id?: string | null
+          drill_key?: string
+          id?: string
+          last_streak?: number
+          plays?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_scores_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string

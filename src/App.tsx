@@ -94,6 +94,7 @@ const App = () => (
                   <Route path="/drills/bypass" element={<BypassDrill />} />
                   <Route path="/drills/phone-opener" element={<PhoneOpenerDrill />} />
                   <Route path="/drills/spot-the-mistake" element={<SpotTheMistakeDrill />} />
+                  <Route path="/drills/spaced-match" element={<SpacedMatchDrill />} />
                   <Route path="/training/:scenarioId" element={<Training />} />
                   <Route path="/voice-training" element={<VoiceTraining />} />
                   <Route path="/results" element={<Results />} />

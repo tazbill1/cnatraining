@@ -97,6 +97,7 @@ export type Database = {
           estimated_time: string | null
           id: string
           is_active: boolean | null
+          module_id: string | null
           name: string
           opening_line: string
           personality: string | null
@@ -116,6 +117,7 @@ export type Database = {
           estimated_time?: string | null
           id?: string
           is_active?: boolean | null
+          module_id?: string | null
           name: string
           opening_line: string
           personality?: string | null
@@ -135,6 +137,7 @@ export type Database = {
           estimated_time?: string | null
           id?: string
           is_active?: boolean | null
+          module_id?: string | null
           name?: string
           opening_line?: string
           personality?: string | null
@@ -149,6 +152,13 @@ export type Database = {
             columns: ["dealership_id"]
             isOneToOne: false
             referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_scenarios_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "dealership_modules"
             referencedColumns: ["id"]
           },
         ]

@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Trophy } from "lucide-react";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
+import { cn } from "@/lib/utils";
 
 interface CertificateCardProps {
   moduleName: string;
@@ -10,10 +11,13 @@ interface CertificateCardProps {
   completionDate: string;
   score: number | null;
   compact?: boolean;
+  variant?: "module" | "mastery";
 }
 
-export function CertificateCard({ moduleName, userName, completionDate, score, compact }: CertificateCardProps) {
+export function CertificateCard({ moduleName, userName, completionDate, score, compact, variant = "module" }: CertificateCardProps) {
   const certRef = useRef<HTMLDivElement>(null);
+  const isMastery = variant === "mastery";
+
 
   const handleDownload = async () => {
     if (!certRef.current) return;

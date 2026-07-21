@@ -199,32 +199,36 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       toast.success(editingModule ? "Module updated" : "Module created");
       setModuleDialogOpen(false);
       fetchModules();
-      if (!editingModule && newModuleId && formIsActive) {
-        setNotifyPrompt({ id: newModuleId, title: newModuleTitle });
-      }
     }
   };
 
+  const pendingModules = modules.filter((m) => m.is_active && !m.announced_at);
+
   const handleNotifyUsers = async () => {
-    if (!notifyPrompt) return;
+    if (pendingModules.length === 0) return;
     setNotifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("notify-new-module", {
-        body: { moduleId: notifyPrompt.id, siteUrl: window.location.origin },
+        body: {
+          dealershipId,
+          moduleIds: pendingModules.map((m) => m.id),
+          siteUrl: window.location.origin,
+        },
       });
       if (error) throw error;
       const sent = (data as any)?.sent ?? 0;
       const failed = (data as any)?.failed ?? 0;
+      const count = (data as any)?.modules ?? pendingModules.length;
       toast.success(
         failed > 0
-          ? `Sent to ${sent} user(s), ${failed} failed`
-          : `Notification sent to ${sent} user(s)`,
+          ? `Sent ${count} module(s) to ${sent} user(s), ${failed} failed`
+          : `Notified ${sent} user(s) about ${count} new module(s)`,
       );
+      fetchModules();
     } catch (err: any) {
       toast.error(`Failed to send notifications: ${err?.message || "unknown error"}`);
     } finally {
       setNotifying(false);
-      setNotifyPrompt(null);
     }
   };
 

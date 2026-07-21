@@ -43,6 +43,8 @@ export default function Scenarios() {
   const [modules, setModules] = useState<ModuleRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<ChannelCategory | null>(null);
+  const [difficultyFilter, setDifficultyFilter] = useState<"all" | "beginner" | "intermediate" | "advanced">("all");
+
 
   useEffect(() => {
     const fetchData = async () => {

@@ -178,7 +178,12 @@ export default function Scenarios() {
           </div>
         </div>
 
-        <Accordion type="multiple" defaultValue={orderedModules.map((m) => m.id)} className="space-y-3">
+        <Accordion
+          key={orderedModules.map((m) => m.id).join("|")}
+          type="multiple"
+          defaultValue={orderedModules.map((m) => m.id)}
+          className="space-y-3"
+        >
           {orderedModules.map((mod) => {
             const modScenarios = (byModule.get(mod.id) || []).sort(
               (a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]

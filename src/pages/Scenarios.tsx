@@ -189,6 +189,15 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /closing/i,
     },
+    {
+      id: "cric-match",
+      title: "C.R.I.C. Category Match",
+      description: "Budget, Decision, or Deal? Categorize the objection fast.",
+      href: "/drills/cric-match",
+      icon: MessageCircleQuestion,
+      channel: "showroom",
+      matchModule: /objection/i,
+    },
   ];
 
   const renderFeaturedDrills = () => (

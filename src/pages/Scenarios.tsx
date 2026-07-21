@@ -180,6 +180,15 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /presentation|demonstration/i,
     },
+    {
+      id: "either-or-close",
+      title: "Either/Or Close Match",
+      description: "Pick the strongest either/or close for each moment.",
+      href: "/drills/either-or-close",
+      icon: Handshake,
+      channel: "showroom",
+      matchModule: /closing/i,
+    },
   ];
 
   const renderFeaturedDrills = () => (

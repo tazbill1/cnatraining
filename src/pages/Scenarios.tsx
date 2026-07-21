@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -137,28 +137,75 @@ export default function Scenarios() {
     navigate(`/training/${scenarioId}`);
   };
 
-  const renderFeaturedDrill = () => (
-    <button
-      type="button"
-      onClick={() => navigate("/drills/bypass")}
-      className="w-full mb-6 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 text-left hover:bg-primary/10 transition-colors"
-    >
-      <div className="w-11 h-11 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-        <Flame className="w-5 h-5 text-primary" />
+  const drills: Array<{
+    id: string;
+    title: string;
+    description: string;
+    href: string;
+    icon: LucideIcon;
+    channel: ChannelCategory;
+    matchModule?: RegExp;
+  }> = [
+    {
+      id: "phone-opener",
+      title: "Phone Opener Streak Drill",
+      description: "First 30 seconds of an inbound call. Build your streak.",
+      href: "/drills/phone-opener",
+      icon: PhoneCall,
+      channel: "phone",
+    },
+    {
+      id: "bypass",
+      title: "Bypass Streak Drill",
+      description: "10 quick objections. Pick the best bypass.",
+      href: "/drills/bypass",
+      icon: Flame,
+      channel: "showroom",
+      matchModule: /bypass/i,
+    },
+    {
+      id: "spot-the-mistake",
+      title: "Spot the Mistake",
+      description: "Read the scenario. Find what the salesperson did wrong.",
+      href: "/drills/spot-the-mistake",
+      icon: Search,
+      channel: "showroom",
+    },
+  ];
+
+  const renderFeaturedDrills = () => (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick Games</h2>
+        <Badge variant="outline" className="text-xs">New</Badge>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2 mb-1">
-          <span className="font-semibold text-foreground text-sm sm:text-base">Bypass Streak Drill</span>
-          <Badge variant="outline" className="text-xs">Game</Badge>
-        </div>
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Practice the Bypassing module with 10 quick objections and instant feedback.
-        </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {drills.map((d) => {
+          const Icon = d.icon;
+          return (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => navigate(d.href)}
+              className="text-left p-4 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col gap-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="font-semibold text-foreground text-sm sm:text-base leading-tight">
+                  {d.title}
+                </div>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground">{d.description}</p>
+              <Button size="sm" className="self-start" onClick={(e) => { e.stopPropagation(); navigate(d.href); }}>
+                Start
+              </Button>
+            </button>
+          );
+        })}
       </div>
-      <Button size="sm" className="w-full sm:w-auto" onClick={(e) => { e.stopPropagation(); navigate("/drills/bypass"); }}>
-        Start Drill
-      </Button>
-    </button>
+    </div>
   );
 
   const renderChannel = (channel: ChannelCategory) => {
@@ -339,7 +386,7 @@ export default function Scenarios() {
             </div>
           ) : (
             <>
-              {renderFeaturedDrill()}
+              {renderFeaturedDrills()}
               {availableChannels.length > 0 && (
                 <Tabs
                   value={effectiveChannel ?? undefined}

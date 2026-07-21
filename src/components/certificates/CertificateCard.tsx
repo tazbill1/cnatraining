@@ -104,7 +104,7 @@ export function CertificateCard({ moduleName, userName, completionDate, score, c
             <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
               {userName}
             </p>
-            <p className="text-sm text-muted-foreground">has successfully completed</p>
+            <p className="text-sm text-muted-foreground">{isMastery ? "has mastered every module in" : "has successfully completed"}</p>
             <p className="text-lg md:text-xl font-semibold text-primary">
               {moduleName}
             </p>

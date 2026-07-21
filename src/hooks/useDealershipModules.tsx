@@ -119,7 +119,7 @@ export function mergeModules(
   const newModules: DealershipModule[] = [];
 
   custom.forEach((dm) => {
-    if (dm.base_module_id) {
+    if (dm.base_module_id && defaults.some((m) => m.id === dm.base_module_id)) {
       overrides.set(dm.base_module_id, dm);
     } else {
       newModules.push(dm);

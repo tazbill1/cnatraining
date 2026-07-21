@@ -1,0 +1,1 @@
+UPDATE public.dealership_modules SET base_module_id = NULL WHERE id = '7affe8e2-7437-4b17-ba49-f63d6c5cd06f';

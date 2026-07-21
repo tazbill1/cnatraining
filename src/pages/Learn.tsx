@@ -290,8 +290,30 @@ export default function Learn() {
             </div>
           </div>
 
-          {/* Category Gallery (shown when no category selected) */}
+          {/* Global search — visible on gallery view only */}
           {!activeCategory && (
+            <div className="mb-6 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search all modules..."
+                value={search}
+                onChange={(e) => updateParam("q", e.target.value)}
+                className="pl-9 pr-9 h-11"
+              />
+              {search && (
+                <button
+                  onClick={() => updateParam("q", "")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Category Gallery (shown when no category selected and no search) */}
+          {!activeCategory && !search && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {channelCategories.map((cat) => {
                 const stats = categoryStats[cat.id] || { total: 0, completed: 0 };
@@ -333,6 +355,39 @@ export default function Learn() {
               })}
             </div>
           )}
+
+          {/* Global search results (across categories) */}
+          {!activeCategory && search && (
+            <div className="space-y-4 mb-8">
+              <p className="text-sm text-muted-foreground">
+                {enabledModules.filter((m) => {
+                  const q = search.toLowerCase();
+                  return m.title.toLowerCase().includes(q) || m.description.toLowerCase().includes(q);
+                }).length} result(s) for "{search}"
+              </p>
+              {enabledModules
+                .filter((m) => {
+                  const q = search.toLowerCase();
+                  return m.title.toLowerCase().includes(q) || m.description.toLowerCase().includes(q);
+                })
+                .map((module) => {
+                  const isCompleted = completedModules.includes(module.id);
+                  const isLocked = module.alwaysAccessible ? false : !checkPrerequisitesMet(module.id, completedModules);
+                  const hasProgress = !isCompleted && !!localStorage.getItem(`module_${module.id}_current_stage`);
+                  return (
+                    <ModuleCard
+                      key={module.id}
+                      module={module}
+                      isCompleted={isCompleted}
+                      isLocked={isLocked}
+                      hasProgress={hasProgress}
+                      onClick={() => handleModuleClick(module.id, isLocked)}
+                    />
+                  );
+                })}
+            </div>
+          )}
+
 
           {activeCategory && (<>
 

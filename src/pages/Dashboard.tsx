@@ -13,6 +13,8 @@ import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { ContinueBanner } from "@/components/dashboard/ContinueBanner";
 
 interface SessionData {
   id: string;
@@ -172,6 +174,13 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          <ContinueBanner />
+          <OnboardingChecklist />
+
+
+
+
 
 
           <div className="mb-8">

@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Trophy } from "lucide-react";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
+import { cn } from "@/lib/utils";
 
 interface CertificateCardProps {
   moduleName: string;
@@ -10,10 +11,13 @@ interface CertificateCardProps {
   completionDate: string;
   score: number | null;
   compact?: boolean;
+  variant?: "module" | "mastery";
 }
 
-export function CertificateCard({ moduleName, userName, completionDate, score, compact }: CertificateCardProps) {
+export function CertificateCard({ moduleName, userName, completionDate, score, compact, variant = "module" }: CertificateCardProps) {
   const certRef = useRef<HTMLDivElement>(null);
+  const isMastery = variant === "mastery";
+
 
   const handleDownload = async () => {
     if (!certRef.current) return;
@@ -62,23 +66,37 @@ export function CertificateCard({ moduleName, userName, completionDate, score, c
     <div className="space-y-3">
       <div
         ref={certRef}
-        className="relative bg-card border-2 border-border rounded-xl p-8 md:p-12 overflow-hidden"
+        className={cn(
+          "relative bg-card border-2 rounded-xl p-8 md:p-12 overflow-hidden",
+          isMastery ? "border-primary/60 bg-gradient-to-br from-primary/5 via-card to-primary/10" : "border-border"
+        )}
         style={{ aspectRatio: "1.414" }}
       >
         {/* Subtle corner accents */}
-        <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-primary/20 rounded-tl-xl" />
-        <div className="absolute top-0 right-0 w-20 h-20 border-t-2 border-r-2 border-primary/20 rounded-tr-xl" />
-        <div className="absolute bottom-0 left-0 w-20 h-20 border-b-2 border-l-2 border-primary/20 rounded-bl-xl" />
-        <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-primary/20 rounded-br-xl" />
+        <div className={cn("absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 rounded-tl-xl", isMastery ? "border-primary/50" : "border-primary/20")} />
+        <div className={cn("absolute top-0 right-0 w-20 h-20 border-t-2 border-r-2 rounded-tr-xl", isMastery ? "border-primary/50" : "border-primary/20")} />
+        <div className={cn("absolute bottom-0 left-0 w-20 h-20 border-b-2 border-l-2 rounded-bl-xl", isMastery ? "border-primary/50" : "border-primary/20")} />
+        <div className={cn("absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 rounded-br-xl", isMastery ? "border-primary/50" : "border-primary/20")} />
 
         <div className="flex flex-col items-center justify-between h-full text-center">
           {/* Top: Logo */}
           <div>
             <img src={werkandmeLogo} alt="WerkandMe" className="h-8 mx-auto mb-2" />
-            <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground font-medium">
-              Certificate of Completion
-            </p>
+            {isMastery ? (
+              <div className="flex items-center justify-center gap-2">
+                <Trophy className="w-3.5 h-3.5 text-primary" />
+                <p className="text-xs tracking-[0.3em] uppercase text-primary font-semibold">
+                  Certificate of Mastery
+                </p>
+                <Trophy className="w-3.5 h-3.5 text-primary" />
+              </div>
+            ) : (
+              <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground font-medium">
+                Certificate of Completion
+              </p>
+            )}
           </div>
+
 
           {/* Middle: Details */}
           <div className="flex-1 flex flex-col items-center justify-center gap-4 py-6">
@@ -86,7 +104,7 @@ export function CertificateCard({ moduleName, userName, completionDate, score, c
             <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
               {userName}
             </p>
-            <p className="text-sm text-muted-foreground">has successfully completed</p>
+            <p className="text-sm text-muted-foreground">{isMastery ? "has mastered every module in" : "has successfully completed"}</p>
             <p className="text-lg md:text-xl font-semibold text-primary">
               {moduleName}
             </p>

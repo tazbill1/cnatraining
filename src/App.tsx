@@ -32,6 +32,7 @@ const CNAForm = lazy(() => import("./pages/CNAForm"));
 const PhoneScripts = lazy(() => import("./pages/PhoneScripts"));
 const ConsultativeCallGuide = lazy(() => import("./pages/ConsultativeCallGuide"));
 const Scenarios = lazy(() => import("./pages/Scenarios"));
+const BypassDrill = lazy(() => import("./pages/BypassDrill"));
 const Training = lazy(() => import("./pages/Training"));
 const VoiceTraining = lazy(() => import("./pages/VoiceTraining"));
 const Results = lazy(() => import("./pages/Results"));

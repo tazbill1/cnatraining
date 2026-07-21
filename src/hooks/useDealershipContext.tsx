@@ -40,7 +40,11 @@ export function DealershipProvider({ children }: { children: ReactNode }) {
         .select("id, name, slug, is_active")
         .order("name")
         .then(({ data }) => {
-          setDealerships(data || []);
+          const rows = data || [];
+          setDealerships(rows);
+          if (rows.length === 1) {
+            setSelectedDealershipId((current) => current || rows[0].id);
+          }
           setLoading(false);
         });
     }

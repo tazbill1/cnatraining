@@ -234,11 +234,13 @@ export default function Scenarios() {
         {drills.map((d) => {
           const Icon = d.icon;
           return (
-            <button
+            <div
               key={d.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(d.href)}
-              className="text-left p-4 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col gap-3"
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(d.href); } }}
+              className="cursor-pointer text-left p-4 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col gap-3"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
@@ -252,7 +254,7 @@ export default function Scenarios() {
               <Button size="sm" className="self-start" onClick={(e) => { e.stopPropagation(); navigate(d.href); }}>
                 Start
               </Button>
-            </button>
+            </div>
           );
         })}
       </div>

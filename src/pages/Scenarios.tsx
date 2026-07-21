@@ -473,12 +473,30 @@ export default function Scenarios() {
               Back to Dashboard
             </Button>
             <h1 className="text-3xl font-bold text-foreground mb-2">Practice Center</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               Roleplays are grouped by the module that teaches the skill — start with easier scenarios and work your way up.
             </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mr-1">Difficulty:</span>
+              {(["all", "beginner", "intermediate", "advanced"] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDifficultyFilter(d)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors capitalize ${
+                    difficultyFilter === d
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
           </div>
 
           {!dealershipId ? (
+
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                 <Building2 className="w-8 h-8 text-muted-foreground" />

@@ -39,7 +39,9 @@ export default function Training() {
         }
 
         const row = data;
-        const category = normalizeScenarioCategory(row.category);
+        // Fall back to raw category (e.g. "showroom", "internet") so scenarios
+        // whose category isn't in scenarioCategories still load instead of bouncing.
+        const category = (normalizeScenarioCategory(row.category) || row.category) as Scenario["category"];
 
         if (!category) {
           navigate("/scenarios");

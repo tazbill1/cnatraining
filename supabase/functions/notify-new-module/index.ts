@@ -118,19 +118,29 @@ Deno.serve(async (req) => {
     .eq('id', dealershipId)
     .maybeSingle()
 
-  const { data: recipients, error: recErr } = await admin
-    .from('profiles')
-    .select('email')
-    .eq('dealership_id', dealershipId)
-    .not('email', 'is', null)
+  const [{ data: recipients, error: recErr }, { data: pendingInvites }] = await Promise.all([
+    admin
+      .from('profiles')
+      .select('email')
+      .eq('dealership_id', dealershipId)
+      .not('email', 'is', null),
+    admin
+      .from('invitations')
+      .select('email, status')
+      .eq('dealership_id', dealershipId)
+      .neq('status', 'accepted'),
+  ])
   if (recErr) {
     return json({ error: 'Failed to load recipients' }, 500)
   }
 
   const emails = Array.from(
     new Set(
-      (recipients ?? [])
-        .map((r: { email: string | null }) => (r.email ?? '').trim().toLowerCase())
+      [
+        ...(recipients ?? []).map((r: { email: string | null }) => r.email ?? ''),
+        ...(pendingInvites ?? []).map((i: { email: string | null }) => i.email ?? ''),
+      ]
+        .map((e) => e.trim().toLowerCase())
         .filter((e) => !!e),
     ),
   )

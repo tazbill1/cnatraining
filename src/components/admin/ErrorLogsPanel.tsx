@@ -44,9 +44,24 @@ export function ErrorLogsPanel() {
           <AlertTriangle className="w-5 h-5 text-destructive" />
           Auto-Captured Errors ({logs.length})
         </CardTitle>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              if (!confirm("Clear all auto-captured errors? This cannot be undone.")) return;
+              setLoading(true);
+              await supabase.from("bug_reports").delete().in("source", ["auto-client", "auto-edge"]);
+              await load();
+            }}
+            disabled={loading || logs.length === 0}
+          >
+            Clear all
+          </Button>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Refresh"}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? (

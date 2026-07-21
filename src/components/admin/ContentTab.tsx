@@ -412,6 +412,29 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
         </Button>
       </div>
 
+      {pendingModules.length > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <Mail className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="font-medium text-sm">
+                  {pendingModules.length} new module{pendingModules.length === 1 ? "" : "s"} not yet announced
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {pendingModules.map((m) => m.title).join(" • ")}
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleNotifyUsers} disabled={notifying} size="sm">
+              {notifying ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
+              Notify users in one email
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+
       {modules.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center space-y-3">

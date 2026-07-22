@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play, AlertCircle, RotateCcw } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -51,6 +51,28 @@ interface ModuleData {
 
 const QUIZ_PASS_THRESHOLD = 80;
 
+type ModuleStage = { type: "intro" | "section" | "practice" | "quiz"; title: string; index?: number };
+
+const getWatchedStorageKey = (moduleId: string) => `module-watched-videos:${moduleId}`;
+
+const readWatchedVideos = (moduleId: string) => {
+  if (typeof window === "undefined") return new Set<string>();
+  try {
+    const raw = window.localStorage.getItem(getWatchedStorageKey(moduleId));
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set<string>();
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const getStageProgressKey = (stage?: ModuleStage) => {
+  if (!stage) return null;
+  if (stage.type === "intro") return "intro";
+  if (stage.type === "section" && stage.index !== undefined) return `section-${stage.index}`;
+  if (stage.type === "practice" && stage.index !== undefined) return `practice-${stage.index}`;
+  return null;
+};
+
 export default function DealershipModuleContent() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -61,16 +83,8 @@ export default function DealershipModuleContent() {
   const [resumeApplied, setResumeApplied] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const watchedStorageKey = `module-watched-videos:${moduleId || ""}`;
-  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try {
-      const raw = window.localStorage.getItem(`module-watched-videos:${moduleId || ""}`);
-      return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  const watchedStorageKey = getWatchedStorageKey(moduleId || "");
+  const [watchedVideos, setWatchedVideos] = useState<Set<string>>(() => readWatchedVideos(moduleId || ""));
 
   const persistWatched = (next: Set<string>) => {
     try {
@@ -80,9 +94,8 @@ export default function DealershipModuleContent() {
     }
   };
 
-  const markVideoWatched = (key: string) => {
+  const markStageComplete = async (key: string) => {
     setWatchedVideos((prev) => {
-      if (prev.has(key)) return prev;
       const next = new Set(prev);
       next.add(key);
       persistWatched(next);
@@ -90,7 +103,7 @@ export default function DealershipModuleContent() {
     });
     // Persist to DB so progress survives across devices
     if (user && moduleId) {
-      supabase
+      const { error } = await supabase
         .from("module_section_progress")
         .upsert(
           {
@@ -100,11 +113,15 @@ export default function DealershipModuleContent() {
             watched_at: new Date().toISOString(),
           },
           { onConflict: "user_id,module_id,section_key" }
-        )
-        .then(({ error }) => {
-          if (error) console.warn("Failed to save section progress", error);
-        });
+        );
+      if (error) throw error;
     }
+  };
+
+  const markVideoWatched = (key: string) => {
+    markStageComplete(key).catch((error) => {
+      console.warn("Failed to save section progress", error);
+    });
   };
 
 
@@ -114,6 +131,12 @@ export default function DealershipModuleContent() {
   useEffect(() => {
     async function load() {
       setLoading(true);
+      setResumeApplied(false);
+      setCurrentStage(0);
+      setQuizAnswers({});
+      setQuizSubmitted(false);
+      const localWatched = readWatchedVideos(dbId);
+      setWatchedVideos(localWatched);
       const { data: mod, error } = await supabase
         .from("dealership_modules")
         .select("*")
@@ -153,14 +176,10 @@ export default function DealershipModuleContent() {
       ]);
 
       // Merge DB-persisted progress with any local cache
-      if (progressRes.data && progressRes.data.length > 0) {
-        setWatchedVideos((prev) => {
-          const next = new Set(prev);
-          progressRes.data.forEach((r) => next.add(r.section_key));
-          persistWatched(next);
-          return next;
-        });
-      }
+      const mergedWatched = new Set(localWatched);
+      (progressRes.data || []).forEach((r) => mergedWatched.add(r.section_key));
+      setWatchedVideos(mergedWatched);
+      persistWatched(mergedWatched);
 
       setModule({
         ...mod,
@@ -176,6 +195,45 @@ export default function DealershipModuleContent() {
     load();
   }, [dbId, user]);
 
+  const hasVideo = !!module?.video_url;
+  const sections = module?.sections || [];
+  const hasQuiz = (module?.quiz_questions.length || 0) > 0;
+  const practiceScenarios = module?.practice_scenarios || [];
+  const hasPractice = practiceScenarios.length > 0;
+
+  // Stages: [intro/video, ...sections, ...practice, quiz?]
+  const stages = useMemo<ModuleStage[]>(() => {
+    if (!module) return [];
+    const nextStages: ModuleStage[] = [];
+    if (module.video_url || module.description) {
+      nextStages.push({ type: "intro", title: module.video_title || "Introduction" });
+    }
+    module.sections.forEach((s, i) => nextStages.push({ type: "section", title: s.title, index: i }));
+    module.practice_scenarios.forEach((ps, i) =>
+      nextStages.push({ type: "practice", title: `Practice: ${ps.title}`, index: i })
+    );
+    if (module.quiz_questions.length > 0) nextStages.push({ type: "quiz", title: "Knowledge Check" });
+    return nextStages;
+  }, [module]);
+
+  const totalStages = stages.length;
+
+  // Auto-resume to the first incomplete stage (once per module load)
+  useEffect(() => {
+    if (loading || !module || resumeApplied || totalStages === 0) return;
+
+    const firstIncompleteIndex = stages.findIndex((stage) => {
+      const key = getStageProgressKey(stage);
+      return key ? !watchedVideos.has(key) : true;
+    });
+    const resumeIndex = firstIncompleteIndex === -1 ? totalStages - 1 : firstIncompleteIndex;
+
+    setResumeApplied(true);
+    if (resumeIndex !== currentStage) {
+      setCurrentStage(resumeIndex);
+    }
+  }, [currentStage, loading, module, resumeApplied, stages, totalStages, watchedVideos]);
+
 
   if (loading) {
     return (
@@ -190,48 +248,6 @@ export default function DealershipModuleContent() {
   }
 
   if (!module) return null;
-
-  const hasVideo = !!module.video_url;
-  const sections = module.sections;
-  const hasQuiz = module.quiz_questions.length > 0;
-  const practiceScenarios = module.practice_scenarios || [];
-  const hasPractice = practiceScenarios.length > 0;
-
-  // Stages: [intro/video, ...sections, ...practice, quiz?]
-  const stages: { type: "intro" | "section" | "practice" | "quiz"; title: string; index?: number }[] = [];
-  if (hasVideo || module.description) {
-    stages.push({ type: "intro", title: module.video_title || "Introduction" });
-  }
-  sections.forEach((s, i) => stages.push({ type: "section", title: s.title, index: i }));
-  if (hasPractice) {
-    practiceScenarios.forEach((ps, i) => stages.push({
-      type: "practice",
-      title: `Practice: ${ps.title}`,
-      index: i,
-    }));
-  }
-  if (hasQuiz) stages.push({ type: "quiz", title: "Knowledge Check" });
-
-  const totalStages = stages.length;
-
-  // Auto-resume to the first unwatched stage (once per load)
-  if (!resumeApplied && !loading && totalStages > 0) {
-    let resumeIndex = 0;
-    for (let i = 0; i < stages.length; i++) {
-      const st = stages[i];
-      const key = st.type === "intro" ? "intro" : st.type === "section" ? `section-${st.index}` : null;
-      if (key === null) break; // practice/quiz — stop here
-      if (!watchedVideos.has(key)) {
-        resumeIndex = i;
-        break;
-      }
-      resumeIndex = Math.min(i + 1, stages.length - 1);
-    }
-    setResumeApplied(true);
-    if (resumeIndex !== currentStage) {
-      setCurrentStage(resumeIndex);
-    }
-  }
 
   const current = stages[currentStage] || stages[0];
 
@@ -276,7 +292,16 @@ export default function DealershipModuleContent() {
     return Math.round((correct / module.quiz_questions.length) * 100);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    const progressKey = getStageProgressKey(current);
+    if (progressKey) {
+      try {
+        await markStageComplete(progressKey);
+      } catch (error) {
+        console.warn("Failed to save section progress", error);
+      }
+    }
+
     if (currentStage < totalStages - 1) {
       setCurrentStage((s) => s + 1);
       window.scrollTo(0, 0);

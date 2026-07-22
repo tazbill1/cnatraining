@@ -119,6 +119,7 @@ export function StreakDrill({
     setIndex(0);
     setSelected(null);
     setStreak(0);
+    setRoundBest(0);
     setCorrectCount(0);
     setFinished(false);
   };

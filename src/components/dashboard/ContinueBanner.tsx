@@ -11,6 +11,8 @@ interface ContinueTarget {
   updatedAt: string;
 }
 
+const normalizeModuleId = (id: string) => id.replace(/^dealership-/, "");
+
 export function ContinueBanner() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -19,34 +21,49 @@ export function ContinueBanner() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      // Find most recent section-progress row for this user
+      // Find most recent section-progress rows for this user
       const { data: progress } = await supabase
         .from("module_section_progress")
         .select("module_id, updated_at")
         .eq("user_id", user.id)
         .order("updated_at", { ascending: false })
-        .limit(10);
+        .limit(50);
 
-      if (!progress || progress.length === 0) return;
+      if (!progress || progress.length === 0) {
+        setTarget(null);
+        return;
+      }
 
-      // Filter out completed modules
+      // Filter out completed modules. Dealership module progress stores the raw
+      // module UUID, while completions store the Learn-card id (`dealership-...`).
       const moduleIds = [...new Set(progress.map((p) => p.module_id))];
+      const completionIds = [...moduleIds, ...moduleIds.map((id) => `dealership-${id}`)];
       const { data: completions } = await supabase
         .from("module_completions")
         .select("module_id")
         .eq("user_id", user.id)
-        .in("module_id", moduleIds);
+        .in("module_id", completionIds);
 
-      const completedSet = new Set((completions || []).map((c) => c.module_id));
-      const nextRow = progress.find((p) => !completedSet.has(p.module_id));
-      if (!nextRow) return;
+      const completedSet = new Set((completions || []).map((c) => normalizeModuleId(c.module_id)));
+      const incompleteModuleIds = moduleIds.filter((id) => !completedSet.has(normalizeModuleId(id)));
+      if (incompleteModuleIds.length === 0) {
+        setTarget(null);
+        return;
+      }
 
-      const { data: mod } = await supabase
+      const { data: mods } = await supabase
         .from("dealership_modules")
         .select("id, title")
-        .eq("id", nextRow.module_id)
-        .maybeSingle();
+        .in("id", incompleteModuleIds)
+        .eq("is_active", true);
 
+      const modById = new Map((mods || []).map((mod) => [mod.id, mod]));
+      const nextRow = progress.find((p) => modById.has(p.module_id));
+      if (!nextRow) {
+        setTarget(null);
+        return;
+      }
+      const mod = modById.get(nextRow.module_id);
       if (!mod) return;
       setTarget({ moduleId: mod.id, title: mod.title, updatedAt: nextRow.updated_at });
     })();

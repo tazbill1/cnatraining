@@ -10,9 +10,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 
 const DRILLS: Array<{ key: string; label: string }> = [
-  { key: "phone_opener_best_streak", label: "Phone Opener" },
-  { key: "bypass_best_streak", label: "Bypass" },
-  { key: "spot_the_mistake_best_streak", label: "Spot the Mistake" },
+  { key: "phone_opener_drill_best_streak", label: "Phone Opener" },
+  { key: "bypass_drill_best_streak", label: "Bypass" },
+  { key: "spot_the_mistake_drill_best_streak", label: "Spot the Mistake" },
   { key: "spaced_match_best_streak", label: "S.P.A.C.E.D. Match" },
   { key: "either_or_close_best_streak", label: "Either/Or Close" },
   { key: "cric_match_best_streak", label: "C.R.I.C. Match" },

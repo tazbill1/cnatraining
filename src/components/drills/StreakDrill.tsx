@@ -66,6 +66,7 @@ export function StreakDrill({
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [streak, setStreak] = useState(0);
+  const [roundBest, setRoundBest] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -93,6 +94,7 @@ export function StreakDrill({
       const newStreak = streak + 1;
       setStreak(newStreak);
       setCorrectCount((c) => c + 1);
+      if (newStreak > roundBest) setRoundBest(newStreak);
       if (newStreak > bestStreak) {
         setBestStreak(newStreak);
         localStorage.setItem(bestStreakKey, String(newStreak));
@@ -105,7 +107,7 @@ export function StreakDrill({
   const handleNext = () => {
     if (index + 1 >= total) {
       setFinished(true);
-      saveDrillScore(bestStreakKey, streak);
+      saveDrillScore(bestStreakKey, Math.max(roundBest, streak));
     } else {
       setIndex(index + 1);
       setSelected(null);

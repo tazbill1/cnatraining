@@ -66,6 +66,7 @@ export function StreakDrill({
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [streak, setStreak] = useState(0);
+  const [roundBest, setRoundBest] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -93,6 +94,7 @@ export function StreakDrill({
       const newStreak = streak + 1;
       setStreak(newStreak);
       setCorrectCount((c) => c + 1);
+      if (newStreak > roundBest) setRoundBest(newStreak);
       if (newStreak > bestStreak) {
         setBestStreak(newStreak);
         localStorage.setItem(bestStreakKey, String(newStreak));
@@ -105,7 +107,7 @@ export function StreakDrill({
   const handleNext = () => {
     if (index + 1 >= total) {
       setFinished(true);
-      saveDrillScore(bestStreakKey, streak);
+      saveDrillScore(bestStreakKey, Math.max(roundBest, streak));
     } else {
       setIndex(index + 1);
       setSelected(null);
@@ -117,6 +119,7 @@ export function StreakDrill({
     setIndex(0);
     setSelected(null);
     setStreak(0);
+    setRoundBest(0);
     setCorrectCount(0);
     setFinished(false);
   };
@@ -258,7 +261,7 @@ export function StreakDrill({
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">This Round</div>
                   <div className="text-2xl font-bold text-foreground flex items-center justify-center gap-1">
                     <Flame className="w-5 h-5 text-primary" />
-                    {streak}
+                    {Math.max(roundBest, streak)}
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-muted">

@@ -261,7 +261,7 @@ export function StreakDrill({
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">This Round</div>
                   <div className="text-2xl font-bold text-foreground flex items-center justify-center gap-1">
                     <Flame className="w-5 h-5 text-primary" />
-                    {streak}
+                    {Math.max(roundBest, streak)}
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-muted">

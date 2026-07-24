@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, Heart, Volume2, VolumeX, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { saveDrillScore } from "@/lib/drillScores";
+import { drillSfx, isSoundOn, setSoundOn } from "@/lib/drillSounds";
+import { computeBadges } from "@/lib/drillBadges";
 
 export interface DrillChoice {
   text: string;
@@ -17,11 +19,8 @@ export interface DrillChoice {
 
 export interface DrillItem {
   id: string;
-  /** Optional context/setup shown above the prompt (e.g. a mini scenario). */
   scenario?: string;
-  /** Label above the prompt. Defaults to "Customer says:". */
   promptLabel?: string;
-  /** The prompt the learner is reacting to. */
   prompt: string;
   choices: DrillChoice[];
 }
@@ -35,6 +34,8 @@ interface StreakDrillProps {
   questionsPerRound?: number;
   backTo?: string;
   correctLabel?: string;
+  /** Starting lives (hearts). Defaults to 3. Set to 0 to disable lives mode. */
+  startingLives?: number;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -59,6 +60,7 @@ export function StreakDrill({
   questionsPerRound = 10,
   backTo = "/scenarios",
   correctLabel = "Nice work",
+  startingLives = 3,
 }: StreakDrillProps) {
   const navigate = useNavigate();
 
@@ -70,6 +72,8 @@ export function StreakDrill({
   const [correctCount, setCorrectCount] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [lives, setLives] = useState(startingLives);
+  const [soundOn, setSoundOnState] = useState(true);
 
   const buildRound = () => {
     const picked = shuffle(pool).slice(0, Math.min(questionsPerRound, pool.length));
@@ -80,14 +84,21 @@ export function StreakDrill({
     setQuestions(buildRound());
     const stored = Number(localStorage.getItem(bestStreakKey) || "0");
     setBestStreak(isNaN(stored) ? 0 : stored);
+    setSoundOnState(isSoundOn());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const current = questions[index];
   const total = questions.length;
 
+  const finishRound = (finalStreak: number, finalRoundBest: number) => {
+    setFinished(true);
+    saveDrillScore(bestStreakKey, Math.max(finalRoundBest, finalStreak));
+    drillSfx.finish();
+  };
+
   const handleSelect = (choiceIdx: number) => {
-    if (selected !== null) return;
+    if (selected !== null || finished) return;
     setSelected(choiceIdx);
     const isCorrect = current.shuffledChoices[choiceIdx].correct;
     if (isCorrect) {
@@ -99,15 +110,32 @@ export function StreakDrill({
         setBestStreak(newStreak);
         localStorage.setItem(bestStreakKey, String(newStreak));
       }
+      // Milestone streak sound at every 5
+      if (newStreak > 0 && newStreak % 5 === 0) {
+        drillSfx.streak();
+      } else {
+        drillSfx.correct();
+      }
     } else {
       setStreak(0);
+      if (startingLives > 0) {
+        const remaining = lives - 1;
+        setLives(remaining);
+        drillSfx.loseLife();
+        if (remaining <= 0) {
+          // Delay so learner sees the "why" panel before results
+          setTimeout(() => finishRound(0, roundBest), 900);
+          return;
+        }
+      } else {
+        drillSfx.wrong();
+      }
     }
   };
 
   const handleNext = () => {
     if (index + 1 >= total) {
-      setFinished(true);
-      saveDrillScore(bestStreakKey, Math.max(roundBest, streak));
+      finishRound(streak, roundBest);
     } else {
       setIndex(index + 1);
       setSelected(null);
@@ -121,7 +149,14 @@ export function StreakDrill({
     setStreak(0);
     setRoundBest(0);
     setCorrectCount(0);
+    setLives(startingLives);
     setFinished(false);
+  };
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundOnState(next);
   };
 
   const progress = useMemo(
@@ -129,14 +164,47 @@ export function StreakDrill({
     [index, selected, total]
   );
 
+  const badges = useMemo(
+    () =>
+      finished
+        ? computeBadges({
+            total,
+            correctCount,
+            bestStreak: Math.max(roundBest, streak),
+            livesRemaining: lives,
+            startingLives,
+          })
+        : [],
+    [finished, total, correctCount, roundBest, streak, lives, startingLives]
+  );
+
+  // Play badge sound once when results reveal badges
+  useEffect(() => {
+    if (finished && badges.length > 0) {
+      const t = setTimeout(() => drillSfx.badge(), 350);
+      return () => clearTimeout(t);
+    }
+  }, [finished, badges.length]);
+
   return (
     <AuthGuard>
       <AppLayout>
         <div className="p-4 sm:p-8 max-w-3xl mx-auto">
-          <Button variant="ghost" onClick={() => navigate(backTo)} className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Practice
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button variant="ghost" onClick={() => navigate(backTo)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Practice
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSound}
+              aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}
+              title={soundOn ? "Sound on" : "Sound off"}
+            >
+              {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+            </Button>
+          </div>
 
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2">
@@ -150,11 +218,24 @@ export function StreakDrill({
 
           {!finished && current && (
             <>
-              <div className="flex items-center justify-between mb-3 gap-4">
+              <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
                 <div className="text-sm text-muted-foreground">
                   Question {index + 1} of {total}
                 </div>
                 <div className="flex items-center gap-4 text-sm">
+                  {startingLives > 0 && (
+                    <div className="flex items-center gap-1" aria-label={`${lives} lives remaining`}>
+                      {Array.from({ length: startingLives }).map((_, i) => (
+                        <Heart
+                          key={i}
+                          className={cn(
+                            "w-4 h-4 transition-all",
+                            i < lives ? "fill-destructive text-destructive" : "text-muted-foreground/40"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5 text-primary font-semibold">
                     <Flame className="w-4 h-4" />
                     {streak}
@@ -236,7 +317,7 @@ export function StreakDrill({
                 )}
               </Card>
 
-              {selected !== null && (
+              {selected !== null && lives > 0 && (
                 <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-gradient-to-t from-background via-background to-transparent sm:bg-none">
                   <Button onClick={handleNext} size="lg" className="w-full sm:w-auto min-h-[52px] text-base">
                     {index + 1 >= total ? "See Results" : "Next Question"}
@@ -252,11 +333,13 @@ export function StreakDrill({
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Trophy className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Round Complete</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                {startingLives > 0 && lives <= 0 ? "Out of Hearts" : "Round Complete"}
+              </h2>
               <p className="text-muted-foreground mb-6">
                 You got <span className="font-semibold text-foreground">{correctCount}</span> of {total} right.
               </p>
-              <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-8">
+              <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-6">
                 <div className="p-4 rounded-xl bg-muted">
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">This Round</div>
                   <div className="text-2xl font-bold text-foreground flex items-center justify-center gap-1">
@@ -272,6 +355,29 @@ export function StreakDrill({
                   </div>
                 </div>
               </div>
+
+              {badges.length > 0 && (
+                <div className="mb-8">
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold mb-3">
+                    Badges Earned
+                  </div>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {badges.map((b) => (
+                      <div
+                        key={b.id}
+                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-primary/10 border border-primary/20 animate-scale-in"
+                        title={b.description}
+                      >
+                        <span className="text-lg" aria-hidden>
+                          {b.emoji}
+                        </span>
+                        <span className="text-sm font-medium text-foreground">{b.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button onClick={handleRestart} size="lg">
                   <RotateCcw className="w-4 h-4 mr-2" />

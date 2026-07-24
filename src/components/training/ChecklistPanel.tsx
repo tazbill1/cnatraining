@@ -4,6 +4,7 @@ import { tradeAppraisalChecklist, vehicleSelectionChecklist } from "@/lib/tradeC
 import { cricChecklist, cricCategoryLabels } from "@/lib/cricChecklist";
 import { phoneChecklist, phoneCategoryLabels } from "@/lib/phoneChecklist";
 import { phoneModule1Checklist, phoneModule1CategoryLabels } from "@/lib/phoneModule1Checklist";
+import { filterChecklistByDifficulty } from "@/lib/difficulty";
 import { cn } from "@/lib/utils";
 import { Scenario } from "@/lib/scenarios";
 import { Progress } from "@/components/ui/progress";

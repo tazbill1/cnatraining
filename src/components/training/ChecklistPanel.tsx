@@ -4,6 +4,7 @@ import { tradeAppraisalChecklist, vehicleSelectionChecklist } from "@/lib/tradeC
 import { cricChecklist, cricCategoryLabels } from "@/lib/cricChecklist";
 import { phoneChecklist, phoneCategoryLabels } from "@/lib/phoneChecklist";
 import { phoneModule1Checklist, phoneModule1CategoryLabels } from "@/lib/phoneModule1Checklist";
+import { filterChecklistByDifficulty } from "@/lib/difficulty";
 import { cn } from "@/lib/utils";
 import { Scenario } from "@/lib/scenarios";
 import { Progress } from "@/components/ui/progress";
@@ -16,36 +17,39 @@ interface ChecklistPanelProps {
 }
 
 function getChecklistForScenario(scenario: Scenario) {
+  const difficulty = scenario.difficulty;
   // C.R.I.C. checklist for objection-handling scenarios
   if (scenario.category === "objection-handling") {
+    const checklist = filterChecklistByDifficulty(cricChecklist, difficulty);
     return {
-      checklist: cricChecklist,
+      checklist,
       title: "C.R.I.C. Checklist",
       progressLabel: "Objection Handling Progress",
       grouped: Object.entries(cricCategoryLabels).map(([cat, label]) => ({
         category: cat,
         label,
-        items: cricChecklist.filter((item) => item.category === cat),
+        items: checklist.filter((item) => item.category === cat),
       })).filter((g) => g.items.length > 0),
     };
   }
   // Phone scenarios use the Module 1 beginner checklist (6 fundamentals)
   if (scenario.category === "inbound-call") {
+    const checklist = filterChecklistByDifficulty(phoneModule1Checklist, difficulty);
     return {
-      checklist: phoneModule1Checklist,
+      checklist,
       title: "Phone Call Basics",
       progressLabel: "Call Progress",
       grouped: Object.entries(phoneModule1CategoryLabels).map(([cat, label]) => ({
         category: cat,
         label,
-        items: phoneModule1Checklist.filter((item) => item.category === cat),
+        items: checklist.filter((item) => item.category === cat),
       })).filter((g) => g.items.length > 0),
     };
   }
   // Use trade checklist if the scenario has trade data (and is not objection-handling)
   if (scenario.customerName && scenario.tradeVehicle) {
     return {
-      checklist: tradeAppraisalChecklist,
+      checklist: filterChecklistByDifficulty(tradeAppraisalChecklist, difficulty),
       title: "Trade Appraisal Checklist",
       progressLabel: "Appraisal Progress",
       grouped: null,
@@ -53,7 +57,7 @@ function getChecklistForScenario(scenario: Scenario) {
   }
   // Default to CNA checklist
   return {
-    checklist: cnaChecklist,
+    checklist: filterChecklistByDifficulty(cnaChecklist, difficulty),
     title: "CNA Checklist",
     progressLabel: "CNA Progress",
     grouped: null,

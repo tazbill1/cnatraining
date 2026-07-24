@@ -212,10 +212,9 @@ export function useTrainingSession() {
 
     try {
       // Calculate scores based on scenario type
-      const isPhoneScenario = false; // phone checklist no longer used as separate category
-      const checklistProgress = isPhoneScenario
-        ? calculatePhoneChecklistProgress(sessionState.checklistState)
-        : calculateChecklistProgress(sessionState.checklistState);
+      const checklistProgress = sessionState.scenario
+        ? calculateEffectiveProgress(sessionState.scenario, sessionState.checklistState)
+        : 0;
       
       // Get AI evaluation
       const evalResponse = await supabase.functions.invoke("evaluate-session", {

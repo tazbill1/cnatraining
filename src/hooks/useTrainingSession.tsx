@@ -217,11 +217,15 @@ export function useTrainingSession() {
         : 0;
       
       // Get AI evaluation
+      const effectiveItems = sessionState.scenario
+        ? getEffectiveChecklist(sessionState.scenario).map((i) => i.id)
+        : [];
       const evalResponse = await supabase.functions.invoke("evaluate-session", {
         body: {
           messages: sessionState.messages,
           scenario: sessionState.scenario,
           checklistState: sessionState.checklistState,
+          effectiveChecklistIds: effectiveItems,
           durationSeconds: sessionState.elapsedSeconds,
         },
       });

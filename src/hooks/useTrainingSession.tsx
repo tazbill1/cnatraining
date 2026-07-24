@@ -142,6 +142,7 @@ export function useTrainingSession() {
               content: m.content,
             })),
             scenarioId: sessionState.scenario.id,
+            difficulty: sessionState.scenario.difficulty,
           },
         });
 

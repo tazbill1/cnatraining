@@ -47,7 +47,9 @@ serve(async (req) => {
 
     // Parse and validate input
     const body = await req.json();
-    const { messages, scenarioId } = body;
+    const { messages, scenarioId, difficulty } = body;
+    const validDifficulties = new Set(["beginner", "intermediate", "advanced"]);
+    const safeDifficulty = validDifficulties.has(difficulty) ? difficulty : "intermediate";
 
     // Validate messages array
     if (!Array.isArray(messages)) {

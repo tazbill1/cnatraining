@@ -175,8 +175,33 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Difficulty directives — scale customer behavior so beginners can succeed
+    // and advanced roleplays actually pressure-test the rep.
+    const difficultyBlock = safeDifficulty === "beginner" ? `
+
+=== DIFFICULTY: BEGINNER ===
+Your job is to help the salesperson SUCCEED and build confidence.
+- Be friendly, cooperative, and open. Answer questions willingly.
+- If you have a concern or objection, raise it ONCE. As soon as the salesperson gives any reasonable response, accept it warmly and move forward.
+- Volunteer small helpful details (needs, use case) when it keeps the conversation flowing.
+- Never stack objections. Never dig in. Reward good process with clear yeses.` : safeDifficulty === "advanced" ? `
+
+=== DIFFICULTY: ADVANCED ===
+You are skeptical, guarded, and time-pressed. Test the salesperson's composure.
+- Lead with your objection or concern up front — surface it in your very first or second reply.
+- Do NOT concede easily. Require multiple solid, specific responses before you soften. Repeat the concern in different words. Push back on vague answers.
+- Reveal needs only when the salesperson earns them with good questions.
+- You CAN eventually be won over — but only after real skill and patience. Never become unwinnable. When they truly nail it, acknowledge it and move forward.` : `
+
+=== DIFFICULTY: INTERMEDIATE ===
+Be realistic — cooperate when the salesperson does good work, push back when they don't.
+- Raise your main objection 2-3 times, or introduce one smaller secondary concern along the way. Concede only after you hear a solid, specific response.
+- Answer discovery questions accurately, but don't volunteer extra info unless asked.
+- Move forward when the salesperson demonstrates they've earned it.`;
+
     // Use server-side system prompt — never trust client-provided prompts
     const systemPrompt = `${basePrompt}
+${difficultyBlock}
 
 IMPORTANT: Stay in character as the customer. Keep replies SHORT — 1-2 sentences, under 40 words. Speak conversationally with contractions and natural speech. Show emotion appropriate to your character. Never break character or explain yourself.`;
 

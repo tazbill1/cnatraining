@@ -2,10 +2,11 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { Scenario } from "@/lib/scenarios";
-import { analyzeChecklistFromConversation, calculateChecklistProgress } from "@/lib/checklist";
-import { analyzePhoneChecklistFromConversation, calculatePhoneChecklistProgress } from "@/lib/phoneChecklist";
+import { analyzeChecklistFromConversation } from "@/lib/checklist";
+import { analyzePhoneChecklistFromConversation } from "@/lib/phoneChecklist";
 import { analyzePhoneModule1Checklist, phoneModule1Checklist } from "@/lib/phoneModule1Checklist";
 import { analyzeCricChecklistFromConversation } from "@/lib/cricChecklist";
+import { calculateEffectiveProgress, getEffectiveChecklist } from "@/lib/effectiveChecklist";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
@@ -211,17 +212,20 @@ export function useTrainingSession() {
 
     try {
       // Calculate scores based on scenario type
-      const isPhoneScenario = false; // phone checklist no longer used as separate category
-      const checklistProgress = isPhoneScenario
-        ? calculatePhoneChecklistProgress(sessionState.checklistState)
-        : calculateChecklistProgress(sessionState.checklistState);
+      const checklistProgress = sessionState.scenario
+        ? calculateEffectiveProgress(sessionState.scenario, sessionState.checklistState)
+        : 0;
       
       // Get AI evaluation
+      const effectiveItems = sessionState.scenario
+        ? getEffectiveChecklist(sessionState.scenario).map((i) => i.id)
+        : [];
       const evalResponse = await supabase.functions.invoke("evaluate-session", {
         body: {
           messages: sessionState.messages,
           scenario: sessionState.scenario,
           checklistState: sessionState.checklistState,
+          effectiveChecklistIds: effectiveItems,
           durationSeconds: sessionState.elapsedSeconds,
         },
       });

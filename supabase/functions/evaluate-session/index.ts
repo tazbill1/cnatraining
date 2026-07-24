@@ -263,7 +263,7 @@ serve(async (req) => {
         { status: validation.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { messages, scenario, checklistState } = body;
+    const { messages, scenario, checklistState, effectiveChecklistIds } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -281,10 +281,17 @@ serve(async (req) => {
       })
       .join("\n\n");
 
-    const checklistCount = Object.values(checklistState || {}).filter(Boolean).length;
+    // Score only against the items the rep was expected to hit at this difficulty.
+    const effectiveIds: string[] = Array.isArray(effectiveChecklistIds) ? effectiveChecklistIds : [];
+    const effectiveTotal = effectiveIds.length;
+    const checklistCompleted = effectiveTotal > 0
+      ? effectiveIds.filter((id) => checklistState?.[id]).length
+      : Object.values(checklistState || {}).filter(Boolean).length;
+    const denom = effectiveTotal > 0 ? effectiveTotal : 16;
+    const difficultyNote = scenario?.difficulty ? ` (difficulty: ${scenario.difficulty})` : "";
     const contextInfo = isPhone
-      ? `Scenario: ${scenario?.name || "Unknown"}\nDuration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes\n`
-      : `Scenario: ${scenario?.name || "Unknown"}\nDuration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes\nChecklist items checked: ${checklistCount}/16\n`;
+      ? `Scenario: ${scenario?.name || "Unknown"}${difficultyNote}\nDuration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes\n`
+      : `Scenario: ${scenario?.name || "Unknown"}${difficultyNote}\nDuration: ${Math.floor((validation.validatedDuration || 0) / 60)} minutes\nChecklist items checked: ${checklistCompleted}/${denom}\n`;
 
     const systemPrompt = isPhone ? PHONE_EVALUATION_PROMPT : CNA_EVALUATION_PROMPT;
     const userTask = isPhone

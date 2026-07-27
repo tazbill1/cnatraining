@@ -22,9 +22,12 @@ const DRILLS: Array<{ key: string; label: string }> = [
   { key: "comparison_best_streak", label: "Us vs Them" },
 ];
 
+type Mode = "first" | "best";
+
 interface Row {
   user_id: string;
   best_streak: number;
+  first_streak: number;
   plays: number;
   full_name: string | null;
   email: string | null;
@@ -33,6 +36,7 @@ interface Row {
 export default function DrillLeaderboard() {
   const navigate = useNavigate();
   const [activeDrill, setActiveDrill] = useState(DRILLS[0].key);
+  const [mode, setMode] = useState<Mode>("first");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,9 +46,9 @@ export default function DrillLeaderboard() {
       setLoading(true);
       const { data: scores } = await supabase
         .from("drill_scores")
-        .select("user_id,best_streak,plays")
+        .select("user_id,best_streak,first_streak,plays")
         .eq("drill_key", activeDrill)
-        .order("best_streak", { ascending: false })
+        .order(mode === "first" ? "first_streak" : "best_streak", { ascending: false, nullsFirst: false })
         .limit(25);
 
       if (!scores || scores.length === 0) {
@@ -64,6 +68,7 @@ export default function DrillLeaderboard() {
         return {
           user_id: s.user_id,
           best_streak: s.best_streak,
+          first_streak: s.first_streak ?? s.best_streak,
           plays: s.plays,
           full_name: p?.full_name ?? null,
           email: p?.email ?? null,
@@ -73,7 +78,7 @@ export default function DrillLeaderboard() {
     };
     load();
     return () => { cancelled = true; };
-  }, [activeDrill]);
+  }, [activeDrill, mode]);
 
   return (
     <AuthGuard>
@@ -91,8 +96,27 @@ export default function DrillLeaderboard() {
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Drill Leaderboard</h1>
           </div>
           <p className="text-muted-foreground text-sm sm:text-base mb-6">
-            Top best-streaks across the team. Play a drill to get on the board.
+            {mode === "first"
+              ? "Contest standings: everyone's very first attempt at each game. Keep playing to improve — your first score stays locked in."
+              : "Best streak ever recorded across all attempts."}
           </p>
+
+          <div className="flex gap-2 mb-6">
+            <Button
+              size="sm"
+              variant={mode === "first" ? "default" : "outline"}
+              onClick={() => setMode("first")}
+            >
+              Contest (1st attempt)
+            </Button>
+            <Button
+              size="sm"
+              variant={mode === "best" ? "default" : "outline"}
+              onClick={() => setMode("best")}
+            >
+              Best ever
+            </Button>
+          </div>
 
           <Tabs value={activeDrill} onValueChange={setActiveDrill}>
             <TabsList className="w-full h-auto flex-wrap justify-start gap-1 bg-muted/50 p-1">
@@ -132,11 +156,14 @@ export default function DrillLeaderboard() {
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {r.plays} play{r.plays === 1 ? "" : "s"}
+                              {mode === "first"
+                                ? ` · best ${r.best_streak}`
+                                : ` · 1st attempt ${r.first_streak}`}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 font-semibold text-primary">
                             <Flame className="w-4 h-4" />
-                            {r.best_streak}
+                            {mode === "first" ? r.first_streak : r.best_streak}
                           </div>
                         </li>
                       ))}

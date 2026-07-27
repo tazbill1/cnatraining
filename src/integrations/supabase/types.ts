@@ -700,6 +700,74 @@ export type Database = {
           },
         ]
       }
+      product_questions: {
+        Row: {
+          choices: Json
+          created_at: string
+          dealership_id: string
+          difficulty: string
+          game_type: string
+          id: string
+          is_active: boolean
+          make: string | null
+          model: string
+          model_year: number | null
+          prompt: string
+          prompt_label: string | null
+          scenario: string | null
+          sort_order: number
+          topic: string | null
+          trim: string | null
+          updated_at: string
+        }
+        Insert: {
+          choices: Json
+          created_at?: string
+          dealership_id: string
+          difficulty?: string
+          game_type?: string
+          id?: string
+          is_active?: boolean
+          make?: string | null
+          model: string
+          model_year?: number | null
+          prompt: string
+          prompt_label?: string | null
+          scenario?: string | null
+          sort_order?: number
+          topic?: string | null
+          trim?: string | null
+          updated_at?: string
+        }
+        Update: {
+          choices?: Json
+          created_at?: string
+          dealership_id?: string
+          difficulty?: string
+          game_type?: string
+          id?: string
+          is_active?: boolean
+          make?: string | null
+          model?: string
+          model_year?: number | null
+          prompt?: string
+          prompt_label?: string | null
+          scenario?: string | null
+          sort_order?: number
+          topic?: string | null
+          trim?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_questions_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

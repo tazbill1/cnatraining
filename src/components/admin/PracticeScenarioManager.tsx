@@ -61,9 +61,10 @@ function newDecisionPoint(id: string): DecisionPoint {
 
 interface PracticeScenarioManagerProps {
   moduleId: string;
+  moduleCategory?: string;
 }
 
-export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerProps) {
+export function PracticeScenarioManager({ moduleId, moduleCategory = "phone" }: PracticeScenarioManagerProps) {
   const [scenarios, setScenarios] = useState<PracticeScenario[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -146,6 +147,7 @@ export function PracticeScenarioManager({ moduleId }: PracticeScenarioManagerPro
     const payload = {
       module_id: moduleId,
       difficulty: formDifficulty,
+      category: moduleCategory,
       title: formTitle.trim(),
       customer_setup: formSetup.trim(),
       customer_quote: formQuote.trim(),

@@ -19,6 +19,8 @@ import {
   normalizeBuyerType,
 } from "@/lib/scenarios";
 import { channelCategories, ChannelCategory, getCategoryBySlug } from "@/lib/categories";
+import { resolveDrills } from "@/lib/drills";
+import { useDealershipDrills } from "@/hooks/useDealershipDrills";
 
 interface ModuleRow {
   id: string;
@@ -145,118 +147,16 @@ export default function Scenarios() {
     navigate(`/training/${scenarioId}`);
   };
 
-  const drills: Array<{
-    id: string;
-    title: string;
-    description: string;
-    href: string;
-    icon: LucideIcon;
-    channel: ChannelCategory;
-    matchModule?: RegExp;
-  }> = [
-    {
-      id: "phone-opener",
-      title: "Phone Opener Streak Drill",
-      description: "First 30 seconds of an inbound call. Build your streak.",
-      href: "/drills/phone-opener",
-      icon: PhoneCall,
-      channel: "phone",
-    },
-    {
-      id: "bypass",
-      title: "Bypass Streak Drill",
-      description: "10 quick objections. Pick the best bypass.",
-      href: "/drills/bypass",
-      icon: Flame,
-      channel: "showroom",
-      matchModule: /bypass/i,
-    },
-    {
-      id: "spot-the-mistake",
-      title: "Spot the Mistake",
-      description: "Read the scenario. Find what the salesperson did wrong.",
-      href: "/drills/spot-the-mistake",
-      icon: Search,
-      channel: "showroom",
-    },
-    {
-      id: "spaced-match",
-      title: "S.P.A.C.E.D. Match",
-      description: "Match F.A.B. statements to the right customer need.",
-      href: "/drills/spaced-match",
-      icon: Target,
-      channel: "showroom",
-      matchModule: /presentation|demonstration/i,
-    },
-    {
-      id: "either-or-close",
-      title: "Either/Or Close Match",
-      description: "Pick the strongest either/or close for each moment.",
-      href: "/drills/either-or-close",
-      icon: Handshake,
-      channel: "showroom",
-      matchModule: /closing/i,
-    },
-    {
-      id: "cric-match",
-      title: "C.R.I.C. Category Match",
-      description: "Budget, Decision, or Deal? Categorize the objection fast.",
-      href: "/drills/cric-match",
-      icon: MessageCircleQuestion,
-      channel: "showroom",
-      matchModule: /objection/i,
-    },
-    {
-      id: "hot-button",
-      title: "Hot Button Detector",
-      description: "Listen to the customer. Tag the S.P.A.C.E.D. hot button.",
-      href: "/drills/hot-button",
-      icon: Ear,
-      channel: "showroom",
-      matchModule: /presentation|demonstration|rapport|investigate/i,
-    },
-    ...(productGames.quiz
-      ? [
-          {
-            id: "product-quiz",
-            title: "Timed Product Quiz",
-            description: "15 seconds a question. Know your product cold.",
-            href: "/drills/product-quiz",
-            icon: Gauge,
-            channel: "showroom" as ChannelCategory,
-          },
-        ]
-      : []),
-    ...(productGames.wrong_claim
-      ? [
-          {
-            id: "wrong-claim",
-            title: "Spot the Wrong Claim",
-            description: "Three claims are true, one isn't. Find the false one fast.",
-            href: "/drills/wrong-claim",
-            icon: ShieldAlert,
-            channel: "showroom" as ChannelCategory,
-          },
-        ]
-      : []),
-    ...(productGames.comparison
-      ? [
-          {
-            id: "comparison",
-            title: "Us vs Them",
-            description: "Cross-shopping customer. Pick the honest, winning answer.",
-            href: "/drills/comparison",
-            icon: Swords,
-            channel: "showroom" as ChannelCategory,
-          },
-        ]
-      : []),
-  ];
+  const { config: drillConfig } = useDealershipDrills(dealershipId);
 
-  // Roleplay-based drills only make sense when the dealership has modules.
-  // Product-knowledge games stand alone.
-  const productDrillIds = new Set(["product-quiz", "wrong-claim", "comparison"]);
-  const visibleDrills = modules.length > 0 ? drills : drills.filter((d) => productDrillIds.has(d.id));
+  const visibleDrills = useMemo(
+    () =>
+      resolveDrills(drillConfig, {
+        hasModules: modules.length > 0,
+        productGames: productGames,
+      }),
+    [drillConfig, modules.length, productGames]
+  );
 
   const renderFeaturedDrills = () => (
     <div className="mb-6">

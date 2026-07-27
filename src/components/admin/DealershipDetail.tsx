@@ -18,6 +18,7 @@ import { trainingModules } from "@/lib/modules";
 import { useDealershipSettingsForId, DealershipSettings } from "@/hooks/useDealershipSettings";
 import { toast } from "sonner";
 import { ContentTab } from "./ContentTab";
+import { DrillsTab } from "./DrillsTab";
 
 interface DealershipDetailProps {
   dealershipId: string;
@@ -124,10 +125,15 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="features">Features</TabsTrigger>
           <TabsTrigger value="scenarios">Scenarios</TabsTrigger>
+          <TabsTrigger value="games">Games</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
           <OverviewTab users={users} sessions={sessions} invitations={invitations} dealershipId={dealershipId} onRefresh={fetchAll} />
+        </TabsContent>
+
+        <TabsContent value="games" className="mt-6">
+          <DrillsTab dealershipId={dealershipId} />
         </TabsContent>
 
         <TabsContent value="content" className="mt-6">

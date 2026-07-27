@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, Heart, Volume2, VolumeX, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, Heart, Volume2, VolumeX, Timer, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";

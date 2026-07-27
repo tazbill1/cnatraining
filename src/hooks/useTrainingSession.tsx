@@ -162,12 +162,23 @@ export function useTrainingSession() {
         // Analyze checklist based on scenario category
         const isObjectionHandling = sessionState.scenario?.category === "objection-handling";
         const isPhone = sessionState.scenario?.category === "inbound-call";
+        const isTrade =
+          !isObjectionHandling &&
+          !isPhone &&
+          !!sessionState.scenario?.customerName &&
+          !!sessionState.scenario?.tradeVehicle;
         const convo = allMessages.map((m) => ({ role: m.role, content: m.content }));
         const newChecklistState = isObjectionHandling
           ? analyzeCricChecklistFromConversation(convo, sessionState.checklistState)
           : isPhone
             ? analyzePhoneModule1Checklist(convo, sessionState.checklistState)
-            : analyzeChecklistFromConversation(convo, sessionState.checklistState);
+            : isTrade
+              ? analyzeTradeChecklistFromConversation(
+                  convo,
+                  analyzeChecklistFromConversation(convo, sessionState.checklistState),
+                  "trade",
+                )
+              : analyzeChecklistFromConversation(convo, sessionState.checklistState);
 
         setSessionState((prev) => ({
           ...prev,

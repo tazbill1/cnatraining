@@ -104,6 +104,8 @@ const App = () => (
                   <Route path="/drills/either-or-close" element={<EitherOrCloseDrill />} />
                   <Route path="/drills/cric-match" element={<CricMatchDrill />} />
                   <Route path="/drills/hot-button" element={<HotButtonDrill />} />
+                  <Route path="/drills/product-quiz" element={<ProductQuizDrill />} />
+                  <Route path="/drills/wrong-claim" element={<WrongClaimDrill />} />
                   <Route path="/drills/leaderboard" element={<DrillLeaderboard />} />
                   <Route path="/training/:scenarioId" element={<Training />} />
                   <Route path="/voice-training" element={<VoiceTraining />} />

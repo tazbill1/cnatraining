@@ -36,6 +36,12 @@ interface StreakDrillProps {
   correctLabel?: string;
   /** Starting lives (hearts). Defaults to 3. Set to 0 to disable lives mode. */
   startingLives?: number;
+  /** Countdown per question in seconds. Omit or 0 to disable the timer. */
+  secondsPerQuestion?: number;
+  /** Show a loading state instead of the round (for DB-backed question banks). */
+  loading?: boolean;
+  /** Message shown when the question pool is empty. */
+  emptyMessage?: string;
 }
 
 function shuffle<T>(arr: T[]): T[] {

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, BookOpen, Target, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { CategoryBreakdown } from "@/components/progress/CategoryBreakdown";
 
 interface ModuleProgress {
   moduleId: string;
@@ -115,6 +116,13 @@ export function TeamProgressDashboard({ userIds }: TeamProgressDashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Category breakdown */}
+      <CategoryBreakdown
+        userIds={userIds}
+        title="Category Breakdown"
+        description="Where your team is strong — and where they need work"
+      />
 
       {/* Module breakdown */}
       {modules.length === 0 ? (

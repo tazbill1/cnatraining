@@ -26,6 +26,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cnaChecklist } from "@/lib/checklist";
 import { logger } from "@/lib/logger";
+import { CategoryBreakdown } from "@/components/progress/CategoryBreakdown";
 
 interface SessionData {
   id: string;
@@ -186,6 +187,14 @@ export default function ProgressPage() {
               icon={<TrendingUp className="w-5 h-5 text-primary" />}
               label="Certification"
               value={`${stats.certificationProgress}%`}
+            />
+          </div>
+
+          <div className="mb-6">
+            <CategoryBreakdown
+              userIds={user ? [user.id] : []}
+              title="Category Progress"
+              description="Your module completion by skill category"
             />
           </div>
 

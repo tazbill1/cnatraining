@@ -519,7 +519,7 @@ export default function Scenarios() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Practice Center</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Practice & Games</h1>
             <p className="text-muted-foreground mb-4">
               Roleplays are grouped by the module that teaches the skill — start with easier scenarios and work your way up.
             </p>

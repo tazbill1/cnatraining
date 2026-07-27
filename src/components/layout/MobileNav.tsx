@@ -13,7 +13,7 @@ const baseNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: null },
   
   { icon: GraduationCap, label: "Learn", path: "/learn", featureKey: null },
-  { icon: MessageSquare, label: "Practice", path: "/scenarios", featureKey: null },
+  { icon: MessageSquare, label: "Practice & Games", path: "/scenarios", featureKey: null },
   { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
   
   { icon: History, label: "Session History", path: "/history", featureKey: null },

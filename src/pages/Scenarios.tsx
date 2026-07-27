@@ -162,7 +162,7 @@ export default function Scenarios() {
   const productDrills = useMemo(() => visibleDrills.filter((d) => d.group === "product"), [visibleDrills]);
   const skillDrills = useMemo(() => visibleDrills.filter((d) => d.group !== "product"), [visibleDrills]);
 
-  const renderDrillGrid = (items: typeof visibleDrills) => (
+  const renderDrillGrid = (items: typeof visibleDrills, label?: string | null) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {items.map((d) => {
         const Icon = d.icon;
@@ -184,6 +184,9 @@ export default function Scenarios() {
               </div>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground">{d.description}</p>
+            {label && (
+              <span className="text-xs font-medium text-primary">{label}</span>
+            )}
             <Button size="sm" className="self-start" onClick={(e) => { e.stopPropagation(); navigate(d.href); }}>
               Start
             </Button>
@@ -217,7 +220,7 @@ export default function Scenarios() {
               Leaderboard
             </Button>
           </div>
-          {renderDrillGrid(productDrills)}
+          {renderDrillGrid(productDrills, productLabel)}
         </div>
       )}
 

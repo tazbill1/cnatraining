@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { saveDrillScore } from "@/lib/drillScores";
 import { drillSfx, isSoundOn, setSoundOn } from "@/lib/drillSounds";
 import { computeBadges } from "@/lib/drillBadges";
+import { logDrillAttempt } from "@/lib/drillAttempts";
 
 export interface DrillChoice {
   text: string;
@@ -19,6 +20,10 @@ export interface DrillChoice {
 
 export interface DrillItem {
   id: string;
+  /** Product-knowledge topic, used for weak-topic tracking. */
+  topic?: string | null;
+  /** Vehicle the question is about, used for weak-topic tracking. */
+  vehicle?: string | null;
   scenario?: string;
   promptLabel?: string;
   prompt: string;
@@ -117,6 +122,17 @@ export function StreakDrill({
     drillSfx.finish();
   };
 
+  const recordAttempt = (item: DrillItem | undefined, isCorrect: boolean) => {
+    if (!item) return;
+    logDrillAttempt({
+      drillKey: bestStreakKey,
+      questionId: item.id,
+      topic: item.topic,
+      vehicle: item.vehicle,
+      isCorrect,
+    });
+  };
+
   const registerMiss = () => {
     setStreak(0);
     if (startingLives > 0) {
@@ -136,6 +152,7 @@ export function StreakDrill({
     if (selected !== null || timedOut || finished) return;
     setSelected(choiceIdx);
     const isCorrect = current.shuffledChoices[choiceIdx].correct;
+    recordAttempt(current, isCorrect);
     if (isCorrect) {
       const newStreak = streak + 1;
       setStreak(newStreak);
@@ -161,6 +178,7 @@ export function StreakDrill({
     if (!secondsPerQuestion || finished || !current || selected !== null || timedOut) return;
     if (timeLeft <= 0) {
       setTimedOut(true);
+      recordAttempt(current, false);
       registerMiss();
       return;
     }

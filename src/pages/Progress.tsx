@@ -27,6 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import { cnaChecklist } from "@/lib/checklist";
 import { logger } from "@/lib/logger";
 import { CategoryBreakdown } from "@/components/progress/CategoryBreakdown";
+import { WeakTopics } from "@/components/progress/WeakTopics";
 
 interface SessionData {
   id: string;
@@ -190,12 +191,13 @@ export default function ProgressPage() {
             />
           </div>
 
-          <div className="mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <CategoryBreakdown
               userIds={user ? [user.id] : []}
               title="Category Progress"
               description="Your module completion by skill category"
             />
+            <WeakTopics userId={user?.id ?? null} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -84,6 +84,8 @@ export function useProductQuestions(gameType: ProductGameType) {
       rows
         .map((r) => ({
           id: r.id,
+          topic: r.topic,
+          vehicle: [r.model_year, r.make, r.model].filter(Boolean).join(" ") || null,
           prompt: r.prompt,
           promptLabel:
             r.prompt_label ||

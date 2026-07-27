@@ -117,8 +117,23 @@ export function StreakDrill({
     drillSfx.finish();
   };
 
+  const registerMiss = () => {
+    setStreak(0);
+    if (startingLives > 0) {
+      const remaining = lives - 1;
+      setLives(remaining);
+      drillSfx.loseLife();
+      if (remaining <= 0) {
+        // Delay so learner sees the "why" panel before results
+        setTimeout(() => finishRound(0, roundBest), 900);
+      }
+    } else {
+      drillSfx.wrong();
+    }
+  };
+
   const handleSelect = (choiceIdx: number) => {
-    if (selected !== null || finished) return;
+    if (selected !== null || timedOut || finished) return;
     setSelected(choiceIdx);
     const isCorrect = current.shuffledChoices[choiceIdx].correct;
     if (isCorrect) {
@@ -137,21 +152,22 @@ export function StreakDrill({
         drillSfx.correct();
       }
     } else {
-      setStreak(0);
-      if (startingLives > 0) {
-        const remaining = lives - 1;
-        setLives(remaining);
-        drillSfx.loseLife();
-        if (remaining <= 0) {
-          // Delay so learner sees the "why" panel before results
-          setTimeout(() => finishRound(0, roundBest), 900);
-          return;
-        }
-      } else {
-        drillSfx.wrong();
-      }
+      registerMiss();
     }
   };
+
+  // Countdown timer
+  useEffect(() => {
+    if (!secondsPerQuestion || finished || !current || selected !== null || timedOut) return;
+    if (timeLeft <= 0) {
+      setTimedOut(true);
+      registerMiss();
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, secondsPerQuestion, finished, current, selected, timedOut]);
 
   const handleNext = () => {
     if (index + 1 >= total) {
@@ -159,6 +175,8 @@ export function StreakDrill({
     } else {
       setIndex(index + 1);
       setSelected(null);
+      setTimedOut(false);
+      setTimeLeft(secondsPerQuestion);
     }
   };
 
@@ -166,12 +184,15 @@ export function StreakDrill({
     setQuestions(buildRound());
     setIndex(0);
     setSelected(null);
+    setTimedOut(false);
+    setTimeLeft(secondsPerQuestion);
     setStreak(0);
     setRoundBest(0);
     setCorrectCount(0);
     setLives(startingLives);
     setFinished(false);
   };
+
 
   const toggleSound = () => {
     const next = !soundOn;

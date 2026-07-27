@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, Gauge, ShieldAlert, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, Gauge, ShieldAlert, Swords, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -235,6 +235,18 @@ export default function Scenarios() {
             description: "Three claims are true, one isn't. Find the false one fast.",
             href: "/drills/wrong-claim",
             icon: ShieldAlert,
+            channel: "showroom" as ChannelCategory,
+          },
+        ]
+      : []),
+    ...(productGames.comparison
+      ? [
+          {
+            id: "comparison",
+            title: "Us vs Them",
+            description: "Cross-shopping customer. Pick the honest, winning answer.",
+            href: "/drills/comparison",
+            icon: Swords,
             channel: "showroom" as ChannelCategory,
           },
         ]

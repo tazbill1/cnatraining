@@ -786,9 +786,11 @@ export type Database = {
       product_questions: {
         Row: {
           choices: Json
+          coaching: string | null
           created_at: string
           dealership_id: string
           difficulty: string
+          explanation: string | null
           game_type: string
           id: string
           is_active: boolean
@@ -805,9 +807,11 @@ export type Database = {
         }
         Insert: {
           choices: Json
+          coaching?: string | null
           created_at?: string
           dealership_id: string
           difficulty?: string
+          explanation?: string | null
           game_type?: string
           id?: string
           is_active?: boolean
@@ -824,9 +828,11 @@ export type Database = {
         }
         Update: {
           choices?: Json
+          coaching?: string | null
           created_at?: string
           dealership_id?: string
           difficulty?: string
+          explanation?: string | null
           game_type?: string
           id?: string
           is_active?: boolean

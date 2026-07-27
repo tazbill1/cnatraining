@@ -39,6 +39,9 @@ export default function Scenarios() {
   const { profile } = useAuth();
   const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
   const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id || (dealerships.length === 1 ? dealerships[0].id : null);
+  const productGames = useHasProductQuestions(dealershipId);
+
+
 
   const [scenarios, setScenarios] = useState<ScenarioWithModule[]>([]);
   const [modules, setModules] = useState<ModuleRow[]>([]);

@@ -13,7 +13,7 @@ export async function saveDrillScore(drillKey: string, lastStreak: number) {
 
     const { data: existing } = await supabase
       .from("drill_scores")
-      .select("id, best_streak, plays")
+      .select("id, best_streak, plays, first_streak")
       .eq("user_id", user.id)
       .eq("drill_key", drillKey)
       .maybeSingle();
@@ -22,6 +22,8 @@ export async function saveDrillScore(drillKey: string, lastStreak: number) {
       await supabase.from("drill_scores").update({
         best_streak: Math.max(existing.best_streak, lastStreak),
         last_streak: lastStreak,
+        // Contest score: locked to the very first attempt, never overwritten.
+        first_streak: existing.first_streak ?? lastStreak,
         plays: (existing.plays || 0) + 1,
         dealership_id: profile?.dealership_id ?? null,
       }).eq("id", existing.id);
@@ -32,9 +34,11 @@ export async function saveDrillScore(drillKey: string, lastStreak: number) {
         drill_key: drillKey,
         best_streak: lastStreak,
         last_streak: lastStreak,
+        first_streak: lastStreak,
         plays: 1,
       });
     }
+
   } catch (e) {
     console.warn("saveDrillScore failed", e);
   }

@@ -461,6 +461,7 @@ export type Database = {
           created_at: string
           dealership_id: string | null
           drill_key: string
+          first_streak: number | null
           id: string
           last_streak: number
           plays: number
@@ -472,6 +473,7 @@ export type Database = {
           created_at?: string
           dealership_id?: string | null
           drill_key: string
+          first_streak?: number | null
           id?: string
           last_streak?: number
           plays?: number
@@ -483,6 +485,7 @@ export type Database = {
           created_at?: string
           dealership_id?: string | null
           drill_key?: string
+          first_streak?: number | null
           id?: string
           last_streak?: number
           plays?: number

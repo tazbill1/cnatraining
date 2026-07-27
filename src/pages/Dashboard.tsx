@@ -13,7 +13,6 @@ import { useDealershipSettings } from "@/hooks/useDealershipSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
-import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { ContinueBanner } from "@/components/dashboard/ContinueBanner";
 
 interface SessionData {
@@ -37,22 +36,6 @@ export default function Dashboard() {
     improvement: null as number | null,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [bannerDismissed, setBannerDismissed] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      const key = `onboarding_banner_dismissed_${user.id}`;
-      setBannerDismissed(localStorage.getItem(key) === 'true');
-    }
-  }, [user]);
-
-  const dismissBanner = () => {
-    if (user) {
-      localStorage.setItem(`onboarding_banner_dismissed_${user.id}`, 'true');
-    }
-    setBannerDismissed(true);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
@@ -147,36 +130,7 @@ export default function Dashboard() {
           )}
 
           {/* First-Session Nudge */}
-          {!isLoading && !bannerDismissed && sessions.length === 0 && stats.totalSessions === 0 && (
-            <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-5 relative">
-              <button
-                onClick={dismissBanner}
-                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Dismiss banner"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <p className="text-base font-medium text-foreground mb-1">
-                👋 Welcome to WerkandMe!
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Start with Learn to build your foundation, then jump into Practice to role-play with real customer scenarios.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => navigate("/learn")} size="sm">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Start Learning
-                </Button>
-                <Button onClick={() => navigate("/scenarios")} variant="outline" size="sm">
-                  <Swords className="w-4 h-4 mr-2" />
-                  Go to Practice
-                </Button>
-              </div>
-            </div>
-          )}
-
           <ContinueBanner />
-          <OnboardingChecklist />
 
 
 

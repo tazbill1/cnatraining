@@ -28,7 +28,12 @@ export interface DrillItem {
   promptLabel?: string;
   prompt: string;
   choices: DrillChoice[];
+  /** Full breakdown of the correct answer, shown after answering. */
+  explanation?: string | null;
+  /** How to use this on the floor with a real customer. */
+  coaching?: string | null;
 }
+
 
 interface StreakDrillProps {
   title: string;
@@ -380,29 +385,51 @@ export function StreakDrill({
                 </div>
 
                 {(selected !== null || timedOut) && (
-                  <div
-                    className={cn(
-                      "mt-5 p-4 rounded-lg border",
-                      selected !== null && current.shuffledChoices[selected].correct
-                        ? "bg-success/10 border-success/30"
-                        : "bg-muted border-border"
-                    )}
-                  >
-                    <div className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
-                      {timedOut
-                        ? "Out of time"
-                        : current.shuffledChoices[selected!].correct
-                        ? correctLabel
-                        : "Why this matters"}
+                  <div className="mt-5 space-y-3">
+                    <div
+                      className={cn(
+                        "p-4 rounded-lg border",
+                        selected !== null && current.shuffledChoices[selected].correct
+                          ? "bg-success/10 border-success/30"
+                          : "bg-muted border-border"
+                      )}
+                    >
+                      <div className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
+                        {timedOut
+                          ? "Out of time"
+                          : current.shuffledChoices[selected!].correct
+                          ? correctLabel
+                          : "Why this matters"}
+                      </div>
+                      <p className="text-sm text-foreground/90">
+                        {timedOut
+                          ? current.shuffledChoices.find((c) => c.correct)?.why
+                          : current.shuffledChoices[selected!].why}
+                      </p>
                     </div>
-                    <p className="text-sm text-foreground/90">
-                      {timedOut
-                        ? current.shuffledChoices.find((c) => c.correct)?.why
-                        : current.shuffledChoices[selected!].why}
-                    </p>
+
+                    {current.explanation && (
+                      <div className="p-4 rounded-lg border border-border bg-card">
+                        <div className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
+                          The full answer
+                        </div>
+                        <p className="text-sm text-foreground/90">{current.explanation}</p>
+                      </div>
+                    )}
+
+                    {current.coaching && (
+                      <div className="p-4 rounded-lg border border-primary/30 bg-primary/5">
+                        <div className="text-xs uppercase tracking-wide font-semibold text-primary mb-1">
+                          Coaching tip
+                        </div>
+                        <p className="text-sm text-foreground/90">{current.coaching}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>
+
+
 
               {(selected !== null || timedOut) && lives > 0 && (
                 <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-gradient-to-t from-background via-background to-transparent sm:bg-none">

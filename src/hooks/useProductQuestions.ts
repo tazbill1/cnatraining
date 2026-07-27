@@ -19,6 +19,8 @@ interface ProductQuestionRow {
   prompt_label: string | null;
   scenario: string | null;
   choices: unknown;
+  explanation: string | null;
+  coaching: string | null;
   sort_order: number;
 }
 
@@ -96,6 +98,8 @@ export function useProductQuestions(gameType: ProductGameType) {
                 : "Spot the wrong claim:"),
           scenario: r.scenario || undefined,
           choices: toChoices(r.choices),
+          explanation: r.explanation,
+          coaching: r.coaching,
         }))
         .filter((q) => q.choices.some((c) => c.correct)),
     [rows, gameType]

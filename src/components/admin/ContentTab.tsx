@@ -547,7 +547,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
                   </div>
 
                   {/* Practice Scenarios */}
-                  <PracticeScenarioManager moduleId={m.id} />
+                  <PracticeScenarioManager moduleId={m.id} moduleCategory={m.category || "phone"} />
                 </div>
               )}
             </Card>

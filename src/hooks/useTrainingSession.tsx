@@ -6,6 +6,7 @@ import { analyzeChecklistFromConversation } from "@/lib/checklist";
 import { analyzePhoneChecklistFromConversation } from "@/lib/phoneChecklist";
 import { analyzePhoneModule1Checklist, phoneModule1Checklist } from "@/lib/phoneModule1Checklist";
 import { analyzeCricChecklistFromConversation } from "@/lib/cricChecklist";
+import { analyzeTradeChecklistFromConversation } from "@/lib/tradeChecklist";
 import { calculateEffectiveProgress, getEffectiveChecklist } from "@/lib/effectiveChecklist";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";

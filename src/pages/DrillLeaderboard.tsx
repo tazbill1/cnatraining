@@ -33,9 +33,12 @@ interface Row {
   email: string | null;
 }
 
+const OVERALL = "__overall";
+const TABS = [{ key: OVERALL, label: "Overall" }, ...DRILLS];
+
 export default function DrillLeaderboard() {
   const navigate = useNavigate();
-  const [activeDrill, setActiveDrill] = useState(DRILLS[0].key);
+  const [activeDrill, setActiveDrill] = useState(OVERALL);
   const [mode, setMode] = useState<Mode>("first");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +47,57 @@ export default function DrillLeaderboard() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+
+      if (activeDrill === OVERALL) {
+        const { data: all } = await supabase
+          .from("drill_scores")
+          .select("user_id,best_streak,first_streak,plays")
+          .in("drill_key", DRILLS.map((d) => d.key));
+
+        const agg = new Map<string, { first: number; best: number; games: number; plays: number }>();
+        (all || []).forEach((s) => {
+          const cur = agg.get(s.user_id) || { first: 0, best: 0, games: 0, plays: 0 };
+          cur.first += s.first_streak ?? s.best_streak ?? 0;
+          cur.best += s.best_streak ?? 0;
+          cur.games += 1;
+          cur.plays += s.plays || 0;
+          agg.set(s.user_id, cur);
+        });
+
+        if (agg.size === 0) {
+          if (!cancelled) { setRows([]); setLoading(false); }
+          return;
+        }
+
+        const ids = Array.from(agg.keys());
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id,full_name,email")
+          .in("user_id", ids);
+        const pmap = new Map((profs || []).map((p) => [p.user_id, p]));
+
+        const totals: Row[] = ids
+          .map((id) => {
+            const a = agg.get(id)!;
+            const p = pmap.get(id);
+            return {
+              user_id: id,
+              best_streak: a.best,
+              first_streak: a.first,
+              plays: a.games,
+              full_name: p?.full_name ?? null,
+              email: p?.email ?? null,
+            };
+          })
+          .sort((x, y) =>
+            mode === "first" ? y.first_streak - x.first_streak : y.best_streak - x.best_streak
+          )
+          .slice(0, 25);
+
+        if (!cancelled) { setRows(totals); setLoading(false); }
+        return;
+      }
+
       const { data: scores } = await supabase
         .from("drill_scores")
         .select("user_id,best_streak,first_streak,plays")
@@ -96,6 +150,7 @@ export default function DrillLeaderboard() {
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Drill Leaderboard</h1>
           </div>
           <p className="text-muted-foreground text-sm sm:text-base mb-6">
+            {activeDrill === OVERALL ? "Total points across all games. " : ""}
             {mode === "first"
               ? "Contest standings: everyone's very first attempt at each game. Keep playing to improve — your first score stays locked in."
               : "Best streak ever recorded across all attempts."}
@@ -120,14 +175,14 @@ export default function DrillLeaderboard() {
 
           <Tabs value={activeDrill} onValueChange={setActiveDrill}>
             <TabsList className="w-full h-auto flex-wrap justify-start gap-1 bg-muted/50 p-1">
-              {DRILLS.map((d) => (
+              {TABS.map((d) => (
                 <TabsTrigger key={d.key} value={d.key} className="text-xs sm:text-sm">
                   {d.label}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            {DRILLS.map((d) => (
+            {TABS.map((d) => (
               <TabsContent key={d.key} value={d.key} className="mt-4">
                 <Card className="p-4 sm:p-6">
                   {loading ? (
@@ -155,7 +210,9 @@ export default function DrillLeaderboard() {
                               {r.full_name || r.email || "Team member"}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {r.plays} play{r.plays === 1 ? "" : "s"}
+                              {activeDrill === OVERALL
+                                ? `${r.plays} game${r.plays === 1 ? "" : "s"} played`
+                                : `${r.plays} play${r.plays === 1 ? "" : "s"}`}
                               {mode === "first"
                                 ? ` · best ${r.best_streak}`
                                 : ` · 1st attempt ${r.first_streak}`}

@@ -41,7 +41,8 @@ export default function Scenarios() {
   const { profile } = useAuth();
   const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
   const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id || (dealerships.length === 1 ? dealerships[0].id : null);
-  const productGames = useHasProductQuestions(dealershipId);
+  const { vehicles: productVehicles, ...productGames } = useHasProductQuestions(dealershipId);
+  const productLabel = productVehicles.length ? productVehicles.join(" · ") : null;
 
 
 
@@ -202,7 +203,9 @@ export default function Scenarios() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Product Knowledge
               </h2>
-              <Badge variant="outline" className="text-xs">New</Badge>
+              {productLabel && (
+                <Badge variant="outline" className="text-xs normal-case">{productLabel}</Badge>
+              )}
             </div>
             <Button
               variant="ghost"

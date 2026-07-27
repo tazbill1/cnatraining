@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, Gauge, ShieldAlert, Swords, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, Gauge, ShieldAlert, Swords, Car, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -158,53 +158,93 @@ export default function Scenarios() {
     [drillConfig, modules.length, productGames]
   );
 
-  const renderFeaturedDrills = () => (
-    <div className="mb-6">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick Games</h2>
-          <Badge variant="outline" className="text-xs">New</Badge>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/drills/leaderboard")}
-          className="text-primary"
-        >
-          <Trophy className="w-4 h-4 mr-1.5" />
-          Leaderboard
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {visibleDrills.map((d) => {
-          const Icon = d.icon;
-          return (
-            <div
-              key={d.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(d.href)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(d.href); } }}
-              className="cursor-pointer text-left p-4 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col gap-3"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-primary" />
-                </div>
-                <div className="font-semibold text-foreground text-sm sm:text-base leading-tight">
-                  {d.title}
-                </div>
+  const productDrills = useMemo(() => visibleDrills.filter((d) => d.group === "product"), [visibleDrills]);
+  const skillDrills = useMemo(() => visibleDrills.filter((d) => d.group !== "product"), [visibleDrills]);
+
+  const renderDrillGrid = (items: typeof visibleDrills) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {items.map((d) => {
+        const Icon = d.icon;
+        return (
+          <div
+            key={d.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate(d.href)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(d.href); } }}
+            className="cursor-pointer text-left p-4 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-xs sm:text-sm text-muted-foreground">{d.description}</p>
-              <Button size="sm" className="self-start" onClick={(e) => { e.stopPropagation(); navigate(d.href); }}>
-                Start
-              </Button>
+              <div className="font-semibold text-foreground text-sm sm:text-base leading-tight">
+                {d.title}
+              </div>
             </div>
-          );
-        })}
-      </div>
+            <p className="text-xs sm:text-sm text-muted-foreground">{d.description}</p>
+            <Button size="sm" className="self-start" onClick={(e) => { e.stopPropagation(); navigate(d.href); }}>
+              Start
+            </Button>
+          </div>
+        );
+      })}
     </div>
   );
+
+  const renderFeaturedDrills = () => (
+    <div className="mb-8 space-y-6">
+      {productDrills.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Car className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Product Knowledge
+              </h2>
+              <Badge variant="outline" className="text-xs">New</Badge>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/drills/leaderboard")}
+              className="text-primary"
+            >
+              <Trophy className="w-4 h-4 mr-1.5" />
+              Leaderboard
+            </Button>
+          </div>
+          {renderDrillGrid(productDrills)}
+        </div>
+      )}
+
+      {skillDrills.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Gauge className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Sales Skill Games
+              </h2>
+            </div>
+            {productDrills.length === 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/drills/leaderboard")}
+                className="text-primary"
+              >
+                <Trophy className="w-4 h-4 mr-1.5" />
+                Leaderboard
+              </Button>
+            )}
+          </div>
+          {renderDrillGrid(skillDrills)}
+        </div>
+      )}
+    </div>
+  );
+
 
   const renderChannel = (channel: ChannelCategory) => {
     const items = scenariosByChannel.map.get(channel) || [];

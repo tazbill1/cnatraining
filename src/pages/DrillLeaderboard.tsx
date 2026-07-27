@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Trophy, Flame } from "lucide-react";
+import { ArrowLeft, Trophy, Flame, Download } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { downloadCsv } from "@/lib/csvExport";
+import { toast } from "sonner";
 
 const DRILLS: Array<{ key: string; label: string }> = [
   { key: "phone_opener_drill_best_streak", label: "Phone Opener" },
@@ -32,7 +35,11 @@ interface ScoreRecord {
   drill_key: string;
   best_streak: number;
   first_streak: number | null;
+  last_streak: number;
   plays: number;
+  dealership_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface Row {
@@ -46,10 +53,12 @@ interface Row {
 
 export default function DrillLeaderboard() {
   const navigate = useNavigate();
+  const { isManager } = useAuth();
   const [activeDrill, setActiveDrill] = useState(OVERALL);
   const [mode, setMode] = useState<Mode>("first");
   const [scores, setScores] = useState<ScoreRecord[]>([]);
   const [profiles, setProfiles] = useState<Map<string, { full_name: string | null; email: string | null }>>(new Map());
+  const [dealerships, setDealerships] = useState<Map<string, string>>(new Map());
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +70,7 @@ export default function DrillLeaderboard() {
         supabase.auth.getUser(),
         supabase
           .from("drill_scores")
-          .select("user_id,drill_key,best_streak,first_streak,plays")
+          .select("user_id,drill_key,best_streak,first_streak,last_streak,plays,dealership_id,created_at,updated_at")
           .in("drill_key", DRILLS.map((d) => d.key)),
       ]);
 
@@ -76,7 +85,10 @@ export default function DrillLeaderboard() {
         pmap = new Map((profs || []).map((p) => [p.user_id, { full_name: p.full_name, email: p.email }]));
       }
 
+      const { data: deals } = await supabase.from("dealerships").select("id,name");
+
       if (!cancelled) {
+        setDealerships(new Map((deals || []).map((d) => [d.id, d.name])));
         setUserId(user?.id ?? null);
         setScores(records);
         setProfiles(pmap);
@@ -140,6 +152,99 @@ export default function DrillLeaderboard() {
     });
   }, [scores, userId, mode]);
 
+  const handleExport = () => {
+    if (scores.length === 0) {
+      toast.error("No scores to export yet.");
+      return;
+    }
+
+    const labelOf = (key: string) => DRILLS.find((d) => d.key === key)?.label || key;
+
+    // Rank lookups per game (contest = first attempt, best = all-time)
+    const rankMaps = new Map<string, { first: Map<string, number>; best: Map<string, number> }>();
+    DRILLS.forEach((d) => {
+      const list = scores.filter((s) => s.drill_key === d.key);
+      const firstRank = new Map(
+        [...list]
+          .sort((a, b) => (b.first_streak ?? b.best_streak ?? 0) - (a.first_streak ?? a.best_streak ?? 0))
+          .map((s, i) => [s.user_id, i + 1] as [string, number])
+      );
+      const bestRank = new Map(
+        [...list]
+          .sort((a, b) => (b.best_streak ?? 0) - (a.best_streak ?? 0))
+          .map((s, i) => [s.user_id, i + 1] as [string, number])
+      );
+      rankMaps.set(d.key, { first: firstRank, best: bestRank });
+    });
+
+    // Overall ranks
+    const totals = new Map<string, { first: number; best: number; games: number; plays: number }>();
+    scores.forEach((s) => {
+      const cur = totals.get(s.user_id) || { first: 0, best: 0, games: 0, plays: 0 };
+      cur.first += s.first_streak ?? s.best_streak ?? 0;
+      cur.best += s.best_streak ?? 0;
+      cur.games += 1;
+      cur.plays += s.plays || 0;
+      totals.set(s.user_id, cur);
+    });
+    const overallFirstRank = new Map(
+      Array.from(totals.entries()).sort((a, b) => b[1].first - a[1].first).map(([id], i) => [id, i + 1] as [string, number])
+    );
+    const overallBestRank = new Map(
+      Array.from(totals.entries()).sort((a, b) => b[1].best - a[1].best).map(([id], i) => [id, i + 1] as [string, number])
+    );
+
+    const rows: Record<string, string | number>[] = [];
+
+    Array.from(totals.keys())
+      .sort((a, b) => (totals.get(b)!.first - totals.get(a)!.first))
+      .forEach((uid) => {
+        const p = profiles.get(uid);
+        const t = totals.get(uid)!;
+        const name = p?.full_name || p?.email || "Team member";
+        const email = p?.email || "";
+
+        DRILLS.forEach((d) => {
+          const rec = scores.find((s) => s.user_id === uid && s.drill_key === d.key);
+          rows.push({
+            "Team Member": name,
+            Email: email,
+            Dealership: rec?.dealership_id ? dealerships.get(rec.dealership_id) || "" : "",
+            Game: d.label,
+            "Contest Score (1st attempt)": rec ? (rec.first_streak ?? rec.best_streak ?? 0) : "",
+            "Best Score": rec ? rec.best_streak ?? 0 : "",
+            "Most Recent Score": rec ? rec.last_streak ?? 0 : "",
+            Plays: rec ? rec.plays ?? 0 : 0,
+            "Contest Rank": rec ? rankMaps.get(d.key)!.first.get(uid) ?? "" : "",
+            "Best Rank": rec ? rankMaps.get(d.key)!.best.get(uid) ?? "" : "",
+            Played: rec ? "Yes" : "No",
+            "First Played": rec?.created_at ? new Date(rec.created_at).toLocaleDateString() : "",
+            "Last Played": rec?.updated_at ? new Date(rec.updated_at).toLocaleDateString() : "",
+          });
+        });
+
+        rows.push({
+          "Team Member": name,
+          Email: email,
+          Dealership: "",
+          Game: "TOTAL (all games)",
+          "Contest Score (1st attempt)": t.first,
+          "Best Score": t.best,
+          "Most Recent Score": "",
+          Plays: t.plays,
+          "Contest Rank": overallFirstRank.get(uid) ?? "",
+          "Best Rank": overallBestRank.get(uid) ?? "",
+          Played: `${t.games} of ${DRILLS.length} games`,
+          "First Played": "",
+          "Last Played": "",
+        });
+      });
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadCsv(rows, `leaderboard-standings-${stamp}.csv`);
+    toast.success("Leaderboard exported");
+  };
+
   const myTotal = myBreakdown.reduce((sum, b) => sum + (b.points ?? 0), 0);
   const gamesPlayed = myBreakdown.filter((b) => b.points !== null).length;
 
@@ -172,6 +277,12 @@ export default function DrillLeaderboard() {
             <Button size="sm" variant={mode === "best" ? "default" : "outline"} onClick={() => setMode("best")}>
               Best ever
             </Button>
+            {isManager && (
+              <Button size="sm" variant="outline" onClick={handleExport} className="ml-auto">
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+            )}
           </div>
 
           {/* Your standing */}

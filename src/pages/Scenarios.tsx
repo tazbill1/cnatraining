@@ -563,13 +563,13 @@ export default function Scenarios() {
                 ))}
               </div>
             </div>
-          ) : availableChannels.length === 0 && !hasUnmapped ? (
+          ) : availableChannels.length === 0 && !hasUnmapped && visibleDrills.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               No practice scenarios are available for your dealership yet.
             </div>
           ) : (
             <>
-              {renderFeaturedDrills()}
+              {visibleDrills.length > 0 && renderFeaturedDrills()}
               {availableChannels.length > 0 && (
                 <Tabs
                   value={effectiveChannel ?? undefined}

@@ -163,6 +163,50 @@ export type Database = {
           },
         ]
       }
+      dealership_drills: {
+        Row: {
+          created_at: string
+          dealership_id: string
+          description_override: string | null
+          drill_key: string
+          id: string
+          is_enabled: boolean
+          sort_order: number
+          title_override: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dealership_id: string
+          description_override?: string | null
+          drill_key: string
+          id?: string
+          is_enabled?: boolean
+          sort_order?: number
+          title_override?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string
+          description_override?: string | null
+          drill_key?: string
+          id?: string
+          is_enabled?: boolean
+          sort_order?: number
+          title_override?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dealership_drills_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dealership_module_sections: {
         Row: {
           content_html: string | null

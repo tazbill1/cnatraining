@@ -253,6 +253,11 @@ export default function Scenarios() {
       : []),
   ];
 
+  // Roleplay-based drills only make sense when the dealership has modules.
+  // Product-knowledge games stand alone.
+  const productDrillIds = new Set(["product-quiz", "wrong-claim", "comparison"]);
+  const visibleDrills = modules.length > 0 ? drills : drills.filter((d) => productDrillIds.has(d.id));
+
   const renderFeaturedDrills = () => (
     <div className="mb-6">
       <div className="flex items-center justify-between gap-2 mb-3">
@@ -271,7 +276,7 @@ export default function Scenarios() {
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {drills.map((d) => {
+        {visibleDrills.map((d) => {
           const Icon = d.icon;
           return (
             <div
@@ -558,13 +563,13 @@ export default function Scenarios() {
                 ))}
               </div>
             </div>
-          ) : availableChannels.length === 0 && !hasUnmapped ? (
+          ) : availableChannels.length === 0 && !hasUnmapped && visibleDrills.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               No practice scenarios are available for your dealership yet.
             </div>
           ) : (
             <>
-              {renderFeaturedDrills()}
+              {visibleDrills.length > 0 && renderFeaturedDrills()}
               {availableChannels.length > 0 && (
                 <Tabs
                   value={effectiveChannel ?? undefined}

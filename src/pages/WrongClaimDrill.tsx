@@ -6,7 +6,7 @@ export default function WrongClaimDrill() {
   const { questions, vehicles, isLoading } = useProductQuestions("wrong_claim");
 
   const subtitle = vehicles.length
-    ? `Three claims are true, one isn't. Find the false statement before the clock runs out (${vehicles.join(", ")}).`
+    ? `Three claims are true, one isn't. Find the false statement before the clock runs out. 15 rounds, 15 seconds each (${vehicles.join(", ")}).`
     : "Three claims are true, one isn't. Find the false statement before the clock runs out.";
 
   return (
@@ -18,7 +18,8 @@ export default function WrongClaimDrill() {
       loading={isLoading}
       emptyMessage="No product questions have been added for your dealership yet."
       bestStreakKey="wrong_claim_best_streak"
-      secondsPerQuestion={20}
+      questionsPerRound={15}
+      secondsPerQuestion={15}
       correctLabel="Caught it — that claim would have burned trust"
     />
   );

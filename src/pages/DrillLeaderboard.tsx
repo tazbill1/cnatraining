@@ -17,6 +17,8 @@ const DRILLS: Array<{ key: string; label: string }> = [
   { key: "either_or_close_best_streak", label: "Either/Or Close" },
   { key: "cric_match_best_streak", label: "C.R.I.C. Match" },
   { key: "hot_button_best_streak", label: "Hot Button" },
+  { key: "product_quiz_best_streak", label: "Product Quiz" },
+  { key: "wrong_claim_best_streak", label: "Spot the Wrong Claim" },
 ];
 
 interface Row {

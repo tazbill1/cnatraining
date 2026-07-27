@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Lock, Users, Building2, BookOpen, Flame, PhoneCall, Search, Target, Handshake, MessageCircleQuestion, Ear, Trophy, Gauge, ShieldAlert, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ScenarioCard } from "@/components/training/ScenarioCard";
@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipContext } from "@/hooks/useDealershipContext";
+import { useHasProductQuestions } from "@/hooks/useProductQuestions";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Scenario,
@@ -38,6 +39,9 @@ export default function Scenarios() {
   const { profile } = useAuth();
   const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
   const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id || (dealerships.length === 1 ? dealerships[0].id : null);
+  const productGames = useHasProductQuestions(dealershipId);
+
+
 
   const [scenarios, setScenarios] = useState<ScenarioWithModule[]>([]);
   const [modules, setModules] = useState<ModuleRow[]>([]);
@@ -211,6 +215,30 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /presentation|demonstration|rapport|investigate/i,
     },
+    ...(productGames.quiz
+      ? [
+          {
+            id: "product-quiz",
+            title: "Timed Product Quiz",
+            description: "15 seconds a question. Know your product cold.",
+            href: "/drills/product-quiz",
+            icon: Gauge,
+            channel: "showroom" as ChannelCategory,
+          },
+        ]
+      : []),
+    ...(productGames.wrong_claim
+      ? [
+          {
+            id: "wrong-claim",
+            title: "Spot the Wrong Claim",
+            description: "Three claims are true, one isn't. Find the false one fast.",
+            href: "/drills/wrong-claim",
+            icon: ShieldAlert,
+            channel: "showroom" as ChannelCategory,
+          },
+        ]
+      : []),
   ];
 
   const renderFeaturedDrills = () => (

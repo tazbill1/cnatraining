@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, Heart, Volume2, VolumeX, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, Heart, Volume2, VolumeX, Timer, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,12 @@ interface StreakDrillProps {
   correctLabel?: string;
   /** Starting lives (hearts). Defaults to 3. Set to 0 to disable lives mode. */
   startingLives?: number;
+  /** Countdown per question in seconds. Omit or 0 to disable the timer. */
+  secondsPerQuestion?: number;
+  /** Show a loading state instead of the round (for DB-backed question banks). */
+  loading?: boolean;
+  /** Message shown when the question pool is empty. */
+  emptyMessage?: string;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -61,12 +67,17 @@ export function StreakDrill({
   backTo = "/scenarios",
   correctLabel = "Nice work",
   startingLives = 3,
+  secondsPerQuestion = 0,
+  loading = false,
+  emptyMessage = "No questions available yet.",
 }: StreakDrillProps) {
   const navigate = useNavigate();
 
   const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(secondsPerQuestion);
   const [streak, setStreak] = useState(0);
   const [roundBest, setRoundBest] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -81,12 +92,21 @@ export function StreakDrill({
   };
 
   useEffect(() => {
-    setQuestions(buildRound());
     const stored = Number(localStorage.getItem(bestStreakKey) || "0");
     setBestStreak(isNaN(stored) ? 0 : stored);
     setSoundOnState(isSoundOn());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // (Re)build the round whenever the pool becomes available
+  useEffect(() => {
+    if (pool.length > 0 && questions.length === 0 && !finished) {
+      setQuestions(buildRound());
+      setTimeLeft(secondsPerQuestion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pool]);
+
 
   const current = questions[index];
   const total = questions.length;
@@ -97,8 +117,23 @@ export function StreakDrill({
     drillSfx.finish();
   };
 
+  const registerMiss = () => {
+    setStreak(0);
+    if (startingLives > 0) {
+      const remaining = lives - 1;
+      setLives(remaining);
+      drillSfx.loseLife();
+      if (remaining <= 0) {
+        // Delay so learner sees the "why" panel before results
+        setTimeout(() => finishRound(0, roundBest), 900);
+      }
+    } else {
+      drillSfx.wrong();
+    }
+  };
+
   const handleSelect = (choiceIdx: number) => {
-    if (selected !== null || finished) return;
+    if (selected !== null || timedOut || finished) return;
     setSelected(choiceIdx);
     const isCorrect = current.shuffledChoices[choiceIdx].correct;
     if (isCorrect) {
@@ -117,21 +152,22 @@ export function StreakDrill({
         drillSfx.correct();
       }
     } else {
-      setStreak(0);
-      if (startingLives > 0) {
-        const remaining = lives - 1;
-        setLives(remaining);
-        drillSfx.loseLife();
-        if (remaining <= 0) {
-          // Delay so learner sees the "why" panel before results
-          setTimeout(() => finishRound(0, roundBest), 900);
-          return;
-        }
-      } else {
-        drillSfx.wrong();
-      }
+      registerMiss();
     }
   };
+
+  // Countdown timer
+  useEffect(() => {
+    if (!secondsPerQuestion || finished || !current || selected !== null || timedOut) return;
+    if (timeLeft <= 0) {
+      setTimedOut(true);
+      registerMiss();
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, secondsPerQuestion, finished, current, selected, timedOut]);
 
   const handleNext = () => {
     if (index + 1 >= total) {
@@ -139,6 +175,8 @@ export function StreakDrill({
     } else {
       setIndex(index + 1);
       setSelected(null);
+      setTimedOut(false);
+      setTimeLeft(secondsPerQuestion);
     }
   };
 
@@ -146,12 +184,15 @@ export function StreakDrill({
     setQuestions(buildRound());
     setIndex(0);
     setSelected(null);
+    setTimedOut(false);
+    setTimeLeft(secondsPerQuestion);
     setStreak(0);
     setRoundBest(0);
     setCorrectCount(0);
     setLives(startingLives);
     setFinished(false);
   };
+
 
   const toggleSound = () => {
     const next = !soundOn;
@@ -216,6 +257,14 @@ export function StreakDrill({
             <p className="text-muted-foreground text-sm sm:text-base">{subtitle}</p>
           </div>
 
+          {loading && (
+            <Card className="p-6 text-center text-muted-foreground">Loading questions…</Card>
+          )}
+
+          {!loading && pool.length === 0 && (
+            <Card className="p-6 text-center text-muted-foreground">{emptyMessage}</Card>
+          )}
+
           {!finished && current && (
             <>
               <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
@@ -223,6 +272,20 @@ export function StreakDrill({
                   Question {index + 1} of {total}
                 </div>
                 <div className="flex items-center gap-4 text-sm">
+                  {secondsPerQuestion > 0 && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-1.5 font-semibold tabular-nums",
+                        timeLeft <= 3 && selected === null && !timedOut
+                          ? "text-destructive animate-pulse"
+                          : "text-foreground"
+                      )}
+                      aria-label={`${timeLeft} seconds left`}
+                    >
+                      <Timer className="w-4 h-4" />
+                      {selected !== null || timedOut ? "—" : `${timeLeft}s`}
+                    </div>
+                  )}
                   {startingLives > 0 && (
                     <div className="flex items-center gap-1" aria-label={`${lives} lives remaining`}>
                       {Array.from({ length: startingLives }).map((_, i) => (
@@ -270,7 +333,7 @@ export function StreakDrill({
                 <div className="space-y-3">
                   {current.shuffledChoices.map((choice, i) => {
                     const isSelected = selected === i;
-                    const showResult = selected !== null;
+                    const showResult = selected !== null || timedOut;
                     const isCorrect = choice.correct;
                     return (
                       <button
@@ -298,26 +361,32 @@ export function StreakDrill({
                   })}
                 </div>
 
-                {selected !== null && (
+                {(selected !== null || timedOut) && (
                   <div
                     className={cn(
                       "mt-5 p-4 rounded-lg border",
-                      current.shuffledChoices[selected].correct
+                      selected !== null && current.shuffledChoices[selected].correct
                         ? "bg-success/10 border-success/30"
                         : "bg-muted border-border"
                     )}
                   >
                     <div className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
-                      {current.shuffledChoices[selected].correct ? correctLabel : "Why this matters"}
+                      {timedOut
+                        ? "Out of time"
+                        : current.shuffledChoices[selected!].correct
+                        ? correctLabel
+                        : "Why this matters"}
                     </div>
                     <p className="text-sm text-foreground/90">
-                      {current.shuffledChoices[selected].why}
+                      {timedOut
+                        ? current.shuffledChoices.find((c) => c.correct)?.why
+                        : current.shuffledChoices[selected!].why}
                     </p>
                   </div>
                 )}
               </Card>
 
-              {selected !== null && lives > 0 && (
+              {(selected !== null || timedOut) && lives > 0 && (
                 <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-gradient-to-t from-background via-background to-transparent sm:bg-none">
                   <Button onClick={handleNext} size="lg" className="w-full sm:w-auto min-h-[52px] text-base">
                     {index + 1 >= total ? "See Results" : "Next Question"}
@@ -326,6 +395,7 @@ export function StreakDrill({
               )}
             </>
           )}
+
 
 
           {finished && (

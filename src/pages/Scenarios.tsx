@@ -41,7 +41,8 @@ export default function Scenarios() {
   const { profile } = useAuth();
   const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
   const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id || (dealerships.length === 1 ? dealerships[0].id : null);
-  const productGames = useHasProductQuestions(dealershipId);
+  const { vehicles: productVehicles, ...productGames } = useHasProductQuestions(dealershipId);
+  const productLabel = productVehicles.length ? productVehicles.join(" · ") : null;
 
 
 
@@ -161,7 +162,7 @@ export default function Scenarios() {
   const productDrills = useMemo(() => visibleDrills.filter((d) => d.group === "product"), [visibleDrills]);
   const skillDrills = useMemo(() => visibleDrills.filter((d) => d.group !== "product"), [visibleDrills]);
 
-  const renderDrillGrid = (items: typeof visibleDrills) => (
+  const renderDrillGrid = (items: typeof visibleDrills, label?: string | null) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {items.map((d) => {
         const Icon = d.icon;
@@ -183,6 +184,9 @@ export default function Scenarios() {
               </div>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground">{d.description}</p>
+            {label && (
+              <span className="text-xs font-medium text-primary">{label}</span>
+            )}
             <Button size="sm" className="self-start" onClick={(e) => { e.stopPropagation(); navigate(d.href); }}>
               Start
             </Button>
@@ -202,7 +206,9 @@ export default function Scenarios() {
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Product Knowledge
               </h2>
-              <Badge variant="outline" className="text-xs">New</Badge>
+              {productLabel && (
+                <Badge variant="outline" className="text-xs normal-case">{productLabel}</Badge>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -214,7 +220,7 @@ export default function Scenarios() {
               Leaderboard
             </Button>
           </div>
-          {renderDrillGrid(productDrills)}
+          {renderDrillGrid(productDrills, productLabel)}
         </div>
       )}
 

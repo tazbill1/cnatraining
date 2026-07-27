@@ -28,7 +28,12 @@ export interface DrillItem {
   promptLabel?: string;
   prompt: string;
   choices: DrillChoice[];
+  /** Full breakdown of the correct answer, shown after answering. */
+  explanation?: string | null;
+  /** How to use this on the floor with a real customer. */
+  coaching?: string | null;
 }
+
 
 interface StreakDrillProps {
   title: string;

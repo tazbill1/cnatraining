@@ -211,6 +211,30 @@ export default function Scenarios() {
       channel: "showroom",
       matchModule: /presentation|demonstration|rapport|investigate/i,
     },
+    ...(productGames.quiz
+      ? [
+          {
+            id: "product-quiz",
+            title: "Timed Product Quiz",
+            description: "15 seconds a question. Know your product cold.",
+            href: "/drills/product-quiz",
+            icon: Gauge,
+            channel: "showroom" as ChannelCategory,
+          },
+        ]
+      : []),
+    ...(productGames.wrong_claim
+      ? [
+          {
+            id: "wrong-claim",
+            title: "Spot the Wrong Claim",
+            description: "Three claims are true, one isn't. Find the false one fast.",
+            href: "/drills/wrong-claim",
+            icon: ShieldAlert,
+            channel: "showroom" as ChannelCategory,
+          },
+        ]
+      : []),
   ];
 
   const renderFeaturedDrills = () => (

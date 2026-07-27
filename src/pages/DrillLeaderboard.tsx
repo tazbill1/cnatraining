@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy, Flame } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -22,7 +22,18 @@ const DRILLS: Array<{ key: string; label: string }> = [
   { key: "comparison_best_streak", label: "Us vs Them" },
 ];
 
+const OVERALL = "__overall";
+const TABS = [{ key: OVERALL, label: "Overall" }, ...DRILLS];
+
 type Mode = "first" | "best";
+
+interface ScoreRecord {
+  user_id: string;
+  drill_key: string;
+  best_streak: number;
+  first_streak: number | null;
+  plays: number;
+}
 
 interface Row {
   user_id: string;
@@ -33,106 +44,104 @@ interface Row {
   email: string | null;
 }
 
-const OVERALL = "__overall";
-const TABS = [{ key: OVERALL, label: "Overall" }, ...DRILLS];
-
 export default function DrillLeaderboard() {
   const navigate = useNavigate();
   const [activeDrill, setActiveDrill] = useState(OVERALL);
   const [mode, setMode] = useState<Mode>("first");
-  const [rows, setRows] = useState<Row[]>([]);
+  const [scores, setScores] = useState<ScoreRecord[]>([]);
+  const [profiles, setProfiles] = useState<Map<string, { full_name: string | null; email: string | null }>>(new Map());
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-
-      if (activeDrill === OVERALL) {
-        const { data: all } = await supabase
+      const [{ data: { user } }, { data: all }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase
           .from("drill_scores")
-          .select("user_id,best_streak,first_streak,plays")
-          .in("drill_key", DRILLS.map((d) => d.key));
+          .select("user_id,drill_key,best_streak,first_streak,plays")
+          .in("drill_key", DRILLS.map((d) => d.key)),
+      ]);
 
-        const agg = new Map<string, { first: number; best: number; games: number; plays: number }>();
-        (all || []).forEach((s) => {
-          const cur = agg.get(s.user_id) || { first: 0, best: 0, games: 0, plays: 0 };
-          cur.first += s.first_streak ?? s.best_streak ?? 0;
-          cur.best += s.best_streak ?? 0;
-          cur.games += 1;
-          cur.plays += s.plays || 0;
-          agg.set(s.user_id, cur);
-        });
-
-        if (agg.size === 0) {
-          if (!cancelled) { setRows([]); setLoading(false); }
-          return;
-        }
-
-        const ids = Array.from(agg.keys());
+      const records = (all || []) as ScoreRecord[];
+      let pmap = new Map<string, { full_name: string | null; email: string | null }>();
+      const ids = Array.from(new Set(records.map((r) => r.user_id)));
+      if (ids.length > 0) {
         const { data: profs } = await supabase
           .from("profiles")
           .select("user_id,full_name,email")
           .in("user_id", ids);
-        const pmap = new Map((profs || []).map((p) => [p.user_id, p]));
-
-        const totals: Row[] = ids
-          .map((id) => {
-            const a = agg.get(id)!;
-            const p = pmap.get(id);
-            return {
-              user_id: id,
-              best_streak: a.best,
-              first_streak: a.first,
-              plays: a.games,
-              full_name: p?.full_name ?? null,
-              email: p?.email ?? null,
-            };
-          })
-          .sort((x, y) =>
-            mode === "first" ? y.first_streak - x.first_streak : y.best_streak - x.best_streak
-          )
-          .slice(0, 25);
-
-        if (!cancelled) { setRows(totals); setLoading(false); }
-        return;
+        pmap = new Map((profs || []).map((p) => [p.user_id, { full_name: p.full_name, email: p.email }]));
       }
 
-      const { data: scores } = await supabase
-        .from("drill_scores")
-        .select("user_id,best_streak,first_streak,plays")
-        .eq("drill_key", activeDrill)
-        .order(mode === "first" ? "first_streak" : "best_streak", { ascending: false, nullsFirst: false })
-        .limit(25);
-
-      if (!scores || scores.length === 0) {
-        if (!cancelled) { setRows([]); setLoading(false); }
-        return;
+      if (!cancelled) {
+        setUserId(user?.id ?? null);
+        setScores(records);
+        setProfiles(pmap);
+        setLoading(false);
       }
-
-      const userIds = scores.map((s) => s.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id,full_name,email")
-        .in("user_id", userIds);
-
-      const map = new Map((profiles || []).map((p) => [p.user_id, p]));
-      const merged: Row[] = scores.map((s) => {
-        const p = map.get(s.user_id);
-        return {
-          user_id: s.user_id,
-          best_streak: s.best_streak,
-          first_streak: s.first_streak ?? s.best_streak,
-          plays: s.plays,
-          full_name: p?.full_name ?? null,
-          email: p?.email ?? null,
-        };
-      });
-      if (!cancelled) { setRows(merged); setLoading(false); }
     };
     load();
     return () => { cancelled = true; };
-  }, [activeDrill, mode]);
+  }, []);
+
+  const scoreOf = (r: ScoreRecord) =>
+    mode === "first" ? (r.first_streak ?? r.best_streak ?? 0) : (r.best_streak ?? 0);
+
+  // Full ranking (not truncated) for the active tab
+  const ranking: Row[] = useMemo(() => {
+    if (activeDrill === OVERALL) {
+      const agg = new Map<string, { first: number; best: number; games: number }>();
+      scores.forEach((s) => {
+        const cur = agg.get(s.user_id) || { first: 0, best: 0, games: 0 };
+        cur.first += s.first_streak ?? s.best_streak ?? 0;
+        cur.best += s.best_streak ?? 0;
+        cur.games += 1;
+        agg.set(s.user_id, cur);
+      });
+      return Array.from(agg.entries())
+        .map(([id, a]) => ({
+          user_id: id,
+          best_streak: a.best,
+          first_streak: a.first,
+          plays: a.games,
+          full_name: profiles.get(id)?.full_name ?? null,
+          email: profiles.get(id)?.email ?? null,
+        }))
+        .sort((x, y) => (mode === "first" ? y.first_streak - x.first_streak : y.best_streak - x.best_streak));
+    }
+
+    return scores
+      .filter((s) => s.drill_key === activeDrill)
+      .map((s) => ({
+        user_id: s.user_id,
+        best_streak: s.best_streak ?? 0,
+        first_streak: s.first_streak ?? s.best_streak ?? 0,
+        plays: s.plays ?? 0,
+        full_name: profiles.get(s.user_id)?.full_name ?? null,
+        email: profiles.get(s.user_id)?.email ?? null,
+      }))
+      .sort((x, y) => (mode === "first" ? y.first_streak - x.first_streak : y.best_streak - x.best_streak));
+  }, [scores, profiles, activeDrill, mode]);
+
+  const rows = ranking.slice(0, 25);
+
+  const myIndex = userId ? ranking.findIndex((r) => r.user_id === userId) : -1;
+  const me = myIndex >= 0 ? ranking[myIndex] : null;
+
+  // Per-game point breakdown for the signed-in user
+  const myBreakdown = useMemo(() => {
+    if (!userId) return [];
+    return DRILLS.map((d) => {
+      const rec = scores.find((s) => s.user_id === userId && s.drill_key === d.key);
+      return { label: d.label, points: rec ? scoreOf(rec) : null };
+    });
+  }, [scores, userId, mode]);
+
+  const myTotal = myBreakdown.reduce((sum, b) => sum + (b.points ?? 0), 0);
+  const gamesPlayed = myBreakdown.filter((b) => b.points !== null).length;
 
   return (
     <AuthGuard>
@@ -149,29 +158,76 @@ export default function DrillLeaderboard() {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Drill Leaderboard</h1>
           </div>
-          <p className="text-muted-foreground text-sm sm:text-base mb-6">
+          <p className="text-muted-foreground text-sm sm:text-base mb-4">
             {activeDrill === OVERALL ? "Total points across all games. " : ""}
             {mode === "first"
               ? "Contest standings: everyone's very first attempt at each game. Keep playing to improve — your first score stays locked in."
               : "Best streak ever recorded across all attempts."}
           </p>
 
-          <div className="flex gap-2 mb-6">
-            <Button
-              size="sm"
-              variant={mode === "first" ? "default" : "outline"}
-              onClick={() => setMode("first")}
-            >
+          <div className="flex gap-2 mb-4">
+            <Button size="sm" variant={mode === "first" ? "default" : "outline"} onClick={() => setMode("first")}>
               Contest (1st attempt)
             </Button>
-            <Button
-              size="sm"
-              variant={mode === "best" ? "default" : "outline"}
-              onClick={() => setMode("best")}
-            >
+            <Button size="sm" variant={mode === "best" ? "default" : "outline"} onClick={() => setMode("best")}>
               Best ever
             </Button>
           </div>
+
+          {/* Your standing */}
+          {!loading && (
+            <Card className="p-4 sm:p-5 mb-6 border-primary/30 bg-primary/5">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                    Your standing {activeDrill === OVERALL ? "· Overall" : `· ${TABS.find((t) => t.key === activeDrill)?.label}`}
+                  </div>
+                  <div className="flex items-baseline gap-4">
+                    <div>
+                      <span className="text-2xl font-bold text-foreground">
+                        {me ? `#${myIndex + 1}` : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-1">
+                        of {ranking.length || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-primary font-semibold">
+                      <Flame className="w-4 h-4" />
+                      {me ? (mode === "first" ? me.first_streak : me.best_streak) : 0}
+                      <span className="text-xs text-muted-foreground font-normal ml-1">
+                        {activeDrill === OVERALL ? "total points" : "points"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Contest points (all games)</div>
+                  <div className="text-xl font-bold text-foreground">{myTotal}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {gamesPlayed} of {DRILLS.length} games played
+                  </div>
+                </div>
+              </div>
+
+              {/* Point breakdown */}
+              <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {myBreakdown.map((b) => (
+                  <div
+                    key={b.label}
+                    className={
+                      "flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs " +
+                      (b.points === null ? "bg-muted/40 text-muted-foreground" : "bg-background border border-border")
+                    }
+                  >
+                    <span className="truncate">{b.label}</span>
+                    <span className={b.points === null ? "" : "font-semibold text-foreground"}>
+                      {b.points === null ? "—" : b.points}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           <Tabs value={activeDrill} onValueChange={setActiveDrill}>
             <TabsList className="w-full h-auto flex-wrap justify-start gap-1 bg-muted/50 p-1">
@@ -200,14 +256,20 @@ export default function DrillLeaderboard() {
                       {rows.map((r, i) => (
                         <li
                           key={r.user_id}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border border-border"
+                          className={
+                            "flex items-center gap-3 p-3 rounded-lg border " +
+                            (r.user_id === userId
+                              ? "bg-primary/10 border-primary/40"
+                              : "bg-muted/40 border-border")
+                          }
                         >
-                          <div className="w-8 text-center font-bold text-foreground/80">
-                            {i + 1}
-                          </div>
+                          <div className="w-8 text-center font-bold text-foreground/80">{i + 1}</div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm sm:text-base font-medium text-foreground truncate">
                               {r.full_name || r.email || "Team member"}
+                              {r.user_id === userId && (
+                                <span className="ml-2 text-xs text-primary font-semibold">You</span>
+                              )}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {activeDrill === OVERALL

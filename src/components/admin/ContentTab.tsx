@@ -14,6 +14,7 @@ import { PracticeScenarioManager } from "./PracticeScenarioManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { trainingModules } from "@/lib/modules";
+import { channelCategories } from "@/lib/categories";
 
 interface DealershipModule {
   id: string;
@@ -28,6 +29,7 @@ interface DealershipModule {
   video_url: string | null;
   video_title: string | null;
   announced_at: string | null;
+  category: string;
 }
 
 interface ModuleSection {
@@ -86,6 +88,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
   const [formVideoUrl, setFormVideoUrl] = useState("");
   const [formVideoTitle, setFormVideoTitle] = useState("");
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formCategory, setFormCategory] = useState<string>("phone");
 
   const fetchModules = async () => {
     setLoading(true);
@@ -140,6 +143,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     setFormVideoUrl("");
     setFormVideoTitle("");
     setFormIsActive(true);
+    setFormCategory("phone");
     setModuleDialogOpen(true);
   };
 
@@ -153,6 +157,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
     setFormVideoUrl(m.video_url || "");
     setFormVideoTitle(m.video_title || "");
     setFormIsActive(m.is_active);
+    setFormCategory(m.category || "phone");
     setModuleDialogOpen(true);
   };
 
@@ -172,6 +177,7 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       video_url: formVideoUrl.trim() || null,
       video_title: formVideoTitle.trim() || null,
       is_active: formIsActive,
+      category: formCategory,
       sort_order: editingModule ? editingModule.sort_order : modules.length,
     };
 
@@ -458,6 +464,9 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium truncate">{m.title}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {channelCategories.find(c => c.id === (m.category || "phone"))?.shortName || m.category}
+                    </Badge>
                     {!m.is_active && <Badge variant="secondary">Inactive</Badge>}
                     {m.base_module_id && (
                       <Badge variant="outline" className="text-xs">
@@ -565,6 +574,19 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">Select a default module to replace its content for this dealership, or leave blank for a brand new module.</p>
+            </div>
+
+            <div>
+              <Label>Category *</Label>
+              <Select value={formCategory} onValueChange={setFormCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {channelCategories.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">Controls which category gallery this module appears under on the Learn page.</p>
             </div>
 
             <div>

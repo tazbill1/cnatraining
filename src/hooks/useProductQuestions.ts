@@ -115,17 +115,19 @@ export function useHasProductQuestions(dealershipId: string | null) {
     wrong_claim: false,
     comparison: false,
   });
+  const [vehicles, setVehicles] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       if (!dealershipId) {
         setAvailable({ quiz: false, wrong_claim: false, comparison: false });
+        setVehicles([]);
         return;
       }
       const { data } = await supabase
         .from("product_questions")
-        .select("game_type")
+        .select("game_type, make, model, model_year")
         .eq("dealership_id", dealershipId)
         .eq("is_active", true);
       if (cancelled) return;
@@ -135,6 +137,11 @@ export function useHasProductQuestions(dealershipId: string | null) {
         wrong_claim: types.has("wrong_claim"),
         comparison: types.has("comparison"),
       });
+      const labels = new Set<string>();
+      (data || []).forEach((r) =>
+        labels.add([r.model_year, r.make, r.model].filter(Boolean).join(" "))
+      );
+      setVehicles(Array.from(labels).filter(Boolean));
     };
     load();
     return () => {
@@ -142,5 +149,5 @@ export function useHasProductQuestions(dealershipId: string | null) {
     };
   }, [dealershipId]);
 
-  return available;
+  return { ...available, vehicles };
 }

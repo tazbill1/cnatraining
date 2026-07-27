@@ -499,6 +499,42 @@ export type Database = {
         }
         Relationships: []
       }
+      drill_question_attempts: {
+        Row: {
+          created_at: string
+          dealership_id: string | null
+          drill_key: string
+          id: string
+          is_correct: boolean
+          question_id: string
+          topic: string | null
+          user_id: string
+          vehicle: string | null
+        }
+        Insert: {
+          created_at?: string
+          dealership_id?: string | null
+          drill_key: string
+          id?: string
+          is_correct: boolean
+          question_id: string
+          topic?: string | null
+          user_id: string
+          vehicle?: string | null
+        }
+        Update: {
+          created_at?: string
+          dealership_id?: string | null
+          drill_key?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          topic?: string | null
+          user_id?: string
+          vehicle?: string | null
+        }
+        Relationships: []
+      }
       drill_scores: {
         Row: {
           best_streak: number

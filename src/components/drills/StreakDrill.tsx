@@ -67,12 +67,17 @@ export function StreakDrill({
   backTo = "/scenarios",
   correctLabel = "Nice work",
   startingLives = 3,
+  secondsPerQuestion = 0,
+  loading = false,
+  emptyMessage = "No questions available yet.",
 }: StreakDrillProps) {
   const navigate = useNavigate();
 
   const [questions, setQuestions] = useState<ShuffledQuestion[]>([]);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(secondsPerQuestion);
   const [streak, setStreak] = useState(0);
   const [roundBest, setRoundBest] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -87,12 +92,21 @@ export function StreakDrill({
   };
 
   useEffect(() => {
-    setQuestions(buildRound());
     const stored = Number(localStorage.getItem(bestStreakKey) || "0");
     setBestStreak(isNaN(stored) ? 0 : stored);
     setSoundOnState(isSoundOn());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // (Re)build the round whenever the pool becomes available
+  useEffect(() => {
+    if (pool.length > 0 && questions.length === 0 && !finished) {
+      setQuestions(buildRound());
+      setTimeLeft(secondsPerQuestion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pool]);
+
 
   const current = questions[index];
   const total = questions.length;

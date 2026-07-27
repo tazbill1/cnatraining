@@ -8,11 +8,14 @@ export interface DrillDefinition {
   href: string;
   icon: LucideIcon;
   channel: ChannelCategory;
+  /** Grouping used on the Practice & Games page. */
+  group?: "product" | "skills";
   /** Only shown when the dealership has product questions of this game type. */
   requiresProductGame?: "quiz" | "wrong_claim" | "comparison";
   /** Roleplay-derived drills only make sense when the dealership has modules. */
   requiresModules?: boolean;
   matchModule?: RegExp;
+
 }
 
 export const drillRegistry: DrillDefinition[] = [

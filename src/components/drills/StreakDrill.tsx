@@ -257,6 +257,14 @@ export function StreakDrill({
             <p className="text-muted-foreground text-sm sm:text-base">{subtitle}</p>
           </div>
 
+          {loading && (
+            <Card className="p-6 text-center text-muted-foreground">Loading questions…</Card>
+          )}
+
+          {!loading && pool.length === 0 && (
+            <Card className="p-6 text-center text-muted-foreground">{emptyMessage}</Card>
+          )}
+
           {!finished && current && (
             <>
               <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
@@ -264,6 +272,20 @@ export function StreakDrill({
                   Question {index + 1} of {total}
                 </div>
                 <div className="flex items-center gap-4 text-sm">
+                  {secondsPerQuestion > 0 && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-1.5 font-semibold tabular-nums",
+                        timeLeft <= 3 && selected === null && !timedOut
+                          ? "text-destructive animate-pulse"
+                          : "text-foreground"
+                      )}
+                      aria-label={`${timeLeft} seconds left`}
+                    >
+                      <Timer className="w-4 h-4" />
+                      {selected !== null || timedOut ? "—" : `${timeLeft}s`}
+                    </div>
+                  )}
                   {startingLives > 0 && (
                     <div className="flex items-center gap-1" aria-label={`${lives} lives remaining`}>
                       {Array.from({ length: startingLives }).map((_, i) => (
@@ -311,7 +333,7 @@ export function StreakDrill({
                 <div className="space-y-3">
                   {current.shuffledChoices.map((choice, i) => {
                     const isSelected = selected === i;
-                    const showResult = selected !== null;
+                    const showResult = selected !== null || timedOut;
                     const isCorrect = choice.correct;
                     return (
                       <button
@@ -339,26 +361,32 @@ export function StreakDrill({
                   })}
                 </div>
 
-                {selected !== null && (
+                {(selected !== null || timedOut) && (
                   <div
                     className={cn(
                       "mt-5 p-4 rounded-lg border",
-                      current.shuffledChoices[selected].correct
+                      selected !== null && current.shuffledChoices[selected].correct
                         ? "bg-success/10 border-success/30"
                         : "bg-muted border-border"
                     )}
                   >
                     <div className="text-xs uppercase tracking-wide font-semibold text-foreground mb-1">
-                      {current.shuffledChoices[selected].correct ? correctLabel : "Why this matters"}
+                      {timedOut
+                        ? "Out of time"
+                        : current.shuffledChoices[selected!].correct
+                        ? correctLabel
+                        : "Why this matters"}
                     </div>
                     <p className="text-sm text-foreground/90">
-                      {current.shuffledChoices[selected].why}
+                      {timedOut
+                        ? current.shuffledChoices.find((c) => c.correct)?.why
+                        : current.shuffledChoices[selected!].why}
                     </p>
                   </div>
                 )}
               </Card>
 
-              {selected !== null && lives > 0 && (
+              {(selected !== null || timedOut) && lives > 0 && (
                 <div className="sticky bottom-0 -mx-4 sm:mx-0 px-4 sm:px-0 py-3 sm:py-0 bg-gradient-to-t from-background via-background to-transparent sm:bg-none">
                   <Button onClick={handleNext} size="lg" className="w-full sm:w-auto min-h-[52px] text-base">
                     {index + 1 >= total ? "See Results" : "Next Question"}
@@ -367,6 +395,7 @@ export function StreakDrill({
               )}
             </>
           )}
+
 
 
           {finished && (

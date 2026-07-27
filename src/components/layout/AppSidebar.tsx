@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, History, Shield, Award, Bug } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, History, Shield, Award, Bug, Trophy } from "lucide-react";
 import { openBugReport } from "@/components/BugReportButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
@@ -15,6 +15,7 @@ const baseNavItems = [
   { icon: MessageSquare, label: "Practice & Games", path: "/scenarios", featureKey: null },
   { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
   
+  { icon: Trophy, label: "Leaderboard", path: "/drills/leaderboard", featureKey: "leaderboard_enabled" as const },
   { icon: History, label: "Session History", path: "/history", featureKey: null },
   { icon: Award, label: "Certificates", path: "/certificates", featureKey: "certificates_enabled" as const },
   { icon: Settings, label: "Settings", path: "/settings", featureKey: null },

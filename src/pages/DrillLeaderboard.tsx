@@ -19,6 +19,7 @@ const DRILLS: Array<{ key: string; label: string }> = [
   { key: "hot_button_best_streak", label: "Hot Button" },
   { key: "product_quiz_best_streak", label: "Product Quiz" },
   { key: "wrong_claim_best_streak", label: "Spot the Wrong Claim" },
+  { key: "comparison_best_streak", label: "Us vs Them" },
 ];
 
 interface Row {

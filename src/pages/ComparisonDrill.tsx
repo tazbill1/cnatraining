@@ -6,8 +6,9 @@ export default function ComparisonDrill() {
   const { questions, vehicles, isLoading } = useProductQuestions("comparison");
 
   const subtitle = vehicles.length
-    ? `The customer is cross-shopping. Pick the honest ${vehicles.join(", ")} answer before the clock runs out.`
-    : "The customer is cross-shopping. Pick the honest answer before the clock runs out.";
+    ? `The customer is cross-shopping. Show the ${vehicles.join(", ")} advantage — honestly — before the clock runs out.`
+    : "The customer is cross-shopping. Show your advantage — honestly — before the clock runs out.";
+
 
   return (
     <StreakDrill

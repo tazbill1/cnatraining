@@ -42,6 +42,7 @@ const HotButtonDrill = lazy(() => import("./pages/HotButtonDrill"));
 const DrillLeaderboard = lazy(() => import("./pages/DrillLeaderboard"));
 const ProductQuizDrill = lazy(() => import("./pages/ProductQuizDrill"));
 const WrongClaimDrill = lazy(() => import("./pages/WrongClaimDrill"));
+const ComparisonDrill = lazy(() => import("./pages/ComparisonDrill"));
 const Training = lazy(() => import("./pages/Training"));
 const VoiceTraining = lazy(() => import("./pages/VoiceTraining"));
 const Results = lazy(() => import("./pages/Results"));
@@ -106,6 +107,7 @@ const App = () => (
                   <Route path="/drills/hot-button" element={<HotButtonDrill />} />
                   <Route path="/drills/product-quiz" element={<ProductQuizDrill />} />
                   <Route path="/drills/wrong-claim" element={<WrongClaimDrill />} />
+                  <Route path="/drills/comparison" element={<ComparisonDrill />} />
                   <Route path="/drills/leaderboard" element={<DrillLeaderboard />} />
                   <Route path="/training/:scenarioId" element={<Training />} />
                   <Route path="/voice-training" element={<VoiceTraining />} />

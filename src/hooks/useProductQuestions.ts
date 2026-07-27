@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDealershipContext } from "@/hooks/useDealershipContext";
 import type { DrillItem, DrillChoice } from "@/components/drills/StreakDrill";
 
-export type ProductGameType = "quiz" | "wrong_claim";
+export type ProductGameType = "quiz" | "wrong_claim" | "comparison";
 
 interface ProductQuestionRow {
   id: string;
@@ -85,7 +85,13 @@ export function useProductQuestions(gameType: ProductGameType) {
         .map((r) => ({
           id: r.id,
           prompt: r.prompt,
-          promptLabel: r.prompt_label || (gameType === "quiz" ? "Question:" : "Spot the wrong claim:"),
+          promptLabel:
+            r.prompt_label ||
+            (gameType === "quiz"
+              ? "Question:"
+              : gameType === "comparison"
+                ? "The customer says:"
+                : "Spot the wrong claim:"),
           scenario: r.scenario || undefined,
           choices: toChoices(r.choices),
         }))
@@ -107,13 +113,14 @@ export function useHasProductQuestions(dealershipId: string | null) {
   const [available, setAvailable] = useState<Record<ProductGameType, boolean>>({
     quiz: false,
     wrong_claim: false,
+    comparison: false,
   });
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       if (!dealershipId) {
-        setAvailable({ quiz: false, wrong_claim: false });
+        setAvailable({ quiz: false, wrong_claim: false, comparison: false });
         return;
       }
       const { data } = await supabase
@@ -123,7 +130,11 @@ export function useHasProductQuestions(dealershipId: string | null) {
         .eq("is_active", true);
       if (cancelled) return;
       const types = new Set((data || []).map((r) => r.game_type));
-      setAvailable({ quiz: types.has("quiz"), wrong_claim: types.has("wrong_claim") });
+      setAvailable({
+        quiz: types.has("quiz"),
+        wrong_claim: types.has("wrong_claim"),
+        comparison: types.has("comparison"),
+      });
     };
     load();
     return () => {

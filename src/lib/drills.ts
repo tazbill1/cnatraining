@@ -94,6 +94,7 @@ export const drillRegistry: DrillDefinition[] = [
     href: "/drills/product-quiz",
     icon: Gauge,
     channel: "showroom",
+    group: "product",
     requiresProductGame: "quiz",
   },
   {
@@ -103,6 +104,7 @@ export const drillRegistry: DrillDefinition[] = [
     href: "/drills/wrong-claim",
     icon: ShieldAlert,
     channel: "showroom",
+    group: "product",
     requiresProductGame: "wrong_claim",
   },
   {
@@ -112,8 +114,10 @@ export const drillRegistry: DrillDefinition[] = [
     href: "/drills/comparison",
     icon: Swords,
     channel: "showroom",
+    group: "product",
     requiresProductGame: "comparison",
   },
+
 ];
 
 export const getDrillById = (id: string) => drillRegistry.find((d) => d.id === id);

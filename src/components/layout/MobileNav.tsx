@@ -45,7 +45,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
     settings?.dealership_tagline ||
     previewDealership?.name ||
     selectedDealership?.name ||
-    profile?.dealership_name ||
+    (isSuperAdmin ? "All Dealerships" : profile?.dealership_name) ||
     "Dealership";
 
   const navItems = baseNavItems.filter(item => {

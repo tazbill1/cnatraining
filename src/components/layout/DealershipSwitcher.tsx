@@ -25,6 +25,7 @@ export function DealershipSwitcher() {
   if (!isSuperAdmin) return null;
 
   const handleSelect = (id: string | null) => {
+    setPreviewDealershipId(null);
     setSelectedDealershipId(id);
     setOpen(false);
   };
@@ -35,7 +36,6 @@ export function DealershipSwitcher() {
       setPreviewDealershipId(null);
     } else {
       setPreviewDealershipId(dealershipId);
-      setSelectedDealershipId(dealershipId);
     }
     setOpen(false);
   };

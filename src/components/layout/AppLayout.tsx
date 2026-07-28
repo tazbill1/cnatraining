@@ -14,7 +14,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { settings } = useDealershipSettings();
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { previewDealership, selectedDealership } = useDealershipContext();
   const [logoError, setLogoError] = useState(false);
 
@@ -65,7 +65,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               />
             )}
             <span className="font-semibold text-lg">
-              {settings?.dealership_tagline || previewDealership?.name || selectedDealership?.name || profile?.dealership_name || "Sales Training"}
+              {settings?.dealership_tagline || previewDealership?.name || selectedDealership?.name || (isSuperAdmin ? "All Dealerships" : profile?.dealership_name) || "Sales Training"}
             </span>
           </header>
         )}

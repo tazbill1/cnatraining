@@ -38,9 +38,9 @@ const categoryOrder: ChannelCategory[] = ["phone", "internet", "showroom", "foll
 
 export default function Scenarios() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
-  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id || (dealerships.length === 1 ? dealerships[0].id : null);
+  const dealershipId = previewDealershipId || selectedDealershipId || (isSuperAdmin ? null : profile?.dealership_id) || (dealerships.length === 1 ? dealerships[0].id : null);
   const { vehicles: productVehicles, ...productGames } = useHasProductQuestions(dealershipId);
   const productLabel = productVehicles.length ? productVehicles.join(" · ") : null;
 

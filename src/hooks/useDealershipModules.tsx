@@ -91,10 +91,11 @@ function toTrainingModule(dm: DealershipModule): TrainingModule {
 }
 
 export function useDealershipModules() {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { previewDealershipId, selectedDealershipId } = useDealershipContext();
-  // Preview mode overrides selection, which overrides the user's own dealership
-  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id;
+  // Preview mode overrides selection. Super admins only fall back to their own dealership
+  // when they intentionally select/preview one; "All Dealerships" must not pin content.
+  const dealershipId = previewDealershipId || selectedDealershipId || (isSuperAdmin ? null : profile?.dealership_id);
 
   const { data, isLoading } = useQuery({
     queryKey: ["dealership-modules", dealershipId],

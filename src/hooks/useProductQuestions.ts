@@ -38,12 +38,12 @@ function toChoices(raw: unknown): DrillChoice[] {
 
 /** Loads a dealership's product-knowledge question bank for a given game type. */
 export function useProductQuestions(gameType: ProductGameType) {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
   const dealershipId =
     previewDealershipId ||
     selectedDealershipId ||
-    profile?.dealership_id ||
+    (isSuperAdmin ? null : profile?.dealership_id) ||
     (dealerships.length === 1 ? dealerships[0].id : null);
 
   const [rows, setRows] = useState<ProductQuestionRow[]>([]);

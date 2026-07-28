@@ -132,6 +132,8 @@ export function StreakDrill({
 
   const recordAttempt = (item: DrillItem | undefined, isCorrect: boolean) => {
     if (!item) return;
+    if (isCorrect) clearMissed(bestStreakKey, item.id);
+    else markMissed(bestStreakKey, item.id);
     logDrillAttempt({
       drillKey: bestStreakKey,
       questionId: item.id,
@@ -140,6 +142,7 @@ export function StreakDrill({
       isCorrect,
     });
   };
+
 
   const registerMiss = () => {
     setStreak(0);

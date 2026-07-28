@@ -6,8 +6,8 @@ export default function ProductQuizDrill() {
   const { questions, vehicles, isLoading } = useProductQuestions("quiz");
 
   const subtitle = vehicles.length
-    ? `Beat the clock on ${vehicles.join(", ")}. 15 questions, 12 seconds each — build your streak.`
-    : "Beat the clock. 15 questions, 12 seconds each — build your streak.";
+    ? `Beat the clock on ${vehicles.join(", ")}. 20 questions, 10 seconds each — build your streak.`
+    : "Beat the clock. 20 questions, 10 seconds each — build your streak.";
 
   return (
     <StreakDrill
@@ -18,7 +18,7 @@ export default function ProductQuizDrill() {
       loading={isLoading}
       emptyMessage="No product questions have been added for your dealership yet."
       bestStreakKey="product_quiz_best_streak"
-      questionsPerRound={15}
+      questionsPerRound={20}
       secondsPerQuestion={10}
       correctLabel="Product knowledge on point"
     />

@@ -19,7 +19,7 @@ export default function ProductQuizDrill() {
       emptyMessage="No product questions have been added for your dealership yet."
       bestStreakKey="product_quiz_best_streak"
       questionsPerRound={20}
-      secondsPerQuestion={10}
+      secondsPerQuestion={15}
       correctLabel="Product knowledge on point"
     />
   );

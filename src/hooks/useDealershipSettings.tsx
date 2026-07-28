@@ -71,10 +71,11 @@ async function fetchSettings(dealershipId: string): Promise<DealershipSettings> 
 }
 
 export function useDealershipSettings() {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { previewDealershipId, selectedDealershipId } = useDealershipContext();
-  // Preview mode overrides selection, which overrides the user's own dealership
-  const dealershipId = previewDealershipId || selectedDealershipId || profile?.dealership_id;
+  // Preview mode overrides selection. Super admins on "All Dealerships" should not inherit
+  // their profile dealership branding/settings.
+  const dealershipId = previewDealershipId || selectedDealershipId || (isSuperAdmin ? null : profile?.dealership_id);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["dealership-settings", dealershipId],

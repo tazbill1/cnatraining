@@ -11,6 +11,8 @@ import { saveDrillScore } from "@/lib/drillScores";
 import { drillSfx, isSoundOn, setSoundOn } from "@/lib/drillSounds";
 import { computeBadges } from "@/lib/drillBadges";
 import { logDrillAttempt } from "@/lib/drillAttempts";
+import { pickRotatedRound, markMissed, clearMissed } from "@/lib/drillRotation";
+
 
 export interface DrillChoice {
   text: string;

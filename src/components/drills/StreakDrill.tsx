@@ -11,6 +11,8 @@ import { saveDrillScore } from "@/lib/drillScores";
 import { drillSfx, isSoundOn, setSoundOn } from "@/lib/drillSounds";
 import { computeBadges } from "@/lib/drillBadges";
 import { logDrillAttempt } from "@/lib/drillAttempts";
+import { pickRotatedRound, markMissed, clearMissed } from "@/lib/drillRotation";
+
 
 export interface DrillChoice {
   text: string;
@@ -97,9 +99,10 @@ export function StreakDrill({
   const [soundOn, setSoundOnState] = useState(true);
 
   const buildRound = () => {
-    const picked = shuffle(pool).slice(0, Math.min(questionsPerRound, pool.length));
+    const picked = pickRotatedRound(pool, questionsPerRound, bestStreakKey);
     return picked.map((q) => ({ ...q, shuffledChoices: shuffle(q.choices) }));
   };
+
 
   useEffect(() => {
     const stored = Number(localStorage.getItem(bestStreakKey) || "0");
@@ -129,6 +132,8 @@ export function StreakDrill({
 
   const recordAttempt = (item: DrillItem | undefined, isCorrect: boolean) => {
     if (!item) return;
+    if (isCorrect) clearMissed(bestStreakKey, item.id);
+    else markMissed(bestStreakKey, item.id);
     logDrillAttempt({
       drillKey: bestStreakKey,
       questionId: item.id,
@@ -137,6 +142,7 @@ export function StreakDrill({
       isCorrect,
     });
   };
+
 
   const registerMiss = () => {
     setStreak(0);

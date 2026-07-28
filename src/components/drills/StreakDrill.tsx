@@ -97,9 +97,10 @@ export function StreakDrill({
   const [soundOn, setSoundOnState] = useState(true);
 
   const buildRound = () => {
-    const picked = shuffle(pool).slice(0, Math.min(questionsPerRound, pool.length));
+    const picked = pickRotatedRound(pool, questionsPerRound, bestStreakKey);
     return picked.map((q) => ({ ...q, shuffledChoices: shuffle(q.choices) }));
   };
+
 
   useEffect(() => {
     const stored = Number(localStorage.getItem(bestStreakKey) || "0");

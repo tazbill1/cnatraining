@@ -38,7 +38,15 @@ const TOPIC_LABELS: Record<string, string> = {
 
 const label = (t: string) => TOPIC_LABELS[t] || t.replace(/_/g, " ");
 
-const PRODUCT_DRILLS = ["product-quiz", "wrong-claim", "comparison"];
+const PRODUCT_DRILLS = [
+  "product_quiz_best_streak",
+  "wrong_claim_best_streak",
+  "comparison_best_streak",
+  // legacy/alternate keys
+  "product-quiz",
+  "wrong-claim",
+  "comparison",
+];
 
 /** Shows which product-knowledge topics the user misses most, based on recent game answers. */
 export function WeakTopics({ userId, limit = 5 }: { userId: string | null; limit?: number }) {

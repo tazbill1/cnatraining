@@ -6,8 +6,8 @@ export default function ProductQuizDrill() {
   const { questions, vehicles, isLoading } = useProductQuestions("quiz");
 
   const subtitle = vehicles.length
-    ? `Beat the clock on ${vehicles.join(", ")}. 20 questions, 10 seconds each — build your streak.`
-    : "Beat the clock. 20 questions, 10 seconds each — build your streak.";
+    ? `Beat the clock on ${vehicles.join(", ")}. 20 questions, 15 seconds each — build your streak.`
+    : "Beat the clock. 20 questions, 15 seconds each — build your streak.";
 
   return (
     <StreakDrill

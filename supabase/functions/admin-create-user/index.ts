@@ -57,23 +57,40 @@ Deno.serve(async (req) => {
       invited_by: user.id,
     });
 
+    let targetId: string | null = null;
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: { full_name: fullName },
     });
+
     if (createErr) {
-      return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: corsHeaders });
+      // Already registered -> reset the existing user's password instead
+      const { data: list } = await admin.auth.admin.listUsers();
+      const found = list?.users.find((u) => (u.email || "").toLowerCase() === email);
+      if (!found) {
+        return new Response(JSON.stringify({ error: createErr.message }), { status: 400, headers: corsHeaders });
+      }
+      const { error: updErr } = await admin.auth.admin.updateUserById(found.id, {
+        password,
+        email_confirm: true,
+      });
+      if (updErr) {
+        return new Response(JSON.stringify({ error: updErr.message }), { status: 400, headers: corsHeaders });
+      }
+      targetId = found.id;
+    } else {
+      targetId = created?.user?.id ?? null;
     }
 
     // Make sure profile/role landed correctly even if trigger defaults differed
-    if (created?.user) {
+    if (targetId) {
       await admin.from("profiles").update({ dealership_id: dealershipId, full_name: fullName || undefined })
-        .eq("user_id", created.user.id);
-      await admin.from("user_roles").delete().eq("user_id", created.user.id);
-      await admin.from("user_roles").insert({ user_id: created.user.id, role });
-    }
+        .eq("user_id", targetId);
+      await admin.from("user_roles").delete().eq("user_id", targetId);
+      await admin.from("user_roles").insert({ user_id: targetId, role });
+
 
     return new Response(JSON.stringify({ success: true, user_id: created?.user?.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

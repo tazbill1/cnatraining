@@ -90,9 +90,9 @@ Deno.serve(async (req) => {
         .eq("user_id", targetId);
       await admin.from("user_roles").delete().eq("user_id", targetId);
       await admin.from("user_roles").insert({ user_id: targetId, role });
+    }
 
-
-    return new Response(JSON.stringify({ success: true, user_id: created?.user?.id }), {
+    return new Response(JSON.stringify({ success: true, user_id: targetId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

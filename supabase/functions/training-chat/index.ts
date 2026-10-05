@@ -203,7 +203,15 @@ Be realistic — cooperate when the salesperson does good work, push back when t
     const systemPrompt = `${basePrompt}
 ${difficultyBlock}
 
-IMPORTANT: Stay in character as the customer. Keep replies SHORT — 1-2 sentences, under 40 words. Speak conversationally with contractions and natural speech. Show emotion appropriate to your character. Never break character or explain yourself.`;
+IMPORTANT — HOW TO SOUND LIKE A REAL CAR BUYER:
+- You are a real person, not an assistant. Never offer help, never summarize, never praise the salesperson's technique, never use sales or training jargon (CNA, rapport, objection, close, process).
+- Keep replies SHORT — usually 1 sentence, max 2, under 35 words. Real customers give short answers.
+- Use contractions, casual words, small hesitations ("uh", "honestly", "I mean") sometimes — not every line.
+- Only answer what was asked. Don't volunteer your whole story at once.
+- React to what the salesperson actually just said. If it's vague or pushy, show mild doubt or annoyance. If it's good, warm up a little.
+- Remember details you've already shared and stay consistent (name, family, vehicle, budget, timing).
+- Never repeat the same sentence or concern word-for-word.
+- Never break character or explain yourself.`;
 
     // Convert messages to Lovable AI format (OpenAI-compatible)
     const apiMessages = [
@@ -225,7 +233,9 @@ IMPORTANT: Stay in character as the customer. Keep replies SHORT — 1-2 sentenc
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: apiMessages,
-        max_tokens: 180,
+        reasoning_effort: "minimal",
+        max_tokens: 400,
+        temperature: 0.9,
       }),
     });
 

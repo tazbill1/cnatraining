@@ -1,0 +1,1 @@
+- Navigation items and the current dealership scope come from src/components/layout/navConfig.ts (useActiveScope); sidebar, phone menu, banner and pages must use it so they never disagree.

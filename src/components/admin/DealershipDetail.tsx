@@ -441,22 +441,30 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
 /* ─── Invite Section ─── */
 function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId: string; invitations: InvitationRow[]; onRefresh: () => void }) {
   const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [sending, setSending] = useState(false);
   const [resending, setResending] = useState<string | null>(null);
 
   const handleInvite = async (targetEmail?: string, isResend?: boolean) => {
     const sendEmail = targetEmail || email.trim();
     if (!sendEmail || !sendEmail.includes("@")) return;
+    if (!isResend && (!firstName.trim() || !lastName.trim())) {
+      toast.error("Please enter first and last name");
+      return;
+    }
     if (isResend) setResending(sendEmail);
     else setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: sendEmail, dealership_id: dealershipId, resend: true },
+        body: isResend
+          ? { email: sendEmail, dealershipId, resend: true }
+          : { email: sendEmail, dealershipId, firstName: firstName.trim(), lastName: lastName.trim() },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(data?.message || `Invitation sent to ${sendEmail}`);
-      if (!isResend) setEmail("");
+      if (!isResend) { setEmail(""); setFirstName(""); setLastName(""); }
       onRefresh();
     } catch (err: any) {
       toast.error(err.message || "Failed to send invitation");
@@ -472,6 +480,10 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
         <CardTitle className="text-base">Invitations</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-2">
+          <Input placeholder="First name *" value={firstName} maxLength={60} onChange={(e) => setFirstName(e.target.value)} aria-label="First name" />
+          <Input placeholder="Last name *" value={lastName} maxLength={60} onChange={(e) => setLastName(e.target.value)} aria-label="Last name" />
+        </div>
         <div className="flex gap-2">
           <Input
             placeholder="Enter email address..."
@@ -480,7 +492,7 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleInvite()}
           />
-          <Button onClick={() => handleInvite()} disabled={sending || !email.trim()}>
+          <Button onClick={() => handleInvite()} disabled={sending || !email.trim() || !firstName.trim() || !lastName.trim()}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
             Send Invite
           </Button>

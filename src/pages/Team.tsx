@@ -389,18 +389,18 @@ export default function Team() {
                 <Input placeholder="First name *" value={inviteFirstName} maxLength={60} onChange={(e) => setInviteFirstName(e.target.value)} aria-label="First name" required />
                 <Input placeholder="Last name *" value={inviteLastName} maxLength={60} onChange={(e) => setInviteLastName(e.target.value)} aria-label="Last name" required />
               </div>
+              <div className="relative mb-2">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="colleague@dealership.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="pl-10"
+                  onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
+                />
+              </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="colleague@dealership.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="pl-10"
-                    onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
-                  />
-                </div>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as "salesperson" | "manager")}

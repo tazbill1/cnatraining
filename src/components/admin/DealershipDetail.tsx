@@ -484,15 +484,16 @@ function InviteSection({ dealershipId, invitations, onRefresh }: { dealershipId:
           <Input placeholder="First name *" value={firstName} maxLength={60} onChange={(e) => setFirstName(e.target.value)} aria-label="First name" />
           <Input placeholder="Last name *" value={lastName} maxLength={60} onChange={(e) => setLastName(e.target.value)} aria-label="Last name" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
             placeholder="Enter email address..."
             type="email"
+            className="flex-1 min-w-0"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleInvite()}
           />
-          <Button onClick={() => handleInvite()} disabled={sending || !email.trim() || !firstName.trim() || !lastName.trim()}>
+          <Button className="shrink-0" onClick={() => handleInvite()} disabled={sending || !email.trim() || !firstName.trim() || !lastName.trim()}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
             Send Invite
           </Button>

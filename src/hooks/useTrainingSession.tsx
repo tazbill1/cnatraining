@@ -42,6 +42,8 @@ export function useTrainingSession() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [isGrading, setIsGrading] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timer logic
@@ -253,7 +255,8 @@ export function useTrainingSession() {
           );
       } catch (error) {
         logger.error("Error sending message:", error);
-        toast.error("Failed to get AI response. Please try again.");
+        setStreamingText("");
+        toast.error("The customer didn't respond. Your message is back in the box — tap send to try again.");
         options?.onError?.(content);
       } finally {
         setIsTyping(false);
@@ -269,6 +272,7 @@ export function useTrainingSession() {
       clearInterval(timerRef.current);
     }
 
+    setIsGrading(true);
     try {
       // Calculate scores based on scenario type
       const checklistProgress = sessionState.scenario
@@ -350,6 +354,8 @@ export function useTrainingSession() {
       logger.error("Error ending session:", error);
         toast.error("Failed to save session results");
       return null;
+    } finally {
+      setIsGrading(false);
     }
   }, [sessionState]);
 
@@ -363,6 +369,8 @@ export function useTrainingSession() {
     sessionState,
     isLoading,
     isTyping,
+    streamingText,
+    isGrading,
     startSession,
     sendMessage,
     endSession,

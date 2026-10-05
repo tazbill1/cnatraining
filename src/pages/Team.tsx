@@ -53,6 +53,8 @@ export default function Team() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFirstName, setInviteFirstName] = useState("");
+  const [inviteLastName, setInviteLastName] = useState("");
   const [inviteRole, setInviteRole] = useState<"salesperson" | "manager">("salesperson");
   const [inviteDealershipId, setInviteDealershipId] = useState<string>("");
   const [dealerships, setDealerships] = useState<Array<{ id: string; name: string }>>([]);
@@ -133,6 +135,10 @@ export default function Team() {
   };
 
   const handleSendInvite = async () => {
+    if (!inviteFirstName.trim() || !inviteLastName.trim()) {
+      toast.error("Please enter first and last name");
+      return;
+    }
     if (!inviteEmail.trim() || !inviteEmail.includes("@")) {
       toast.error("Please enter a valid email");
       return;
@@ -148,12 +154,14 @@ export default function Team() {
     setIsSendingInvite(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-invite", {
-        body: { email: inviteEmail.trim(), role: inviteRole, dealershipId: inviteDealershipId },
+        body: { email: inviteEmail.trim(), firstName: inviteFirstName.trim(), lastName: inviteLastName.trim(), role: inviteRole, dealershipId: inviteDealershipId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole} (${dealershipName})`);
       setInviteEmail("");
+      setInviteFirstName("");
+      setInviteLastName("");
       setInviteRole("salesperson");
       fetchInvitations();
     } catch (err: any) {
@@ -377,6 +385,10 @@ export default function Team() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <Input placeholder="First name *" value={inviteFirstName} maxLength={60} onChange={(e) => setInviteFirstName(e.target.value)} aria-label="First name" required />
+                <Input placeholder="Last name *" value={inviteLastName} maxLength={60} onChange={(e) => setInviteLastName(e.target.value)} aria-label="Last name" required />
+              </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

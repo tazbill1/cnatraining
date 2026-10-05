@@ -65,7 +65,12 @@ Deno.serve(async (req) => {
 
     const managerDealershipId = profileData?.dealership_id;
 
-    const { email, resend, role, dealershipId } = await req.json();
+    const body = await req.json();
+    const { email, resend, role } = body;
+    const dealershipId = body.dealershipId || body.dealership_id;
+    const clean = (v: unknown) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, 60) : "");
+    const firstName = clean(body.firstName);
+    const lastName = clean(body.lastName);
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email required" }), {
         status: 400,
@@ -119,25 +124,31 @@ Deno.serve(async (req) => {
       );
     }
 
-    // If already invited but not accepted, treat as resend automatically
+    if (!existing && (!firstName || !lastName)) {
+      return new Response(JSON.stringify({ error: "First and last name are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const nameFields = firstName && lastName ? { first_name: firstName, last_name: lastName } : {};
 
     // Insert or update invitation record
     if (!existing) {
       const { error: insertError } = await adminClient
         .from("invitations")
-        .insert({ email: trimmedEmail, invited_by: user.id, dealership_id: inviteDealershipId, role: inviteRole });
+        .insert({ email: trimmedEmail, invited_by: user.id, dealership_id: inviteDealershipId, role: inviteRole, ...nameFields });
       if (insertError) throw insertError;
     } else {
       await adminClient
         .from("invitations")
-        .update({ role: inviteRole, dealership_id: inviteDealershipId })
+        .update({ role: inviteRole, dealership_id: inviteDealershipId, ...nameFields })
         .eq("email", trimmedEmail);
     }
 
     // Send invite via Supabase Auth admin API
     const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
       trimmedEmail,
-      { redirectTo: "https://automotivesalespro.com" }
+      { redirectTo: "https://automotivesalespro.com", data: firstName && lastName ? { full_name: `${firstName} ${lastName}` } : undefined }
     );
 
     if (inviteError) {
@@ -150,7 +161,7 @@ Deno.serve(async (req) => {
         const { data: list } = await adminClient.auth.admin.listUsers();
         const found = list.users.find((u) => (u.email || "").toLowerCase() === trimmedEmail);
         if (found) {
-          await adminClient.from("profiles").update({ dealership_id: inviteDealershipId }).eq("user_id", found.id);
+          await adminClient.from("profiles").update({ dealership_id: inviteDealershipId, ...(firstName && lastName ? { full_name: `${firstName} ${lastName}` } : {}) }).eq("user_id", found.id);
           await adminClient.from("user_roles").delete().eq("user_id", found.id).eq("role", inviteRole);
           await adminClient.from("user_roles").insert({ user_id: found.id, role: inviteRole });
           await adminClient.from("invitations").update({ status: "accepted", used_at: new Date().toISOString(), dealership_id: inviteDealershipId, role: inviteRole }).eq("email", trimmedEmail);

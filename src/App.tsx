@@ -9,6 +9,7 @@ import { CrashReporter } from "@/components/debug/CrashReporter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { BugReportButton } from "@/components/BugReportButton";
+import { NameRequiredDialog } from "@/components/auth/NameRequiredDialog";
 import { installGlobalActionLogger } from "@/lib/actionLog";
 import { installGlobalErrorCapture } from "@/lib/errorCapture";
 
@@ -75,6 +76,7 @@ const App = () => (
         <ErrorBoundary>
           <AuthProvider>
             <DealershipProvider>
+              <NameRequiredDialog />
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   <Route path="/" element={<Index />} />

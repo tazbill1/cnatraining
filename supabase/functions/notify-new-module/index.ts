@@ -1,3 +1,4 @@
+import { sendAppEmail } from '../_shared/sendAppEmail.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
@@ -159,41 +160,20 @@ Deno.serve(async (req) => {
 
   await Promise.all(
     emails.map(async (email) => {
-      try {
-        const res = await fetch(
-          `${supabaseUrl}/functions/v1/send-transactional-email`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${supabaseServiceKey}`,
-              apikey: supabaseServiceKey,
-            },
-            body: JSON.stringify({
-              templateName: 'new-module-notification',
-              recipientEmail: email,
-              idempotencyKey: `new-modules-${dealershipId}-${moduleIdsCsv}-${email}`,
-              templateData: {
-                siteName: 'Automotive Sales Pro',
-                siteUrl: base,
-                learnUrl: `${base}/learn`,
-                dealershipName: dealership?.name,
-                modules: moduleItems,
-              },
-            }),
-          },
-        )
-        if (!res.ok) {
-          failed++
-          const t = await res.text()
-          console.error('send-transactional-email failed', res.status, t)
-        } else {
-          sent++
-        }
-      } catch (err) {
-        failed++
-        console.error('send-transactional-email threw', err)
-      }
+      const ok = await sendAppEmail({
+        templateName: 'new-module-notification',
+        recipientEmail: email,
+        idempotencyKey: `new-modules-${dealershipId}-${moduleIdsCsv}-${email}`,
+        templateData: {
+          siteName: 'Automotive Sales Pro',
+          siteUrl: base,
+          learnUrl: `${base}/learn`,
+          dealershipName: dealership?.name,
+          modules: moduleItems,
+        },
+      })
+      if (ok) sent++
+      else failed++
     }),
   )
 

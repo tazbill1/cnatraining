@@ -40,19 +40,6 @@ export const trainingModules: TrainingModule[] = [
     category: "showroom",
   },
   {
-    id: "base-statement-video",
-    title: "Module 2: Introducing the Base Statement",
-    description: "Watch the foundational video on building trust with every customer interaction. This sets the stage for mastering the Base Statement.",
-    icon: PlayCircle,
-    estimatedTime: "6 min",
-    difficulty: "beginner",
-    sections: [
-      { title: "Watch Video" },
-    ],
-    prerequisiteIds: [],
-    category: "showroom",
-  },
-  {
     id: "base-statement",
     title: "Module 2: The Base Statement",
     description: "Master the foundation of every customer interaction. Learn the script that sets the tone, builds trust, and differentiates your dealership from day one.",
@@ -64,7 +51,7 @@ export const trainingModules: TrainingModule[] = [
       { title: "Script Part 1: Community, Mission & Differentiation" },
       { title: "Script Part 2: Two Pillars & Close" },
     ],
-    prerequisiteIds: ["base-statement-video"],
+    prerequisiteIds: [],
     category: "showroom",
   },
   {

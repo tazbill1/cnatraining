@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { useHasProductQuestions } from "@/hooks/useProductQuestions";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -21,6 +20,7 @@ import {
 import { channelCategories, ChannelCategory, getCategoryBySlug } from "@/lib/categories";
 import { resolveDrills } from "@/lib/drills";
 import { useDealershipDrills } from "@/hooks/useDealershipDrills";
+import { useActiveScope } from "@/components/layout/navConfig";
 
 interface ModuleRow {
   id: string;
@@ -38,9 +38,10 @@ const categoryOrder: ChannelCategory[] = ["phone", "internet", "showroom", "foll
 
 export default function Scenarios() {
   const navigate = useNavigate();
-  const { profile, isSuperAdmin } = useAuth();
-  const { dealerships, previewDealershipId, selectedDealershipId } = useDealershipContext();
-  const dealershipId = previewDealershipId || selectedDealershipId || (isSuperAdmin ? null : profile?.dealership_id) || (dealerships.length === 1 ? dealerships[0].id : null);
+  const { isSuperAdmin, isManager } = useAuth();
+  const scope = useActiveScope();
+  const dealershipId = scope.dealershipId;
+  const [view, setView] = useState<"roleplays" | "games">("roleplays");
   const { vehicles: productVehicles, ...productGames } = useHasProductQuestions(dealershipId);
   const productLabel = productVehicles.length ? productVehicles.join(" · ") : null;
 
@@ -329,90 +330,6 @@ export default function Scenarios() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  {/bypass/i.test(mod.title) && (
-                    <div
-                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
-                      onClick={() => navigate("/drills/bypass")}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                        <Flame className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground text-sm sm:text-base">
-                          Bypass Streak Drill
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          10 quick objections. Build your streak.
-                        </div>
-                      </div>
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/bypass"); }}>
-                        Start Drill
-                      </Button>
-                    </div>
-                  )}
-                  {/presentation|demonstration/i.test(mod.title) && (
-                    <div
-                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
-                      onClick={() => navigate("/drills/spaced-match")}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                        <Target className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground text-sm sm:text-base">
-                          S.P.A.C.E.D. Match
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Match F.A.B. statements to the right customer need.
-                        </div>
-                      </div>
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/spaced-match"); }}>
-                        Start Drill
-                      </Button>
-                    </div>
-                  )}
-                  {/closing/i.test(mod.title) && (
-                    <div
-                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
-                      onClick={() => navigate("/drills/either-or-close")}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                        <Handshake className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground text-sm sm:text-base">
-                          Either/Or Close Match
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Pick the strongest either/or close for each moment.
-                        </div>
-                      </div>
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/either-or-close"); }}>
-                        Start Drill
-                      </Button>
-                    </div>
-                  )}
-                  {/objection/i.test(mod.title) && (
-                    <div
-                      className="mb-4 p-4 rounded-xl border border-primary/30 bg-primary/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-primary/10 transition-colors"
-                      onClick={() => navigate("/drills/cric-match")}
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                        <MessageCircleQuestion className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground text-sm sm:text-base">
-                          C.R.I.C. Category Match
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Budget, Decision, or Deal? Categorize the objection fast.
-                        </div>
-                      </div>
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate("/drills/cric-match"); }}>
-                        Start Drill
-                      </Button>
-                    </div>
-                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
                     {modScenarios.map((scenario) => (
                       <ScenarioCard
@@ -494,11 +411,22 @@ export default function Scenarios() {
               <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
                 <Building2 className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h2 className="text-lg font-semibold text-foreground mb-2">No dealership linked</h2>
-              <p className="text-sm text-muted-foreground max-w-md mb-6">
-                Your account isn't linked to a dealership yet — contact your manager to get set up.
-              </p>
-              <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+              {isSuperAdmin ? (
+                <>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">Pick a dealership</h2>
+                  <p className="text-sm text-muted-foreground max-w-md mb-6">
+                    You're viewing all dealerships. Choose one in the bar above (or the switcher in the menu) to see its roleplays and games.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">No dealership linked</h2>
+                  <p className="text-sm text-muted-foreground max-w-md mb-6">
+                    Your account isn't linked to a dealership yet — contact your manager to get set up.
+                  </p>
+                  <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+                </>
+              )}
             </div>
           ) : isLoading ? (
             <div className="space-y-6">
@@ -510,13 +438,37 @@ export default function Scenarios() {
               </div>
             </div>
           ) : availableChannels.length === 0 && !hasUnmapped && visibleDrills.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No practice scenarios are available for your dealership yet.
+            <div className="flex flex-col items-center text-center py-12">
+              <h2 className="text-lg font-semibold text-foreground mb-2">Nothing to practice yet at {scope.name}</h2>
+              <p className="text-sm text-muted-foreground max-w-md mb-6">
+                {isSuperAdmin
+                  ? "This dealership doesn't have any roleplays or games set up. Switch dealerships, or add training for this one in Admin."
+                  : isManager
+                  ? "No roleplays or games have been set up for your dealership yet. Contact your Werkandme admin to add training."
+                  : "Your manager hasn't added any roleplays or games yet. Check back soon, or keep going in Learn."}
+              </p>
+              <Button onClick={() => navigate(isSuperAdmin ? "/admin" : "/learn")}>{isSuperAdmin ? "Open Admin" : "Go to Learn"}</Button>
             </div>
           ) : (
             <>
-              {visibleDrills.length > 0 && renderFeaturedDrills()}
-              {availableChannels.length > 0 && (
+              {visibleDrills.length > 0 && (availableChannels.length > 0 || hasUnmapped) && (
+                <div className="mb-6 inline-flex rounded-lg border border-border bg-muted p-1" role="tablist">
+                  {([["roleplays", `Roleplays (${scenarios.length})`], ["games", `Games (${visibleDrills.length})`]] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      role="tab"
+                      aria-selected={view === k}
+                      onClick={() => setView(k)}
+                      className={`min-h-[40px] px-4 rounded-md text-sm font-medium transition-colors ${view === k ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {visibleDrills.length > 0 && (view === "games" || (availableChannels.length === 0 && !hasUnmapped)) && renderFeaturedDrills()}
+              {view === "roleplays" && availableChannels.length > 0 && (
                 <Tabs
                   value={effectiveChannel ?? undefined}
                   onValueChange={(v) => setActiveCategory(v as ChannelCategory)}
@@ -551,7 +503,7 @@ export default function Scenarios() {
                   ))}
                 </Tabs>
               )}
-              {hasUnmapped && renderUnmapped()}
+              {view === "roleplays" && hasUnmapped && renderUnmapped()}
             </>
           )}
         </div>

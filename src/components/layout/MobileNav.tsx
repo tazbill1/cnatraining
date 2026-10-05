@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award, Bug, Trophy } from "lucide-react";
+import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award, Bug, Trophy, ChevronDown } from "lucide-react";
 import { openBugReport } from "@/components/BugReportButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
@@ -8,27 +9,7 @@ import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
-
-const baseNavItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: null },
-  
-  { icon: GraduationCap, label: "Learn", path: "/learn", featureKey: null },
-  { icon: MessageSquare, label: "Practice & Games", path: "/scenarios", featureKey: null },
-  { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
-  
-  { icon: Trophy, label: "Leaderboard", path: "/drills/leaderboard", featureKey: "leaderboard_enabled" as const },
-  { icon: History, label: "Session History", path: "/history", featureKey: null },
-  { icon: Award, label: "Certificates", path: "/certificates", featureKey: "certificates_enabled" as const },
-  { icon: Settings, label: "Settings", path: "/settings", featureKey: null },
-];
-
-const managerItems = [
-  { icon: Users, label: "Team", path: "/team" },
-];
-
-const adminItems = [
-  { icon: Shield, label: "Admin", path: "/admin" },
-];
+import { filterNavItems, managerItems, adminItems, useActiveScope } from "./navConfig";
 
 interface MobileNavProps {
   open: boolean;
@@ -38,21 +19,12 @@ interface MobileNavProps {
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   const { profile, isManager, isSuperAdmin, signOut } = useAuth();
   const { settings } = useDealershipSettings();
-  const { previewDealership, selectedDealership } = useDealershipContext();
   const location = useLocation();
+  const [showMore, setShowMore] = useState(false);
 
-  const activeDealershipName =
-    settings?.dealership_tagline ||
-    previewDealership?.name ||
-    selectedDealership?.name ||
-    (isSuperAdmin ? "All Dealerships" : profile?.dealership_name) ||
-    "Dealership";
+  const activeDealershipName = useActiveScope().name;
 
-  const navItems = baseNavItems.filter(item => {
-    if (!item.featureKey) return true;
-    if (!settings) return true;
-    return settings[item.featureKey as keyof typeof settings] !== false;
-  });
+  const navItems = filterNavItems(settings);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -91,7 +63,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
+          {[...navItems.filter((i) => !i.secondary), ...(showMore ? navItems.filter((i) => i.secondary) : [])].map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -107,6 +79,15 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
               <span className="font-medium">{item.label}</span>
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent/50"
+            aria-expanded={showMore}
+          >
+            <ChevronDown className={cn("w-5 h-5 transition-transform", showMore && "rotate-180")} />
+            <span className="font-medium">{showMore ? "Less" : "More"}</span>
+          </button>
 
           {isManager && (
             <>

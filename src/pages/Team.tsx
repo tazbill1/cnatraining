@@ -53,6 +53,7 @@ export default function Team() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserEngagement[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteFirstName, setInviteFirstName] = useState("");
   const [inviteLastName, setInviteLastName] = useState("");
   const [inviteRole, setInviteRole] = useState<"salesperson" | "manager">("salesperson");
@@ -383,8 +384,15 @@ export default function Team() {
               <CardDescription className="text-xs md:text-sm">
                 Send an invitation email to add someone to the platform
               </CardDescription>
+              {!showInviteForm && (
+                <Button className="mt-3 self-start" onClick={() => setShowInviteForm(true)}>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite someone
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
+              {showInviteForm && (<>
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <Input placeholder="First name *" value={inviteFirstName} maxLength={60} onChange={(e) => setInviteFirstName(e.target.value)} aria-label="First name" required />
                 <Input placeholder="Last name *" value={inviteLastName} maxLength={60} onChange={(e) => setInviteLastName(e.target.value)} aria-label="Last name" required />
@@ -441,6 +449,8 @@ export default function Team() {
                   </span>
                 )}
               </p>
+              <Button variant="ghost" size="sm" className="mt-1 -ml-2" onClick={() => setShowInviteForm(false)}>Close</Button>
+              </>)}
 
               {invitations.length > 0 && (
                 <div className="mt-4">

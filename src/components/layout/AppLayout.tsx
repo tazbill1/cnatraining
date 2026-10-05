@@ -1,10 +1,10 @@
 import { ReactNode, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { AppSidebar } from "./AppSidebar";
 import { MobileNav } from "./MobileNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDealershipSettings } from "@/hooks/useDealershipSettings";
-import { useDealershipContext } from "@/hooks/useDealershipContext";
+import { ScopeBanner } from "./ScopeBanner";
+import { useActiveScope } from "./navConfig";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -14,8 +14,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { settings } = useDealershipSettings();
-  const { profile, isSuperAdmin } = useAuth();
-  const { previewDealership, selectedDealership } = useDealershipContext();
+  const scope = useActiveScope();
   const [logoError, setLogoError] = useState(false);
 
   // Set --dealership-color CSS variable for downstream use
@@ -65,10 +64,11 @@ export function AppLayout({ children }: AppLayoutProps) {
               />
             )}
             <span className="font-semibold text-lg">
-              {settings?.dealership_tagline || previewDealership?.name || selectedDealership?.name || (isSuperAdmin ? "All Dealerships" : profile?.dealership_name) || "Sales Training"}
+              {scope.name}
             </span>
           </header>
         )}
+        <ScopeBanner />
         {children}
       </main>
     </div>

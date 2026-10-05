@@ -55,7 +55,7 @@ declare global {
 
 export type VoiceStatus = "idle" | "listening" | "countdown" | "sending";
 
-const SILENCE_COUNTDOWN_SECONDS = 2;
+const SILENCE_COUNTDOWN_SECONDS = 1;
 const MAX_RETRY_ATTEMPTS = 2;
 
 export function useVoiceChat(options: UseVoiceChatOptions = {}) {
@@ -312,7 +312,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
             if (finalTranscriptRef.current.trim() && voiceStatusRef.current === "listening") {
               startSilenceCountdown();
             }
-          }, 1500);
+          }, 700);
         }
       };
 
@@ -508,8 +508,49 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
           throw new Error(`TTS request failed: ${response.status}`);
         }
 
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
+        // Start playback while audio is still downloading when the browser supports it.
+        let audioUrl: string;
+        const canStream =
+          typeof window.MediaSource !== "undefined" &&
+          MediaSource.isTypeSupported("audio/mpeg") &&
+          !!response.body;
+        if (canStream && response.body) {
+          const mediaSource = new MediaSource();
+          audioUrl = URL.createObjectURL(mediaSource);
+          const body = response.body;
+          mediaSource.addEventListener("sourceopen", () => {
+            const sb = mediaSource.addSourceBuffer("audio/mpeg");
+            const reader = body.getReader();
+            const queue: Uint8Array[] = [];
+            let finished = false;
+            const pump = () => {
+              if (sb.updating) return;
+              const next = queue.shift();
+              if (next) {
+                sb.appendBuffer(next);
+              } else if (finished && mediaSource.readyState === "open") {
+                try { mediaSource.endOfStream(); } catch { /* already ended */ }
+              }
+            };
+            sb.addEventListener("updateend", pump);
+            void (async () => {
+              try {
+                for (;;) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  if (value) queue.push(value);
+                  pump();
+                }
+              } finally {
+                finished = true;
+                pump();
+              }
+            })();
+          }, { once: true });
+        } else {
+          const audioBlob = await response.blob();
+          audioUrl = URL.createObjectURL(audioBlob);
+        }
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
 

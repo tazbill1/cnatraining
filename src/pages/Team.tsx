@@ -22,6 +22,8 @@ import { formatDistanceToNow } from "date-fns";
 import { logger } from "@/lib/logger";
 import { downloadCsv } from "@/lib/csvExport";
 import { TeamProgressDashboard } from "@/components/team/TeamProgressDashboard";
+import { CourseAssignmentsPanel } from "@/components/team/CourseAssignmentsPanel";
+import { useActiveScope } from "@/components/layout/navConfig";
 
 interface UserEngagement {
   id: string;
@@ -48,6 +50,7 @@ export default function Team() {
   const { user } = useAuth();
   
   const isMobile = useIsMobile();
+  const { dealershipId: scopeDealershipId } = useActiveScope();
   const [isManager, setIsManager] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -563,7 +566,7 @@ export default function Team() {
           {/* User Tables/Cards */}
           <Tabs defaultValue="all" className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <TabsList className="w-full md:w-auto grid grid-cols-5 md:flex">
+              <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex">
                 <TabsTrigger value="all" className="text-xs md:text-sm">
                   All ({users.length})
                 </TabsTrigger>
@@ -575,6 +578,9 @@ export default function Team() {
                 </TabsTrigger>
                 <TabsTrigger value="progress" className="text-xs md:text-sm">
                   <GraduationCap className="w-3 h-3 mr-1" /> Progress
+                </TabsTrigger>
+                <TabsTrigger value="assignments" className="text-xs md:text-sm">
+                  <ClipboardList className="w-3 h-3 mr-1" /> Assign
                 </TabsTrigger>
                 <TabsTrigger value="insights" className="text-xs md:text-sm">
                   <BarChart3 className="w-3 h-3 mr-1" /> Insights
@@ -652,6 +658,13 @@ export default function Team() {
 
             <TabsContent value="progress">
               <TeamProgressDashboard userIds={users.map((u) => u.user_id)} />
+            </TabsContent>
+
+            <TabsContent value="assignments">
+              <CourseAssignmentsPanel
+                dealershipId={scopeDealershipId}
+                members={users.map((u) => ({ user_id: u.user_id, full_name: u.full_name, email: u.email }))}
+              />
             </TabsContent>
 
             <TabsContent value="insights">

@@ -598,26 +598,6 @@ function TrainingConfigTab({ dealershipId, settings, onSaved }: { dealershipId: 
         </CardContent>
       </Card>
 
-      {/* Required Modules */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Required Modules</CardTitle>
-          <p className="text-sm text-muted-foreground">Subset of enabled modules that must be completed.</p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {trainingModules.filter(m => enabledModules.includes(m.id)).map(m => (
-            <div key={m.id} className="flex items-center space-x-3">
-              <Checkbox
-                id={`req-${m.id}`}
-                checked={requiredModules.includes(m.id)}
-                onCheckedChange={() => setRequiredModules(prev => toggleInArray(prev, m.id))}
-              />
-              <Label htmlFor={`req-${m.id}`} className="text-sm cursor-pointer">{m.title}</Label>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
       {/* Scenario Categories */}
       <Card>
         <CardHeader><CardTitle className="text-base">Scenario Categories</CardTitle></CardHeader>

@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
 import { ContinueBanner } from "@/components/dashboard/ContinueBanner";
+import { MyAssignedCourses } from "@/components/learn/MyAssignedCourses";
 import { useActiveScope } from "@/components/layout/navConfig";
 
 interface SessionData {
@@ -145,6 +146,7 @@ export default function Dashboard() {
 
           {/* First-Session Nudge */}
           <ContinueBanner />
+          <div className="mb-6"><MyAssignedCourses showCompleted /></div>
 
 
 

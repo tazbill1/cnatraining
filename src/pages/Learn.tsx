@@ -5,6 +5,7 @@ import { BookOpen, Search, X, Eye, ArrowLeft, ChevronRight } from "lucide-react"
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { ModuleCard } from "@/components/learn/ModuleCard";
+import { MyAssignedCourses } from "@/components/learn/MyAssignedCourses";
 import { trainingModules, checkPrerequisitesMet, ModuleDifficulty } from "@/lib/modules";
 import { channelCategories, getCategoryBySlug, isValidChannelCategory } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
@@ -279,6 +280,12 @@ export default function Learn() {
               />
             </div>
           </div>
+
+          {!activeCategory && (
+            <div className="mb-6">
+              <MyAssignedCourses />
+            </div>
+          )}
 
           {/* Global search — visible on gallery view only */}
           {!activeCategory && (

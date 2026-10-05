@@ -5,6 +5,7 @@ import type { ComponentType } from 'npm:react@18.3.1'
 import { NewModuleNotificationEmail } from './new-module-notification.tsx'
 import { ManagerWeeklyDigestEmail } from './manager-weekly-digest.tsx'
 import { LearningNudgeEmail } from './learning-nudge.tsx'
+import { CourseAssignedEmail } from './course-assigned.tsx'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -83,6 +84,25 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
       moduleTitle: 'Phone Skills – Module 2: The Modern Caller',
       moduleUrl: 'https://automotivesalespro.com/learn',
       daysSince: 3,
+    },
+  },
+  'course-assigned': {
+    component: CourseAssignedEmail,
+    subject: (data) =>
+      data?.isReminder
+        ? `Reminder: ${data?.courseTitle || 'your course'} is due ${data?.dueDateLabel || 'soon'}`
+        : `You've been assigned: ${data?.courseTitle || 'a new course'}`,
+    displayName: 'Course Assigned',
+    previewData: {
+      siteName: 'Automotive Sales Pro',
+      siteUrl: 'https://automotivesalespro.com',
+      firstName: 'Alex',
+      courseTitle: 'Showroom: Meet and Greet',
+      courseDescription: 'Master the first 10 seconds with L.A.S.T.',
+      courseUrl: 'https://automotivesalespro.com/learn',
+      dueDateLabel: 'Friday, Oct 16',
+      assignedByName: 'Tom Azbill',
+      isReminder: false,
     },
   },
 }

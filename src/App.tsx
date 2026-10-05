@@ -25,7 +25,6 @@ const Module2Content = lazy(() => import("./pages/Module2Content"));
 const Module3Content = lazy(() => import("./pages/Module3Content"));
 const Module4Content = lazy(() => import("./pages/Module4Content"));
 const BuyerTypesContent = lazy(() => import("./pages/BuyerTypesContent"));
-const BuyerTypesVideo = lazy(() => import("./pages/BuyerTypesVideo"));
 const BaseStatementContent = lazy(() => import("./pages/BaseStatementContent"));
 const DealershipModuleContent = lazy(() => import("./pages/DealershipModuleContent"));
 const Toolbox = lazy(() => import("./pages/Toolbox"));
@@ -91,14 +90,12 @@ const App = () => (
                   <Route path="/learn/objection-handling-framework" element={<Module3Content />} />
                   <Route path="/learn/phone-sales-fundamentals" element={<Module4Content />} />
                   <Route path="/learn/buyer-types" element={<BuyerTypesContent />} />
-                  <Route path="/learn/base-statement-video" element={<BuyerTypesVideo />} />
                   <Route path="/learn/dealership/:moduleId" element={<DealershipModuleContent />} />
                   <Route path="/learn/:moduleId" element={<ModuleContent />} />
                   <Route path="/toolbox" element={<Toolbox />} />
                   <Route path="/toolbox/cna-form" element={<CNAForm />} />
                   <Route path="/toolbox/phone-scripts" element={<PhoneScripts />} />
                   <Route path="/toolbox/consultative-call-guide" element={<ConsultativeCallGuide />} />
-                  <Route path="/cna-form" element={<Navigate to="/toolbox/cna-form" replace />} />
                   <Route path="/scenarios" element={<Scenarios />} />
                   <Route path="/drills/bypass" element={<BypassDrill />} />
                   <Route path="/drills/phone-opener" element={<PhoneOpenerDrill />} />

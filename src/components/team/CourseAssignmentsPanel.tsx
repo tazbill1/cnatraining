@@ -189,7 +189,7 @@ export function CourseAssignmentsPanel({ dealershipId, members }: { dealershipId
                         checked={picked.includes(m.user_id)}
                         onCheckedChange={(v) => setPicked((p) => v ? [...p, m.user_id] : p.filter((x) => x !== m.user_id))}
                       />
-                      <span className="truncate">{m.full_name || m.email}</span>
+                      <span className="truncate">{m.full_name && m.full_name !== "Unknown" ? m.full_name : m.email}</span>
                     </label>
                   ))}
                 </div>

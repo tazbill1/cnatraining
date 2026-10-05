@@ -1,1 +1,2 @@
 - Navigation items and the current dealership scope come from src/components/layout/navConfig.ts (useActiveScope); sidebar, phone menu, banner and pages must use it so they never disagree.
+- Course assignments live in course_assignments (per person) + course_team_assignments (whole team, auto-applied to new profiles by trigger); all writes and assignment emails go through the assign-course function, reminders/new-hire emails through the daily send-scheduled-emails run. Why: one server-checked path keeps managers inside their dealership and avoids duplicate emails.

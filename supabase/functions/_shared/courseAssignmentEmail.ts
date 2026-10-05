@@ -1,6 +1,8 @@
 // Shared helper: sends the "course-assigned" app email (initial or reminder)
 // for one course_assignments row, then stamps notified_at / reminder_sent_at.
 
+import { sendAppEmail } from './sendAppEmail.ts'
+
 const SITE_NAME = 'Automotive Sales Pro'
 const SITE_URL = 'https://automotivesalespro.com'
 
@@ -13,8 +15,8 @@ export function formatDueDate(due: string | null | undefined): string {
 export async function sendCourseAssignmentEmail(
   // deno-lint-ignore no-explicit-any
   admin: any,
-  supabaseUrl: string,
-  serviceKey: string,
+  _supabaseUrl: string,
+  _serviceKey: string,
   assignment: { id: string; user_id: string; module_id: string; due_date: string | null; assigned_by: string | null },
   isReminder: boolean,
 ): Promise<boolean> {
@@ -28,36 +30,24 @@ export async function sendCourseAssignmentEmail(
   if (!profile?.email || !mod) return false
 
   const firstName = (profile.full_name || '').trim().split(/\s+/)[0] || ''
-  try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
-      body: JSON.stringify({
-        templateName: 'course-assigned',
-        recipientEmail: profile.email,
-        idempotencyKey: `course-${isReminder ? 'reminder' : 'assigned'}-${assignment.id}`,
-        templateData: {
-          siteName: SITE_NAME,
-          siteUrl: SITE_URL,
-          firstName,
-          courseTitle: mod.title,
-          courseDescription: mod.description || '',
-          courseUrl: `${SITE_URL}/learn/dealership/${assignment.module_id}`,
-          dueDateLabel: formatDueDate(assignment.due_date),
-          assignedByName: by?.full_name || '',
-          isReminder,
-        },
-        metadata: { assignment_id: assignment.id, user_id: assignment.user_id, module_id: assignment.module_id },
-      }),
-    })
-    if (!res.ok) {
-      console.error('course email failed', res.status, await res.text().catch(() => ''))
-      return false
-    }
-  } catch (err) {
-    console.error('course email threw', err)
-    return false
-  }
+  const ok = await sendAppEmail({
+    templateName: 'course-assigned',
+    recipientEmail: profile.email,
+    idempotencyKey: `course-${isReminder ? 'reminder' : 'assigned'}-${assignment.id}`,
+    templateData: {
+      siteName: SITE_NAME,
+      siteUrl: SITE_URL,
+      firstName,
+      courseTitle: mod.title,
+      courseDescription: mod.description || '',
+      courseUrl: `${SITE_URL}/learn/dealership/${assignment.module_id}`,
+      dueDateLabel: formatDueDate(assignment.due_date),
+      assignedByName: by?.full_name || '',
+      isReminder,
+    },
+    metadata: { assignment_id: assignment.id, user_id: assignment.user_id, module_id: assignment.module_id },
+  })
+  if (!ok) return false
   await admin
     .from('course_assignments')
     .update(isReminder ? { reminder_sent_at: new Date().toISOString() } : { notified_at: new Date().toISOString() })

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { sendAppEmail } from '../_shared/sendAppEmail.ts'
 import { sendCourseAssignmentEmail } from '../_shared/courseAssignmentEmail.ts'
 
 // Runs on a daily cron. Sends:
@@ -343,29 +344,11 @@ Deno.serve(async (req) => {
 })
 
 async function sendEmail(
-  supabaseUrl: string,
-  serviceKey: string,
-  body: Record<string, unknown>
+  _supabaseUrl: string,
+  _serviceKey: string,
+  body: { templateName: string; recipientEmail: string; idempotencyKey: string; templateData?: Record<string, unknown>; metadata?: Record<string, unknown> }
 ): Promise<boolean> {
-  try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify(body),
-    })
-    if (!res.ok) {
-      const t = await res.text().catch(() => '')
-      console.error('send-transactional-email failed', res.status, t)
-      return false
-    }
-    return true
-  } catch (err) {
-    console.error('send-transactional-email threw', err)
-    return false
-  }
+  return await sendAppEmail(body)
 }
 
 function formatWeekLabel(start: Date, end: Date) {

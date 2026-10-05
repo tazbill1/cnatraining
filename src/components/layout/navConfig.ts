@@ -25,7 +25,7 @@ export const baseNavItems: NavItem[] = [
 export const managerItems = [{ icon: Users, label: "Team", path: "/team" }];
 export const adminItems = [{ icon: Shield, label: "Admin", path: "/admin" }];
 
-export function filterNavItems(settings: Record<string, unknown> | null | undefined) {
+export function filterNavItems(settings: { leaderboard_enabled?: boolean | null; certificates_enabled?: boolean | null } | null | undefined) {
   return baseNavItems.filter((item) => {
     if (!item.featureKey || !settings) return true;
     return settings[item.featureKey] !== false;

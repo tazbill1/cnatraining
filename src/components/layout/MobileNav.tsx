@@ -24,7 +24,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
   const activeDealershipName = useActiveScope().name;
 
-  const navItems = filterNavItems(settings as Record<string, unknown> | null);
+  const navItems = filterNavItems(settings);
 
   const isActive = (path: string) => location.pathname === path;
 

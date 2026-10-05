@@ -18,7 +18,7 @@ export function AppSidebar() {
   const hasDealershipLogo = !!(settings?.logo_url?.trim());
   const activeDealershipName = useActiveScope().name;
 
-  const navItems = filterNavItems(settings as Record<string, unknown> | null);
+  const navItems = filterNavItems(settings);
 
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">

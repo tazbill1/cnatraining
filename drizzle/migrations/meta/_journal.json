@@ -15,6 +15,13 @@
       "when": 1791217182187,
       "tag": "0001_close_abandoned_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791221661189,
+      "tag": "0002_course_assignments",
+      "breakpoints": true
     }
   ]
 }

@@ -136,21 +136,68 @@ export function useTrainingSession() {
       setIsTyping(true);
 
       try {
-        // Call AI edge function
-        const response = await supabase.functions.invoke("training-chat", {
-          body: {
-            messages: updatedMessages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-            scenarioId: sessionState.scenario.id,
-            difficulty: sessionState.scenario.difficulty,
-          },
-        });
+        const payload = {
+          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+          scenarioId: sessionState.scenario.id,
+          difficulty: sessionState.scenario.difficulty,
+          stream: true,
+        };
 
-        if (response.error) throw response.error;
+        // Stream the reply word-by-word; retry automatically if nothing arrived yet.
+        const streamOnce = async (): Promise<string> => {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/training-chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${session?.access_token ?? ""}`,
+            },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok || !res.body) throw new Error(`training-chat ${res.status}`);
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let text = "";
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let idx: number;
+            while ((idx = buffer.indexOf("\n")) !== -1) {
+              const line = buffer.slice(0, idx).replace(/\r$/, "");
+              buffer = buffer.slice(idx + 1);
+              if (!line.startsWith("data:")) continue;
+              const json = line.slice(5).trim();
+              if (!json || json === "[DONE]") continue;
+              try {
+                const parsed = JSON.parse(json) as { choices?: { delta?: { content?: string } }[] };
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) {
+                  text += delta;
+                  setStreamingText(text);
+                }
+              } catch {
+                buffer = line + "\n" + buffer;
+                break;
+              }
+            }
+          }
+          if (!text.trim()) throw new Error("Empty reply");
+          return text.trim();
+        };
 
-        const aiContent = response.data.content;
+        let aiContent: string;
+        try {
+          aiContent = await streamOnce();
+        } catch (firstErr) {
+          logger.warn("Reply failed, retrying once:", firstErr);
+          setStreamingText("");
+          await new Promise((r) => setTimeout(r, 800));
+          aiContent = await streamOnce();
+        }
+        setStreamingText("");
         const aiMessage: Message = {
           id: crypto.randomUUID(),
           role: "assistant",

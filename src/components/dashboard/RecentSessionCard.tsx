@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface RecentSessionCardProps {
   scenarioType: string;
+  scenarioName?: string;
   date: Date;
   score: number;
   durationSeconds: number;
@@ -12,6 +13,7 @@ interface RecentSessionCardProps {
 
 export function RecentSessionCard({
   scenarioType,
+  scenarioName,
   date,
   score,
   durationSeconds,
@@ -40,7 +42,7 @@ export function RecentSessionCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <p className="font-medium text-foreground truncate">
-            {scenario?.name || scenarioType}
+            {scenarioName || scenario?.name || (scenarioType.startsWith("custom-") ? "Custom roleplay" : scenarioType.replace(/-/g, " "))}
           </p>
           {category && (
             <Badge variant="secondary" className="text-xs shrink-0">

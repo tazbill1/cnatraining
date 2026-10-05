@@ -48,6 +48,7 @@ serve(async (req) => {
     // Parse and validate input
     const body = await req.json();
     const { messages, scenarioId, difficulty } = body;
+    const wantStream = body.stream === true;
     const validDifficulties = new Set(["beginner", "intermediate", "advanced"]);
     const safeDifficulty = validDifficulties.has(difficulty) ? difficulty : "intermediate";
 
@@ -211,7 +212,8 @@ IMPORTANT — HOW TO SOUND LIKE A REAL CAR BUYER:
 - React to what the salesperson actually just said. If it's vague or pushy, show mild doubt or annoyance. If it's good, warm up a little.
 - Remember details you've already shared and stay consistent (name, family, vehicle, budget, timing).
 - Never repeat the same sentence or concern word-for-word.
-- Never break character or explain yourself.`;
+- Never break character or explain yourself.
+- Keep the conversation moving: if the salesperson seems stuck, gives a one-word reply, or goes quiet, nudge naturally the way a real shopper would ("So what would you suggest?", "What else should I know?", "Okay... so what's next?"). Never let the roleplay dead-end.`;
 
     // Convert messages to Lovable AI format (OpenAI-compatible)
     const apiMessages = [
@@ -236,6 +238,7 @@ IMPORTANT — HOW TO SOUND LIKE A REAL CAR BUYER:
         reasoning_effort: "minimal",
         max_tokens: 400,
         temperature: 0.9,
+        stream: wantStream,
       }),
     });
 
@@ -253,10 +256,14 @@ IMPORTANT — HOW TO SOUND LIKE A REAL CAR BUYER:
       throw new Error(`Lovable AI error: ${response.status}`);
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "I'm not sure what to say...";
+    if (wantStream && response.body) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-store" },
+      });
+    }
 
-    console.log("Lovable AI response received successfully");
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "Sorry, what was that?";
 
     return new Response(JSON.stringify({ content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

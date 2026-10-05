@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { sendCourseAssignmentEmail } from '../_shared/courseAssignmentEmail.ts'
 
 // Runs on a daily cron. Sends:
 //   - Manager weekly digest to admins/super_admins on Mondays
@@ -63,6 +64,8 @@ Deno.serve(async (req) => {
     nudgesSent: 0,
     digestErrors: 0,
     nudgeErrors: 0,
+    assignmentEmailsSent: 0,
+    remindersSent: 0,
   }
 
   // ---------- Manager Weekly Digest ----------
@@ -297,6 +300,43 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error('nudge error', err)
     results.nudgeErrors++
+  }
+
+  // ---------- Course assignments: new-hire emails + 2-day due reminders ----------
+  try {
+    // People who inherited a whole-team assignment when they joined
+    const { data: pending } = await supabase
+      .from('course_assignments')
+      .select('id, user_id, module_id, due_date, assigned_by')
+      .is('notified_at', null)
+      .limit(200)
+    for (const a of pending || []) {
+      if (await sendCourseAssignmentEmail(supabase, supabaseUrl, supabaseServiceKey, a, false)) results.assignmentEmailsSent++
+    }
+
+    const today = now.toISOString().slice(0, 10)
+    const inTwo = new Date(now.getTime() + 2 * 86400 * 1000).toISOString().slice(0, 10)
+    const { data: dueSoon } = await supabase
+      .from('course_assignments')
+      .select('id, user_id, module_id, due_date, assigned_by')
+      .is('reminder_sent_at', null)
+      .not('notified_at', 'is', null)
+      .gte('due_date', today)
+      .lte('due_date', inTwo)
+      .limit(500)
+    if (dueSoon && dueSoon.length > 0) {
+      const { data: done } = await supabase
+        .from('module_completions')
+        .select('user_id, module_id')
+        .in('user_id', [...new Set(dueSoon.map((a: any) => a.user_id))])
+      const doneKeys = new Set((done || []).map((c: any) => `${c.user_id}:${c.module_id}`))
+      for (const a of dueSoon) {
+        if (doneKeys.has(`${a.user_id}:dealership-${a.module_id}`)) continue
+        if (await sendCourseAssignmentEmail(supabase, supabaseUrl, supabaseServiceKey, a, true)) results.remindersSent++
+      }
+    }
+  } catch (err) {
+    console.error('course assignment email error', err)
   }
 
   return json({ ok: true, ...results }, 200)

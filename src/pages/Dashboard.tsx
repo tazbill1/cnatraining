@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { AchievementsSection } from "@/components/dashboard/AchievementsSection";
 import { ContinueBanner } from "@/components/dashboard/ContinueBanner";
+import { useActiveScope } from "@/components/layout/navConfig";
 
 interface SessionData {
   id: string;
@@ -27,6 +28,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const { settings } = useDealershipSettings();
+  const { dealershipId } = useActiveScope();
+  const [scenarioNames, setScenarioNames] = useState<Record<string, string>>({});
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [stats, setStats] = useState({
     totalSessions: 0,
@@ -53,6 +56,17 @@ export default function Dashboard() {
 
         const allSessions = (data || []) as SessionData[];
         setSessions(allSessions.slice(0, 5));
+        setScenarioNames({});
+        const customIds = [...new Set(allSessions
+          .filter((session) => session.scenario_type.startsWith("custom-"))
+          .map((session) => session.scenario_type.slice(7)))];
+        if (customIds.length > 0) {
+          let query = supabase.from("custom_scenarios").select("id, name").in("id", customIds);
+          if (dealershipId) query = query.eq("dealership_id", dealershipId);
+          const { data: customScenarios, error: namesError } = await query;
+          if (namesError) logger.error("Error fetching recent roleplay names:", namesError);
+          setScenarioNames(Object.fromEntries((customScenarios || []).map((scenario) => [`custom-${scenario.id}`, scenario.name])));
+        }
 
         const totalSessions = allSessions.length;
         const averageScore = totalSessions > 0
@@ -87,7 +101,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, dealershipId]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -256,6 +270,7 @@ export default function Dashboard() {
                       <RecentSessionCard
                         key={session.id}
                         scenarioType={session.scenario_type}
+                        scenarioName={scenarioNames[session.scenario_type]}
                         date={new Date(session.completed_at)}
                         score={session.score}
                         durationSeconds={session.duration_seconds}

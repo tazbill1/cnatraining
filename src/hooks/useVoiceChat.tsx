@@ -521,7 +521,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
           mediaSource.addEventListener("sourceopen", () => {
             const sb = mediaSource.addSourceBuffer("audio/mpeg");
             const reader = body.getReader();
-            const queue: Uint8Array[] = [];
+            const queue: BufferSource[] = [];
             let finished = false;
             const pump = () => {
               if (sb.updating) return;
@@ -538,7 +538,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
                 for (;;) {
                   const { done, value } = await reader.read();
                   if (done) break;
-                  if (value) queue.push(value);
+                  if (value) queue.push(new Uint8Array(value));
                   pump();
                 }
               } finally {

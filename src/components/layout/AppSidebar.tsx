@@ -7,48 +7,18 @@ import { useDealershipContext } from "@/hooks/useDealershipContext";
 import { cn } from "@/lib/utils";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { DealershipSwitcher } from "./DealershipSwitcher";
-
-const baseNavItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: null },
-  
-  { icon: GraduationCap, label: "Learn", path: "/learn", featureKey: null },
-  { icon: MessageSquare, label: "Practice & Games", path: "/scenarios", featureKey: null },
-  { icon: Wrench, label: "Toolbox", path: "/toolbox", featureKey: null },
-  
-  { icon: Trophy, label: "Leaderboard", path: "/drills/leaderboard", featureKey: "leaderboard_enabled" as const },
-  { icon: History, label: "Session History", path: "/history", featureKey: null },
-  { icon: Award, label: "Certificates", path: "/certificates", featureKey: "certificates_enabled" as const },
-  { icon: Settings, label: "Settings", path: "/settings", featureKey: null },
-];
-
-const managerItems = [
-  { icon: Users, label: "Team", path: "/team" },
-];
-
-const adminItems = [
-  { icon: Shield, label: "Admin", path: "/admin" },
-];
+import { filterNavItems, managerItems, adminItems, useActiveScope } from "./navConfig";
 
 export function AppSidebar() {
   const { profile, isManager, isSuperAdmin, signOut } = useAuth();
   const { settings } = useDealershipSettings();
-  const { previewDealership, selectedDealership } = useDealershipContext();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
   const hasDealershipLogo = !!(settings?.logo_url?.trim());
-  const activeDealershipName =
-    settings?.dealership_tagline ||
-    previewDealership?.name ||
-    selectedDealership?.name ||
-    (isSuperAdmin ? "All Dealerships" : profile?.dealership_name) ||
-    "Dealership";
+  const activeDealershipName = useActiveScope().name;
 
-  const navItems = baseNavItems.filter(item => {
-    if (!item.featureKey) return true;
-    if (!settings) return true; // default: show all
-    return settings[item.featureKey as keyof typeof settings] !== false;
-  });
+  const navItems = filterNavItems(settings as Record<string, unknown> | null);
 
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen sticky top-0">

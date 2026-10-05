@@ -674,8 +674,10 @@ export type Database = {
           created_at: string
           dealership_id: string | null
           email: string
+          first_name: string | null
           id: string
           invited_by: string
+          last_name: string | null
           role: Database["public"]["Enums"]["app_role"]
           status: string
           used_at: string | null
@@ -684,8 +686,10 @@ export type Database = {
           created_at?: string
           dealership_id?: string | null
           email: string
+          first_name?: string | null
           id?: string
           invited_by: string
+          last_name?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           used_at?: string | null
@@ -694,8 +698,10 @@ export type Database = {
           created_at?: string
           dealership_id?: string | null
           email?: string
+          first_name?: string | null
           id?: string
           invited_by?: string
+          last_name?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           used_at?: string | null

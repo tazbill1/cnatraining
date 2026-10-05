@@ -62,6 +62,8 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     sessionState,
     isLoading,
     isTyping,
+    streamingText,
+    isGrading,
     startSession,
     sendMessage,
     endSession,
@@ -145,7 +147,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [sessionState.messages, isTyping]);
+  }, [sessionState.messages, isTyping, streamingText]);
 
   // Auto-speak new assistant messages
   useEffect(() => {
@@ -227,6 +229,18 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
       }
     }
   };
+
+  if (isGrading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4 p-6 text-center" role="status" aria-live="polite">
+        <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <h2 className="text-xl font-semibold">Grading your conversation…</h2>
+        <p className="text-muted-foreground max-w-sm">
+          Reviewing each step, scoring your checklist, and writing coaching tips. This usually takes 5–15 seconds.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading || !sessionState.scenario) {
     return (
@@ -377,7 +391,9 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 timestamp={message.timestamp}
               />
             ))}
-            {isTyping && <TypingIndicator />}
+            {isTyping && (streamingText ? (
+              <ChatBubble role="assistant" content={streamingText} timestamp={new Date()} />
+            ) : <TypingIndicator />)}
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -391,7 +407,9 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
                 <span className="font-medium">Microphone unavailable.</span>{" "}
                 {micPermission === "denied" 
                   ? "Please allow microphone access in your browser settings."
-                  : "Voice recording isn't available in this view."}{" "}
+                  : typeof window !== "undefined" && !(window.SpeechRecognition || window.webkitSpeechRecognition)
+                    ? "This browser can't listen to your voice (Firefox and some iPhone browsers don't support it). Use Chrome, Edge, or Safari for voice."
+                    : "Voice recording isn't available in this view."}{" "}
                 <span className="text-muted-foreground">
                   You can still type your responses below, or{" "}
                   <a 

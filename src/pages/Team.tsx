@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw, Download, GraduationCap, Trash2 } from "lucide-react";
+import { ArrowLeft, Users, Activity, Clock, TrendingUp, AlertTriangle, Mail, Loader2, UserPlus, Check, X, BarChart3, RefreshCw, Download, GraduationCap, Trash2, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -566,7 +566,7 @@ export default function Team() {
           {/* User Tables/Cards */}
           <Tabs defaultValue="all" className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <TabsList className="w-full md:w-auto grid grid-cols-3 md:flex">
+              <TabsList className="w-full md:w-auto h-auto grid grid-cols-3 md:flex">
                 <TabsTrigger value="all" className="text-xs md:text-sm">
                   All ({users.length})
                 </TabsTrigger>

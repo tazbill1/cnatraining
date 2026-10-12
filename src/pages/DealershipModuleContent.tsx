@@ -428,11 +428,21 @@ export default function DealershipModuleContent() {
                       </div>
                     )}
                     <Button
-                      onClick={() => (roleplays[0] ? goToRoleplay(roleplays[0].id) : navigate("/scenarios"))}
+                      onClick={() => {
+                        const key = getStageProgressKey(current);
+                        if (key) markStageComplete(key).catch(() => {});
+                        const quizIndex = stages.findIndex((s) => s.type === "quiz");
+                        if (quizIndex !== -1) {
+                          setCurrentStage(quizIndex);
+                          window.scrollTo(0, 0);
+                        } else {
+                          handleComplete();
+                        }
+                      }}
                       className="w-full sm:w-auto gap-2"
                     >
                       <Play className="w-4 h-4" />
-                      Start Roleplay
+                      {hasQuiz ? "Continue to Knowledge Check" : "Complete Module"}
                     </Button>
                   </div>
                 </div>

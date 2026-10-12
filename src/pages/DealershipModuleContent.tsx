@@ -318,7 +318,7 @@ export default function DealershipModuleContent() {
       setCurrentStage((s) => s + 1);
       window.scrollTo(0, 0);
     } else {
-      handleComplete();
+      handleComplete(roleplays[0] ? `/training/custom-${roleplays[0].id}` : "/learn");
     }
   };
 
@@ -608,7 +608,11 @@ export default function DealershipModuleContent() {
                 : undefined;
               return (
                 <Button onClick={handleNext} disabled={blocked} title={title}>
-                  {currentStage === totalStages - 1 ? "Complete Module" : "Continue"}
+                  {currentStage === totalStages - 1
+                    ? roleplays.length > 0
+                      ? "Complete & Start Roleplay"
+                      : "Complete Module"
+                    : "Continue"}
                   {currentStage < totalStages - 1 && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               );

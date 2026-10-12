@@ -263,7 +263,7 @@ export default function DealershipModuleContent() {
 
   const current = stages[currentStage] || stages[0];
 
-  const handleComplete = async () => {
+  const handleComplete = async (destination = "/learn") => {
     if (!user) return;
     const moduleKey = `dealership-${dbId}`;
     const score = hasQuiz ? calculateScore() : null;
@@ -279,7 +279,7 @@ export default function DealershipModuleContent() {
       );
       if (error) throw error;
       toast.success("Module completed!");
-      navigate("/learn");
+      navigate(destination);
     } catch (err) {
       const { captureError } = await import("@/lib/errorCapture");
       await captureError(err, {
@@ -534,7 +534,7 @@ export default function DealershipModuleContent() {
                             {roleplays.map((rp) => (
                               <button
                                 key={rp.id}
-                                onClick={() => goToRoleplay(rp.id)}
+                                onClick={() => handleComplete(`/training/custom-${rp.id}`)}
                                 className="w-full min-h-[48px] flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/40 hover:bg-muted transition-colors text-left"
                               >
                                 <Play className="w-5 h-5 text-primary shrink-0" />

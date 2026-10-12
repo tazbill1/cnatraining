@@ -83,6 +83,8 @@ export default function DealershipModuleContent() {
   const [resumeApplied, setResumeApplied] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [roleplays, setRoleplays] = useState<{ id: string; name: string; difficulty: string }[]>([]);
+  const goToRoleplay = (id: string) => navigate(`/training/custom-${id}`);
   const watchedStorageKey = getWatchedStorageKey(moduleId || "");
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(() => readWatchedVideos(moduleId || ""));
 
@@ -190,6 +192,16 @@ export default function DealershipModuleContent() {
         })),
         practice_scenarios: (practiceRes.data || []) as unknown as DBPracticeScenario[],
       });
+      const { data: rpData } = await supabase
+        .from("custom_scenarios")
+        .select("id, name, difficulty")
+        .eq("module_id", dbId)
+        .eq("is_active", true)
+        .order("created_at");
+      const order: Record<string, number> = { beginner: 0, intermediate: 1, advanced: 2 };
+      setRoleplays(
+        (rpData || []).slice().sort((a, b) => (order[a.difficulty] ?? 9) - (order[b.difficulty] ?? 9))
+      );
       setLoading(false);
     }
     load();
@@ -251,7 +263,7 @@ export default function DealershipModuleContent() {
 
   const current = stages[currentStage] || stages[0];
 
-  const handleComplete = async () => {
+  const handleComplete = async (destination = "/learn") => {
     if (!user) return;
     const moduleKey = `dealership-${dbId}`;
     const score = hasQuiz ? calculateScore() : null;
@@ -267,7 +279,7 @@ export default function DealershipModuleContent() {
       );
       if (error) throw error;
       toast.success("Module completed!");
-      navigate("/learn");
+      navigate(destination);
     } catch (err) {
       const { captureError } = await import("@/lib/errorCapture");
       await captureError(err, {
@@ -411,7 +423,10 @@ export default function DealershipModuleContent() {
                         "{ps.customer_quote}"
                       </div>
                     )}
-                    <Button onClick={() => navigate("/scenarios")} className="w-full sm:w-auto gap-2">
+                    <Button
+                      onClick={() => (roleplays[0] ? goToRoleplay(roleplays[0].id) : navigate("/scenarios"))}
+                      className="w-full sm:w-auto gap-2"
+                    >
                       <Play className="w-4 h-4" />
                       Start Roleplay
                     </Button>
@@ -511,7 +526,26 @@ export default function DealershipModuleContent() {
                         <p className="text-xs text-muted-foreground">
                           Need {QUIZ_PASS_THRESHOLD}% to complete this module.
                         </p>
+                        {roleplays.length > 0 && (
+                          <div className="pt-4 mt-2 border-t border-border text-left space-y-3">
+                            <p className="text-sm font-semibold text-foreground text-center">
+                              Now put it into practice
+                            </p>
+                            {roleplays.map((rp) => (
+                              <button
+                                key={rp.id}
+                                onClick={() => handleComplete(`/training/custom-${rp.id}`)}
+                                className="w-full min-h-[48px] flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/40 hover:bg-muted transition-colors text-left"
+                              >
+                                <Play className="w-5 h-5 text-primary shrink-0" />
+                                <span className="flex-1 text-sm font-medium text-foreground">{rp.name}</span>
+                                <Badge variant="outline" className="capitalize">{rp.difficulty}</Badge>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </>
+
                     ) : (
                       <>
                         <AlertCircle className="w-10 h-10 text-destructive mx-auto" />

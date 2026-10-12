@@ -177,9 +177,13 @@ export default function DealershipModuleContent() {
           : Promise.resolve({ data: [] as { section_key: string }[] }),
       ]);
 
-      // Merge DB-persisted progress with any local cache
-      const mergedWatched = new Set(localWatched);
-      (progressRes.data || []).forEach((r) => mergedWatched.add(r.section_key));
+      // DB is the source of truth. If it has no progress for this module but the
+      // local cache does, the cache is stale (e.g. progress was reset) — discard it.
+      const dbKeys = (progressRes.data || []).map((r) => r.section_key);
+      const mergedWatched =
+        user && dbKeys.length === 0 && localWatched.size > 0
+          ? new Set<string>()
+          : new Set([...localWatched, ...dbKeys]);
       setWatchedVideos(mergedWatched);
       persistWatched(mergedWatched);
 

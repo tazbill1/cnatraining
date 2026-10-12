@@ -84,7 +84,6 @@ export default function DealershipModuleContent() {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [roleplays, setRoleplays] = useState<{ id: string; name: string; difficulty: string }[]>([]);
-  const goToRoleplay = (id: string) => navigate(`/training/custom-${id}`);
   const watchedStorageKey = getWatchedStorageKey(moduleId || "");
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(() => readWatchedVideos(moduleId || ""));
 

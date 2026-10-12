@@ -57,7 +57,11 @@ export function CourseAssignmentsPanel({ dealershipId, members }: { dealershipId
 
   useEffect(() => { load(); }, [load]);
 
-  const nameOf = (uid: string) => members.find((m) => m.user_id === uid)?.full_name || "Former team member";
+  const nameOf = (uid: string) => {
+    const m = members.find((x) => x.user_id === uid);
+    if (!m) return "Former team member";
+    return m.full_name && m.full_name !== "Unknown" ? m.full_name : m.email || "Team member";
+  };
   const isDone = (a: Assignment) => completed.has(`${a.user_id}:dealership-${a.module_id}`);
 
   const grouped = useMemo(() => {

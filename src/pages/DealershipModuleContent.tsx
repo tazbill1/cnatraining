@@ -330,7 +330,7 @@ export default function DealershipModuleContent() {
   return (
     <AuthGuard>
       <AppLayout>
-        <div className="p-4 sm:p-8 max-w-4xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-6xl mx-auto">
           {/* Progress bar */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
@@ -394,7 +394,7 @@ export default function DealershipModuleContent() {
                 )}
               {sections[current.index].content_html && (
                 <div
-                  className="card-premium p-6 prose prose-sm dark:prose-invert max-w-none"
+                  className="lesson-content card-premium p-6 sm:p-10 prose prose-base lg:prose-lg dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: sections[current.index].content_html! }}
                 />
               )}

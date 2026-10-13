@@ -21,6 +21,7 @@ const DRILLS: Array<{ key: string; label: string }> = [
   { key: "cric_match_best_streak", label: "C.R.I.C. Match" },
   { key: "hot_button_best_streak", label: "Hot Button" },
   { key: "product_quiz_best_streak", label: "Product Quiz" },
+  { key: "awd_quiz_best_streak", label: "Subaru AWD" },
   { key: "wrong_claim_best_streak", label: "Spot the Wrong Claim" },
   { key: "comparison_best_streak", label: "Us vs Them" },
 ];

@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDealershipContext } from "@/hooks/useDealershipContext";
 import type { DrillItem, DrillChoice } from "@/components/drills/StreakDrill";
 
-export type ProductGameType = "quiz" | "wrong_claim" | "comparison";
+export type ProductGameType = "quiz" | "wrong_claim" | "comparison" | "awd_quiz";
 
 interface ProductQuestionRow {
   id: string;
@@ -91,7 +91,7 @@ export function useProductQuestions(gameType: ProductGameType) {
           prompt: r.prompt,
           promptLabel:
             r.prompt_label ||
-            (gameType === "quiz"
+            (gameType === "quiz" || gameType === "awd_quiz"
               ? "Question:"
               : gameType === "comparison"
                 ? "The customer says:"
@@ -120,6 +120,7 @@ export function useHasProductQuestions(dealershipId: string | null) {
     quiz: false,
     wrong_claim: false,
     comparison: false,
+    awd_quiz: false,
   });
   const [vehicles, setVehicles] = useState<string[]>([]);
 
@@ -127,7 +128,7 @@ export function useHasProductQuestions(dealershipId: string | null) {
     let cancelled = false;
     const load = async () => {
       if (!dealershipId) {
-        setAvailable({ quiz: false, wrong_claim: false, comparison: false });
+        setAvailable({ quiz: false, wrong_claim: false, comparison: false, awd_quiz: false });
         setVehicles([]);
         return;
       }
@@ -137,14 +138,16 @@ export function useHasProductQuestions(dealershipId: string | null) {
         .eq("dealership_id", dealershipId)
         .eq("is_active", true);
       if (cancelled) return;
+      const vehicleRows = (data || []).filter((r) => r.game_type !== "awd_quiz");
       const types = new Set((data || []).map((r) => r.game_type));
       setAvailable({
         quiz: types.has("quiz"),
         wrong_claim: types.has("wrong_claim"),
         comparison: types.has("comparison"),
+        awd_quiz: types.has("awd_quiz"),
       });
       const labels = new Set<string>();
-      (data || []).forEach((r) =>
+      vehicleRows.forEach((r) =>
         labels.add([r.model_year, r.make, r.model].filter(Boolean).join(" "))
       );
       setVehicles(Array.from(labels).filter(Boolean));

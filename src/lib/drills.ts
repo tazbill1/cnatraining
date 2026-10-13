@@ -1,4 +1,4 @@
-import { PhoneCall, Flame, Search, Target, Handshake, MessageCircleQuestion, Ear, Gauge, ShieldAlert, Swords, type LucideIcon } from "lucide-react";
+import { PhoneCall, Flame, Search, Target, Handshake, MessageCircleQuestion, Ear, Gauge, ShieldAlert, Swords, Mountain, type LucideIcon } from "lucide-react";
 import type { ChannelCategory } from "@/lib/categories";
 
 export interface DrillDefinition {
@@ -11,7 +11,7 @@ export interface DrillDefinition {
   /** Grouping used on the Practice & Games page. */
   group?: "product" | "skills";
   /** Only shown when the dealership has product questions of this game type. */
-  requiresProductGame?: "quiz" | "wrong_claim" | "comparison";
+  requiresProductGame?: "quiz" | "wrong_claim" | "comparison" | "awd_quiz";
   /** Roleplay-derived drills only make sense when the dealership has modules. */
   requiresModules?: boolean;
   matchModule?: RegExp;
@@ -117,6 +117,16 @@ export const drillRegistry: DrillDefinition[] = [
     group: "product",
     requiresProductGame: "comparison",
   },
+  {
+    id: "awd-quiz",
+    title: "Subaru AWD Know-How",
+    description: "Symmetrical AWD vs. other systems. 15 seconds a question.",
+    href: "/drills/awd-quiz",
+    icon: Mountain,
+    channel: "showroom",
+    group: "product",
+    requiresProductGame: "awd_quiz",
+  },
 
 ];
 
@@ -133,7 +143,7 @@ export interface DrillConfigRow {
 /** Merge the code registry with per-dealership admin config. */
 export function resolveDrills(
   config: DrillConfigRow[],
-  opts: { hasModules: boolean; productGames: { quiz: boolean; wrong_claim: boolean; comparison: boolean } }
+  opts: { hasModules: boolean; productGames: { quiz: boolean; wrong_claim: boolean; comparison: boolean; awd_quiz: boolean } }
 ): DrillDefinition[] {
   const byKey = new Map(config.map((c) => [c.drill_key, c]));
   return drillRegistry

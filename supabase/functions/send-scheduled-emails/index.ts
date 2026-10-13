@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { sendAppEmail } from '../_shared/sendAppEmail.ts'
 import { sendCourseAssignmentEmail } from '../_shared/courseAssignmentEmail.ts'
+import { sendGameAssignmentEmail } from '../_shared/gameAssignmentEmail.ts'
 
 // Runs on a daily cron. Sends:
 //   - Manager weekly digest to admins/super_admins on Mondays
@@ -67,6 +68,8 @@ Deno.serve(async (req) => {
     nudgeErrors: 0,
     assignmentEmailsSent: 0,
     remindersSent: 0,
+    gameAssignmentEmailsSent: 0,
+    gameRemindersSent: 0,
   }
 
   // ---------- Manager Weekly Digest ----------
@@ -338,6 +341,47 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error('course assignment email error', err)
+  }
+
+  // ---------- Game assignments: new-hire emails + 2-day due reminders ----------
+  try {
+    // People who inherited a whole-team game assignment when they joined
+    const { data: pendingGames } = await supabase
+      .from('game_assignments')
+      .select('id, user_id, drill_key, dealership_id, due_date, assigned_by')
+      .is('notified_at', null)
+      .limit(200)
+    for (const a of pendingGames || []) {
+      if (await sendGameAssignmentEmail(supabase, supabaseUrl, supabaseServiceKey, a, false)) {
+        results.gameAssignmentEmailsSent++
+      }
+    }
+
+    const gameToday = now.toISOString().slice(0, 10)
+    const gameInTwo = new Date(now.getTime() + 2 * 86400 * 1000).toISOString().slice(0, 10)
+    const { data: gamesDueSoon } = await supabase
+      .from('game_assignments')
+      .select('id, user_id, drill_key, dealership_id, due_date, assigned_by')
+      .is('reminder_sent_at', null)
+      .not('notified_at', 'is', null)
+      .gte('due_date', gameToday)
+      .lte('due_date', gameInTwo)
+      .limit(500)
+    if (gamesDueSoon && gamesDueSoon.length > 0) {
+      const { data: played } = await supabase
+        .from('drill_scores')
+        .select('user_id, drill_key')
+        .in('user_id', [...new Set(gamesDueSoon.map((a: any) => a.user_id))])
+      const playedKeys = new Set((played || []).map((p: any) => `${p.user_id}:${p.drill_key}`))
+      for (const a of gamesDueSoon) {
+        if (playedKeys.has(`${a.user_id}:${a.drill_key}`)) continue
+        if (await sendGameAssignmentEmail(supabase, supabaseUrl, supabaseServiceKey, a, true)) {
+          results.gameRemindersSent++
+        }
+      }
+    }
+  } catch (err) {
+    console.error('game assignment email error', err)
   }
 
   return json({ ok: true, ...results }, 200)

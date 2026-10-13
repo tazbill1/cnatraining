@@ -132,6 +132,24 @@ export const drillRegistry: DrillDefinition[] = [
 
 export const getDrillById = (id: string) => drillRegistry.find((d) => d.id === id);
 
+/** Registry id -> the drill_scores.drill_key each game page records. */
+export const drillScoreKey: Record<string, string> = {
+  "phone-opener": "phone_opener_drill_best_streak",
+  "bypass": "bypass_drill_best_streak",
+  "spot-the-mistake": "spot_the_mistake_drill_best_streak",
+  "spaced-match": "spaced_match_best_streak",
+  "either-or-close": "either_or_close_best_streak",
+  "cric-match": "cric_match_best_streak",
+  "hot-button": "hot_button_best_streak",
+  "product-quiz": "product_quiz_best_streak",
+  "wrong-claim": "wrong_claim_best_streak",
+  "comparison": "comparison_best_streak",
+  "awd-quiz": "awd_quiz_best_streak",
+};
+
+export const getDrillByScoreKey = (key: string) =>
+  drillRegistry.find((d) => drillScoreKey[d.id] === key);
+
 export interface DrillConfigRow {
   drill_key: string;
   is_enabled: boolean;

@@ -2,15 +2,17 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { z } from 'npm:zod@3.23.8'
 import { sendCourseAssignmentEmail } from '../_shared/courseAssignmentEmail.ts'
+import { getDrillMeta, sendGameAssignmentEmail } from '../_shared/gameAssignmentEmail.ts'
 
-// Managers (own dealership) and super admins assign a dealership course to the
-// whole team or to individuals, and remove assignments. Each newly assigned
-// person gets one "course-assigned" email.
+// Managers (own dealership) and super admins assign a dealership course OR a
+// training game to the whole team or to individuals, and remove assignments.
+// Each newly assigned person gets one "course-assigned" / "game-assigned" email.
 
 const Assign = z.object({
   action: z.literal('assign'),
   dealershipId: z.string().uuid(),
-  moduleId: z.string().uuid(),
+  moduleId: z.string().uuid().optional(),
+  drillKey: z.string().regex(/^[a-z0-9_-]{1,60}$/).optional(),
   scope: z.enum(['team', 'individual']),
   userIds: z.array(z.string().uuid()).max(500).optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
@@ -18,10 +20,11 @@ const Assign = z.object({
 const Unassign = z.object({
   action: z.literal('unassign'),
   dealershipId: z.string().uuid(),
-  moduleId: z.string().uuid(),
+  moduleId: z.string().uuid().optional(),
+  drillKey: z.string().regex(/^[a-z0-9_-]{1,60}$/).optional(),
   userId: z.string().uuid().optional(), // omit = remove the whole-team assignment + all its rows
 })
-const Body = z.discriminatedUnion('action', [Assign, Unassign])
+const Body = z.union([Assign, Unassign])
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -44,36 +47,53 @@ Deno.serve(async (req) => {
     const { data: roles } = await admin.from('user_roles').select('role').eq('user_id', callerId)
     const isSuper = (roles || []).some((r: { role: string }) => r.role === 'super_admin')
     const isManager = (roles || []).some((r: { role: string }) => r.role === 'manager')
-    if (!isSuper && !isManager) return json({ error: 'Only managers can assign courses' }, 403)
+    if (!isSuper && !isManager) return json({ error: 'Only managers can assign training' }, 403)
 
     const parsed = Body.safeParse(await req.json())
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400)
     const body = parsed.data
 
+    if (!body.moduleId && !body.drillKey) return json({ error: 'Specify a course or a game' }, 400)
+    if (body.moduleId && body.drillKey) return json({ error: 'Specify either a course or a game, not both' }, 400)
+    const isGame = !!body.drillKey
+
+    // Games must be known to the app (they live in code, not the database).
+    if (isGame && !getDrillMeta(body.drillKey!)) return json({ error: 'Game not found' }, 404)
+
     if (!isSuper) {
       const { data: me } = await admin.from('profiles').select('dealership_id').eq('user_id', callerId).maybeSingle()
       if (!me?.dealership_id || me.dealership_id !== body.dealershipId) {
-        return json({ error: 'You can only assign courses in your own dealership' }, 403)
+        return json({ error: 'You can only assign training in your own dealership' }, 403)
       }
     }
 
-    const { data: mod } = await admin
-      .from('dealership_modules')
-      .select('id, dealership_id')
-      .eq('id', body.moduleId)
-      .maybeSingle()
-    if (!mod || mod.dealership_id !== body.dealershipId) return json({ error: 'Course not found' }, 404)
+    if (!isGame) {
+      const { data: mod } = await admin
+        .from('dealership_modules')
+        .select('id, dealership_id')
+        .eq('id', body.moduleId!)
+        .maybeSingle()
+      if (!mod || mod.dealership_id !== body.dealershipId) return json({ error: 'Course not found' }, 404)
+    }
 
     if (body.action === 'unassign') {
       if (body.userId) {
-        await admin.from('course_assignments').delete().eq('module_id', body.moduleId).eq('user_id', body.userId)
+        await admin.from(isGame ? 'game_assignments' : 'course_assignments').delete()
+          .eq(isGame ? 'drill_key' : 'module_id', isGame ? body.drillKey! : body.moduleId!)
+          .eq('user_id', body.userId)
       } else {
-        await admin.from('course_assignments').delete().eq('module_id', body.moduleId).eq('dealership_id', body.dealershipId)
-        await admin.from('course_team_assignments').delete().eq('module_id', body.moduleId).eq('dealership_id', body.dealershipId)
+        await admin.from(isGame ? 'game_assignments' : 'course_assignments').delete()
+          .eq(isGame ? 'drill_key' : 'module_id', isGame ? body.drillKey! : body.moduleId!)
+          .eq('dealership_id', body.dealershipId)
+        await admin.from(isGame ? 'game_team_assignments' : 'course_team_assignments').delete()
+          .eq(isGame ? 'drill_key' : 'module_id', isGame ? body.drillKey! : body.moduleId!)
+          .eq('dealership_id', body.dealershipId)
       }
       return json({ ok: true })
     }
 
+    const itemColumn = isGame ? 'drill_key' : 'module_id'
+    const itemId = isGame ? body.drillKey! : body.moduleId!
     const dueDate = body.dueDate ?? null
     let teamAssignmentId: string | null = null
     let targetIds: string[] = []
@@ -87,10 +107,16 @@ Deno.serve(async (req) => {
         ? Math.max(1, Math.round((new Date(dueDate + 'T00:00:00Z').getTime() - today.getTime()) / 86400000))
         : null
       const { data: team, error } = await admin
-        .from('course_team_assignments')
+        .from(isGame ? 'game_team_assignments' : 'course_team_assignments')
         .upsert(
-          { dealership_id: body.dealershipId, module_id: body.moduleId, due_date: dueDate, due_days: dueDays, assigned_by: callerId },
-          { onConflict: 'dealership_id,module_id' },
+          {
+            dealership_id: body.dealershipId,
+            [itemColumn]: itemId,
+            due_date: dueDate,
+            due_days: dueDays,
+            assigned_by: callerId,
+          },
+          { onConflict: `dealership_id,${itemColumn}` },
         )
         .select('id')
         .single()
@@ -103,18 +129,19 @@ Deno.serve(async (req) => {
       if (targetIds.length === 0) return json({ error: 'Pick at least one person on this team' }, 200)
     }
 
+    const perUserTable = isGame ? 'game_assignments' : 'course_assignments'
     // Existing assignments: update due date, don't re-email
     const { data: existing } = await admin
-      .from('course_assignments')
+      .from(perUserTable)
       .select('user_id')
-      .eq('module_id', body.moduleId)
+      .eq(itemColumn, itemId)
       .in('user_id', targetIds.length ? targetIds : ['00000000-0000-0000-0000-000000000000'])
     const existingIds = new Set((existing || []).map((e: { user_id: string }) => e.user_id))
 
     if (existingIds.size > 0) {
       const patch: Record<string, unknown> = { due_date: dueDate, reminder_sent_at: null }
       if (teamAssignmentId) patch.team_assignment_id = teamAssignmentId
-      await admin.from('course_assignments').update(patch).eq('module_id', body.moduleId).in('user_id', [...existingIds])
+      await admin.from(perUserTable).update(patch).eq(itemColumn, itemId).in('user_id', [...existingIds])
     }
 
     const newRows = targetIds
@@ -122,7 +149,7 @@ Deno.serve(async (req) => {
       .map((user_id) => ({
         user_id,
         dealership_id: body.dealershipId,
-        module_id: body.moduleId,
+        [itemColumn]: itemId,
         team_assignment_id: teamAssignmentId,
         due_date: dueDate,
         assigned_by: callerId,
@@ -131,12 +158,14 @@ Deno.serve(async (req) => {
     let emailed = 0
     if (newRows.length > 0) {
       const { data: inserted, error } = await admin
-        .from('course_assignments')
+        .from(perUserTable)
         .insert(newRows)
-        .select('id, user_id, module_id, due_date, assigned_by')
+        .select(`id, user_id, ${itemColumn}, due_date, assigned_by, dealership_id`)
       if (error) throw error
       for (const a of inserted || []) {
-        if (await sendCourseAssignmentEmail(admin, url, svc, a, false)) emailed++
+        if (isGame) {
+          if (await sendGameAssignmentEmail(admin, url, svc, a, false)) emailed++
+        } else if (await sendCourseAssignmentEmail(admin, url, svc, a, false)) emailed++
       }
     }
 

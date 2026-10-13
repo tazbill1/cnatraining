@@ -30,7 +30,7 @@ interface GameAssignedEmailProps extends Props {
   assignedByName?: string
 }
 
-const GameAssignedEmail = ({
+export const GameAssignedEmail = ({
   siteName = 'Automotive Sales Pro',
   siteUrl = '#',
   firstName = '',

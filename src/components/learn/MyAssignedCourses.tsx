@@ -2,15 +2,23 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { drillScoreKey, drillRegistry } from "@/lib/drills";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, ChevronRight } from "lucide-react";
+import { ClipboardList, ChevronRight, Gamepad2 } from "lucide-react";
 
-interface Row { id: string; module_id: string; due_date: string | null; title: string; done: boolean }
+interface Row {
+  id: string;
+  href: string;
+  title: string;
+  due_date: string | null;
+  done: boolean;
+  kind: "course" | "game";
+}
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const fmt = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-/** "Assigned to you" list for the signed-in learner. Hidden when nothing is assigned. */
+/** "Assigned to you" list for the signed-in learner (courses + games). Hidden when nothing is assigned. */
 export function MyAssignedCourses({ showCompleted = false }: { showCompleted?: boolean }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -19,22 +27,43 @@ export function MyAssignedCourses({ showCompleted = false }: { showCompleted?: b
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data: a } = await supabase
-        .from("course_assignments")
-        .select("id, module_id, due_date")
-        .eq("user_id", user.id);
-      if (!a || a.length === 0) { setRows([]); return; }
-      const [{ data: mods }, { data: done }] = await Promise.all([
-        supabase.from("dealership_modules").select("id, title").in("id", a.map((x) => x.module_id)),
+      const [{ data: a }, { data: ga }] = await Promise.all([
+        supabase.from("course_assignments").select("id, module_id, due_date").eq("user_id", user.id),
+        supabase.from("game_assignments").select("id, drill_key, due_date").eq("user_id", user.id),
+      ]);
+      if ((!a || a.length === 0) && (!ga || ga.length === 0)) { setRows([]); return; }
+
+      const [{ data: mods }, { data: done }, { data: scores }] = await Promise.all([
+        supabase.from("dealership_modules").select("id, title").in("id", (a || []).map((x) => x.module_id)),
         supabase.from("module_completions").select("module_id").eq("user_id", user.id),
+        supabase.from("drill_scores").select("drill_key").eq("user_id", user.id),
       ]);
       const doneSet = new Set((done || []).map((d) => d.module_id));
-      const list = a.map((x) => ({
-        ...x,
+      const playedSet = new Set((scores || []).map((s) => s.drill_key));
+
+      const courseRows: Row[] = (a || []).map((x) => ({
+        id: x.id,
+        href: `/learn/dealership/${x.module_id}`,
         title: mods?.find((m) => m.id === x.module_id)?.title || "Course",
+        due_date: x.due_date,
         done: doneSet.has(`dealership-${x.module_id}`),
+        kind: "course",
       }));
-      list.sort((p, q) => Number(p.done) - Number(q.done) || (p.due_date || "9999").localeCompare(q.due_date || "9999"));
+      const gameRows: Row[] = (ga || []).map((x) => {
+        const drill = drillRegistry.find((d) => drillScoreKey[d.id] === x.drill_key);
+        return {
+          id: x.id,
+          href: drill?.href || "/scenarios",
+          title: drill?.title || x.drill_key,
+          due_date: x.due_date,
+          done: playedSet.has(x.drill_key),
+          kind: "game" as const,
+        };
+      });
+      const list = [...courseRows, ...gameRows];
+      list.sort((p, q) =>
+        Number(p.done) - Number(q.done) ||
+        (p.due_date || "9999").localeCompare(q.due_date || "9999"));
       setRows(list);
     })();
   }, [user]);
@@ -53,16 +82,19 @@ export function MyAssignedCourses({ showCompleted = false }: { showCompleted?: b
           return (
             <li key={r.id}>
               <button
-                onClick={() => navigate(`/learn/dealership/${r.module_id}`)}
+                onClick={() => navigate(r.href)}
                 className="w-full min-h-[48px] flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left hover:bg-muted/50 transition-colors"
               >
                 <span className="min-w-0">
-                  <span className="block font-medium text-foreground truncate">{r.title}</span>
+                  <span className="block font-medium text-foreground truncate">
+                    {r.kind === "game" && <Gamepad2 className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-muted-foreground" />}
+                    {r.title}
+                  </span>
                   {r.due_date && <span className="text-xs text-muted-foreground">Due {fmt(r.due_date)}</span>}
                 </span>
                 <span className="flex items-center gap-2 shrink-0">
                   <Badge variant={r.done ? "default" : overdue ? "destructive" : "outline"}>
-                    {r.done ? "Done" : overdue ? "Overdue" : "To do"}
+                    {r.done ? "Done" : overdue ? "Overdue" : r.kind === "game" ? "Play" : "To do"}
                   </Badge>
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </span>

@@ -6,6 +6,8 @@ import { NewModuleNotificationEmail } from './new-module-notification.tsx'
 import { ManagerWeeklyDigestEmail } from './manager-weekly-digest.tsx'
 import { LearningNudgeEmail } from './learning-nudge.tsx'
 import { CourseAssignedEmail } from './course-assigned.tsx'
+import { GameAssignedEmail } from './game-assigned.tsx'
+
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -100,6 +102,25 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
       courseTitle: 'Showroom: Meet and Greet',
       courseDescription: 'Master the first 10 seconds with L.A.S.T.',
       courseUrl: 'https://automotivesalespro.com/learn',
+      dueDateLabel: 'Friday, Oct 16',
+      assignedByName: 'Tom Azbill',
+      isReminder: false,
+    },
+  },
+  'game-assigned': {
+    component: GameAssignedEmail,
+    subject: (data) =>
+      data?.isReminder
+        ? `Reminder: ${data?.gameTitle || 'your game'} is due ${data?.dueDateLabel || 'soon'}`
+        : `You've been assigned: ${data?.gameTitle || 'a training game'}`,
+    displayName: 'Game Assigned',
+    previewData: {
+      siteName: 'Automotive Sales Pro',
+      siteUrl: 'https://automotivesalespro.com',
+      firstName: 'Alex',
+      gameTitle: 'Subaru AWD Know-How',
+      gameDescription: 'Timed questions on Subaru AWD and rival systems.',
+      gameUrl: 'https://automotivesalespro.com/drills/awd-quiz',
       dueDateLabel: 'Friday, Oct 16',
       assignedByName: 'Tom Azbill',
       isReminder: false,

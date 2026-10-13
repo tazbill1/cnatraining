@@ -775,6 +775,91 @@ export type Database = {
         }
         Relationships: []
       }
+      game_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          dealership_id: string
+          drill_key: string
+          due_date: string | null
+          id: string
+          notified_at: string | null
+          reminder_sent_at: string | null
+          team_assignment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          dealership_id: string
+          drill_key: string
+          due_date?: string | null
+          id?: string
+          notified_at?: string | null
+          reminder_sent_at?: string | null
+          team_assignment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          dealership_id?: string
+          drill_key?: string
+          due_date?: string | null
+          id?: string
+          notified_at?: string | null
+          reminder_sent_at?: string | null
+          team_assignment_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_assignments_team_assignment_id_fkey"
+            columns: ["team_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "game_team_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_team_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          dealership_id: string
+          drill_key: string
+          due_date: string | null
+          due_days: number | null
+          id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          dealership_id: string
+          drill_key: string
+          due_date?: string | null
+          due_days?: number | null
+          id?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          dealership_id?: string
+          drill_key?: string
+          due_date?: string | null
+          due_days?: number | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_team_assignments_dealership_id_fkey"
+            columns: ["dealership_id"]
+            isOneToOne: false
+            referencedRelation: "dealerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           created_at: string

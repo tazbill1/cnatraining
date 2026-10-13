@@ -1,6 +1,6 @@
 import { sendAppEmail } from '../_shared/sendAppEmail.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { corsHeaders } from '../_shared/cors.ts'
 
 // Sends ONE email per user summarizing new (un-announced) modules for a
 // dealership, then marks those modules as announced.

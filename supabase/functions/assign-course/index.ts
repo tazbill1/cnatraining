@@ -99,7 +99,8 @@ Deno.serve(async (req) => {
       targetIds = [...memberIds]
     } else {
       targetIds = (body.userIds || []).filter((id) => memberIds.has(id))
-      if (targetIds.length === 0) return json({ error: 'Pick at least one person on this team' }, 400)
+      // 200 with an error field: the panel shows it as a toast instead of a thrown request failure
+      if (targetIds.length === 0) return json({ error: 'Pick at least one person on this team' }, 200)
     }
 
     // Existing assignments: update due date, don't re-email

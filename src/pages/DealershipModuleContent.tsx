@@ -65,10 +65,21 @@ const readWatchedVideos = (moduleId: string) => {
   }
 };
 
-const getStageProgressKey = (stage?: ModuleStage) => {
+// Short stamp of a video URL. Progress is tied to the exact video a learner
+// watched, so when a course video is added or replaced the old "watched"
+// record no longer counts and the new video plays before they move on.
+const videoStamp = (url?: string | null) => {
+  if (!url) return "";
+  let h = 5381;
+  for (let i = 0; i < url.length; i++) h = ((h << 5) + h + url.charCodeAt(i)) >>> 0;
+  return `#${h.toString(36)}`;
+};
+
+const getStageProgressKey = (stage?: ModuleStage, module?: ModuleData | null) => {
   if (!stage) return null;
-  if (stage.type === "intro") return "intro";
-  if (stage.type === "section" && stage.index !== undefined) return `section-${stage.index}`;
+  if (stage.type === "intro") return `intro${videoStamp(module?.video_url)}`;
+  if (stage.type === "section" && stage.index !== undefined)
+    return `section-${stage.index}${videoStamp(module?.sections[stage.index]?.video_url)}`;
   if (stage.type === "practice" && stage.index !== undefined) return `practice-${stage.index}`;
   return null;
 };
@@ -238,7 +249,7 @@ export default function DealershipModuleContent() {
     if (loading || !module || resumeApplied || totalStages === 0) return;
 
     const firstIncompleteIndex = stages.findIndex((stage) => {
-      const key = getStageProgressKey(stage);
+      const key = getStageProgressKey(stage, module);
       return key ? !watchedVideos.has(key) : true;
     });
     const resumeIndex = firstIncompleteIndex === -1 ? totalStages - 1 : firstIncompleteIndex;
@@ -308,7 +319,7 @@ export default function DealershipModuleContent() {
   };
 
   const handleNext = async () => {
-    const progressKey = getStageProgressKey(current);
+    const progressKey = getStageProgressKey(current, module);
     if (progressKey) {
       try {
         await markStageComplete(progressKey);
@@ -368,10 +379,10 @@ export default function DealershipModuleContent() {
                 <VideoPlayer
                   videoUrl={module.video_url!}
                   title={module.video_title || module.title}
-                  onComplete={() => markVideoWatched("intro")}
+                  onComplete={() => markVideoWatched(`intro${videoStamp(module.video_url)}`)}
                 />
               )}
-              {hasVideo && !watchedVideos.has("intro") && (
+              {hasVideo && !watchedVideos.has(`intro${videoStamp(module.video_url)}`) && (
                 <p className="text-xs text-muted-foreground text-center">
                   Watch the video to continue.
                 </p>
@@ -386,11 +397,17 @@ export default function DealershipModuleContent() {
                 <VideoPlayer
                   videoUrl={sections[current.index].video_url!}
                   title={sections[current.index].title}
-                  onComplete={() => markVideoWatched(`section-${current.index}`)}
+                  onComplete={() =>
+                    markVideoWatched(
+                      `section-${current.index}${videoStamp(sections[current.index].video_url)}`
+                    )
+                  }
                 />
               )}
               {sections[current.index].video_url &&
-                !watchedVideos.has(`section-${current.index}`) && (
+                !watchedVideos.has(
+                  `section-${current.index}${videoStamp(sections[current.index].video_url)}`
+                ) && (
                   <p className="text-xs text-muted-foreground text-center">
                     Watch the video to continue.
                   </p>
@@ -428,7 +445,7 @@ export default function DealershipModuleContent() {
                     )}
                     <Button
                       onClick={() => {
-                        const key = getStageProgressKey(current);
+                        const key = getStageProgressKey(current, module);
                         if (key) markStageComplete(key).catch(() => {});
                         const quizIndex = stages.findIndex((s) => s.type === "quiz");
                         if (quizIndex !== -1) {
@@ -599,11 +616,11 @@ export default function DealershipModuleContent() {
             {(() => {
               const videoKey =
                 current.type === "intro" && hasVideo
-                  ? "intro"
+                  ? `intro${videoStamp(module.video_url)}`
                   : current.type === "section" &&
                     current.index !== undefined &&
                     sections[current.index].video_url
-                  ? `section-${current.index}`
+                  ? `section-${current.index}${videoStamp(sections[current.index].video_url)}`
                   : null;
               const videoBlocked = videoKey !== null && !watchedVideos.has(videoKey);
               const isQuizStage = current.type === "quiz";

@@ -28,6 +28,7 @@ import { useActiveScope } from "@/components/layout/navConfig";
 interface UserEngagement {
   id: string;
   user_id: string;
+  dealership_id?: string | null;
   full_name: string;
   email: string;
   last_active_at: string | null;
@@ -251,6 +252,7 @@ export default function Team() {
         return {
           id: profile.id,
           user_id: profile.user_id,
+          dealership_id: profile.dealership_id,
           full_name: profile.full_name || "Unknown",
           email: profile.email,
           last_active_at: profile.last_active_at,
@@ -663,7 +665,9 @@ export default function Team() {
             <TabsContent value="assignments">
               <CourseAssignmentsPanel
                 dealershipId={scopeDealershipId}
-                members={users.map((u) => ({ user_id: u.user_id, full_name: u.full_name, email: u.email }))}
+                members={users
+                  .filter((u) => u.dealership_id === scopeDealershipId)
+                  .map((u) => ({ user_id: u.user_id, full_name: u.full_name, email: u.email }))}
               />
             </TabsContent>
 

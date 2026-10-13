@@ -42,6 +42,7 @@ const PRODUCT_DRILLS = [
   "product_quiz_best_streak",
   "wrong_claim_best_streak",
   "comparison_best_streak",
+  "awd_quiz_best_streak",
   // legacy/alternate keys
   "product-quiz",
   "wrong-claim",

@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
       const { data: inserted, error } = await admin
         .from(perUserTable)
         .insert(newRows)
-        .select('id, user_id, drill_key, module_id, due_date, assigned_by, dealership_id')
+        .select(`id, user_id, ${itemColumn}, due_date, assigned_by, dealership_id`)
       if (error) throw error
       for (const a of inserted || []) {
         if (isGame) {

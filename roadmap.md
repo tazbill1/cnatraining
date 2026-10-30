@@ -2,9 +2,9 @@
 
 ## Backend hardening
 - [ ] Custom per-user AI limiter — awaiting confirmation of custom-limiter tradeoff (30/minute, 1,000/day; Super Admin exempt)
-- [ ] Private training videos with authenticated signed access; logos remain public
-- [ ] Friendly AI credit/rate errors and clear missing-key diagnostics
-- [ ] Gateway transcription migration with unchanged voice contract and live speech test
+- [x] Private training videos with authenticated signed access; logos remain public
+- [x] Friendly AI credit/rate errors and clear missing-key diagnostics
+- [x] Gateway transcription migration with unchanged voice contract and live speech test (200 with accurate spoken transcript)
 
 ## Invitation-only security
 - [x] Enforce invitations for every new signup, including Google

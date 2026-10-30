@@ -60,6 +60,17 @@ export const channelCategories: ChannelCategoryInfo[] = [
     iconBg: "bg-purple-500/10",
     iconColor: "text-purple-600 dark:text-purple-400",
   },
+  {
+    id: "fi",
+    slug: "fi",
+    name: "F&I and After Sales",
+    shortName: "F&I",
+    description: "Finance & insurance hand-off, product menus, delivery paperwork and the after-sale relationship.",
+    icon: Landmark,
+    accent: "border-rose-500/30 hover:border-rose-500/60",
+    iconBg: "bg-rose-500/10",
+    iconColor: "text-rose-600 dark:text-rose-400",
+  },
 ];
 
 export const getCategoryBySlug = (slug: string | null | undefined): ChannelCategoryInfo | undefined =>

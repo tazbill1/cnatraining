@@ -294,7 +294,7 @@ export default function Learn() {
           {/* Category Gallery (shown when no category selected and no search) */}
           {!activeCategory && !search && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {channelCategories.filter((cat) => (categoryStats[cat.id]?.total ?? 0) > 0).map((cat) => {
+              {channelCategories.filter((cat) => (categoryStats[cat.id]?.total ?? 0) > 0 || cat.id === "fi").map((cat) => {
                 const stats = categoryStats[cat.id] || { total: 0, completed: 0 };
                 const Icon = cat.icon;
                 const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -320,7 +320,7 @@ export default function Learn() {
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">
                             {stats.total === 0
-                              ? "No modules yet"
+                              ? "Coming soon"
                               : `${stats.completed} of ${stats.total} complete`}
                           </span>
                           {stats.total > 0 && (

@@ -34,7 +34,7 @@ interface ScenarioWithModule extends Scenario {
 }
 
 const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 };
-const categoryOrder: ChannelCategory[] = ["phone", "internet", "showroom", "followup"];
+const categoryOrder: ChannelCategory[] = ["phone", "internet", "showroom", "followup", "fi"];
 
 export default function Scenarios() {
   const navigate = useNavigate();

@@ -78,6 +78,13 @@
       "when": 1793379708883,
       "tag": "0010_super_admin_write_global_training_videos",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793384351949,
+      "tag": "0011_add_fi_aftersales_category",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+CREATE POLICY "Dealership members read their training videos" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'training-videos' AND (public.has_role(auth.uid(), 'super_admin') OR (public.get_user_dealership_id(auth.uid()) IS NOT NULL AND (storage.foldername(name))[1] = public.get_user_dealership_id(auth.uid())::text)));

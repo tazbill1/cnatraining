@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireDealership } from "../_shared/requireDealership.ts";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
+import { transcribe } from "./gatewayTranscribe.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+
 
 // Input validation constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB max
@@ -27,8 +27,8 @@ serve(async (req) => {
     }
 
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
     );
 
@@ -44,24 +44,37 @@ serve(async (req) => {
     const { errorResponse } = await requireDealership(supabase, user.id, corsHeaders);
     if (errorResponse) return errorResponse;
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) return missingAIKeyResponse(corsHeaders);
 
-    if (!OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured");
-      return new Response(
-        JSON.stringify({ error: "Service temporarily unavailable" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Bound the full multipart body, including chunked uploads, before buffering.
+    const bodyLimit = MAX_FILE_SIZE + 1024 * 1024;
+    const tooLarge = () => new Response(JSON.stringify({ error: "File too large. Maximum size: 10MB" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+    if (Number(req.headers.get("content-length")) > bodyLimit) return tooLarge();
+    const reader = req.body?.getReader();
+    if (!reader) return new Response(JSON.stringify({ error: "No audio file provided" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+    const chunks: Uint8Array[] = [];
+    let bytes = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > bodyLimit) { await reader.cancel(); return tooLarge(); }
+      chunks.push(value);
     }
-
-    const formData = await req.formData();
-    const audioFile = formData.get("audio") as File;
-
-    if (!audioFile) {
-      return new Response(
-        JSON.stringify({ error: "No audio file provided" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const boundedBody = new Uint8Array(bytes);
+    let offset = 0;
+    for (const chunk of chunks) { boundedBody.set(chunk, offset); offset += chunk.byteLength; }
+    const formData = await new Response(boundedBody, { headers: { "Content-Type": req.headers.get("content-type") ?? "" } }).formData();
+    const audioFile = formData.get("audio");
+    if (!(audioFile instanceof File) || !audioFile.size) {
+      return new Response(JSON.stringify({ error: "No audio file provided" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Validate file size
@@ -81,30 +94,18 @@ serve(async (req) => {
       );
     }
 
-    console.log("Transcribing audio file:", audioFile.name, "size:", audioFile.size, "user:", user.id);
-
-    // Create form data for OpenAI Whisper API
-    const openaiFormData = new FormData();
-    openaiFormData.append("file", audioFile, audioFile.name || "audio.webm");
-    openaiFormData.append("model", "whisper-1");
-    openaiFormData.append("language", "en");
-
-    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: openaiFormData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenAI Whisper API error:", response.status, errorText);
-      throw new Error(`Whisper API error: ${response.status}`);
-    }
-
+    // Keep the existing complete-file upload and { text } response contract.
+    const file = new File([audioFile], audioFile.name || "audio.webm", { type: audioFile.type || "audio/webm" });
+    const response = await transcribe({
+      baseURL: "https://ai.gateway.lovable.dev",
+      apiKey,
+      model: "openai/gpt-transcribe",
+      maxFileBytes: MAX_FILE_SIZE,
+      audioOnly: false,
+    }, file, { buffered: true, language: "en", signal: req.signal });
+    if (!response.ok) return gatewayErrorResponse(response, corsHeaders);
     const data = await response.json();
-    console.log("Transcription successful:", data.text?.substring(0, 50) + "...");
+    if (typeof data.text !== "string") throw new Error("Invalid transcription response");
 
     return new Response(JSON.stringify({ text: data.text }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

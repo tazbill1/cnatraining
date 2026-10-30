@@ -50,6 +50,13 @@
       "when": 1793374208793,
       "tag": "0006_protect_completed_session_state",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793374685623,
+      "tag": "0007_private_training_video_access",
+      "breakpoints": true
     }
   ]
 }

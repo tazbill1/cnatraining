@@ -1,7 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 
-Deno.test("live shared caps, passing certificate issuance, idempotency and Super Admin exemption", async () => {
+Deno.test({
+  name: "live shared caps, passing certificate issuance, idempotency and Super Admin exemption",
+  ignore: !Deno.env.get("SUPABASE_URL") || !Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  fn: async () => {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) throw new Error("Service environment is required for integration verification");
@@ -44,4 +47,5 @@ Deno.test("live shared caps, passing certificate issuance, idempotency and Super
       if (error) throw error;
     }
   }
+  },
 });

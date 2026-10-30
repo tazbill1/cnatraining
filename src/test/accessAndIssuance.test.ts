@@ -16,6 +16,27 @@ function limiter(result: unknown, error: unknown = null) {
 }
 
 describe("Per-user limit responses", () => {
+  it("blocks all five handlers before calling AI using the authenticated user, not a supplied ID", async () => {
+    for (const name of ["training-chat", "chat", "speak", "transcribe", "evaluate-session"]) {
+      const source = readFileSync(`supabase/functions/${name}/index.ts`, "utf8").replace(/^import .*;\r?\n/gm, "");
+      let handler: ((req: Request) => Promise<Response>) | undefined;
+      const capture = (fn: (req: Request) => Promise<Response>) => { handler = fn; };
+      new Script(ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(createContext({
+        exports: {}, Response, console, corsHeaders: {}, serve: capture, Deno: { env: { get: () => "mock" }, serve: capture },
+        createClient: () => ({ auth: { getUser: async () => ({ data: { user: { id: "verified-user" } }, error: null }) } }),
+        requireDealership: async () => ({ errorResponse: null, profile: { dealership_id: "team" }, isSuperAdmin: false }),
+        requireAIRateLimit: async (id: string, fn: string) => {
+          expect(id).toBe("verified-user");
+          expect(fn).toBe(name);
+          return new Response('{"error":"Please wait a moment and try again."}', { status: 429 });
+        },
+        fetch: () => { throw new Error("Blocked calls must not reach AI"); },
+      }));
+      if (!handler) throw new Error("Missing handler");
+      const response = await handler(new Request("http://localhost", { method: "POST", headers: { Authorization: "Bearer mock" }, body: '{"userId":"forged"}' }));
+      expect(response.status, name).toBe(429);
+    }
+  });
   it("returns minute-limit 429 with a friendly message and retry window", async () => {
     const response = await limiter({ allowed: false, period: "minute", retry_after: 12 })("user", "chat", {});
     if (!response) throw new Error("Missing limit response");

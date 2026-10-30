@@ -250,7 +250,7 @@ export function UserDetailPanel({ userId, userName, onBack }: UserDetailPanelPro
               <TableBody>
                 {completions.map(c => (
                   <TableRow key={c.id}>
-                    <TableCell className="font-medium capitalize">{c.module_id.replace(/-/g, " ")}</TableCell>
+                    <TableCell className="font-medium">{modules.find(m => m.id === c.module_id)?.title || "Unavailable course"}</TableCell>
                     <TableCell>
                       {c.quiz_score != null ? (
                         <span className={cn("font-semibold", getScoreColor(c.quiz_score))}>{c.quiz_score}%</span>

@@ -202,6 +202,7 @@ function SettingsGuard({ dealershipId, settings, onInitialized, children }: { de
 
 /* ─── Overview Tab (existing content) ─── */
 function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: { users: ProfileRow[]; sessions: SessionRow[]; invitations: InvitationRow[]; dealershipId: string; onRefresh: () => void }) {
+  const getSessionTitle = useSessionTitles();
   const [assignOpen, setAssignOpen] = useState(false);
   const [unassignedUsers, setUnassignedUsers] = useState<ProfileRow[]>([]);
   const [loadingUnassigned, setLoadingUnassigned] = useState(false);
@@ -409,7 +410,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
             <TableBody>
               {sessions.slice(0, 20).map((s) => (
                 <TableRow key={s.id}>
-                  <TableCell className="font-medium capitalize">{s.scenario_type.replace(/-/g, " ")}</TableCell>
+                  <TableCell className="font-medium">{getSessionTitle(s.scenario_type)}</TableCell>
                   <TableCell>{s.score != null ? `${s.score}%` : "—"}</TableCell>
                   <TableCell>
                     <Badge variant={s.status === "completed" ? "default" : "secondary"}>

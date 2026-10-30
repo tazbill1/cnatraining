@@ -1,5 +1,14 @@
 # Roadmap — Showroom courses match the handbook
 
+## Consistency and recovery batch
+- [ ] One certification-progress definition across all displays
+- [ ] Shared dealership user/completed-session counts for Team and Admin
+- [ ] Team course titles and consistent category breakdown
+- [ ] Source-derived Auth statistics and shared session titles/checklist label
+- [ ] Password recovery formats and 8-character minimum on reset/signup
+- [ ] Structured evaluation with explicit failure and Retry
+- [ ] Regression and signed-in flow verification
+
 ## Backend hardening
 - [x] Implement confirmed custom per-user AI limiter (30/minute, rolling 1,000/24 hours; Super Admin exempt)
 - [x] Server-issued passing-course certificates and insert-only qualifying backfill (two recovered certificates: 88%, 100%)

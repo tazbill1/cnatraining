@@ -36,6 +36,20 @@
       "when": 1793373606606,
       "tag": "0004_require_invitation_for_signup",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793374082846,
+      "tag": "0005_server_only_score_writes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793374208793,
+      "tag": "0006_protect_completed_session_state",
+      "breakpoints": true
     }
   ]
 }

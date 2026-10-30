@@ -11,7 +11,7 @@ import { QuizQuestion } from "@/lib/moduleContent";
 interface ModuleQuizProps {
   questions: QuizQuestion[];
   passingScore: number;
-  onComplete: (passed: boolean, score: number) => void;
+  onComplete: (passed: boolean, score: number, answers: Record<string, string>) => void;
 }
 
 export function ModuleQuiz({ questions, passingScore, onComplete }: ModuleQuizProps) {
@@ -39,7 +39,7 @@ export function ModuleQuiz({ questions, passingScore, onComplete }: ModuleQuizPr
       const finalScore = Math.round((correct / questions.length) * 100);
       setScore(finalScore);
       setShowResults(true);
-      onComplete(finalScore >= passingScore, finalScore);
+      onComplete(finalScore >= passingScore, finalScore, answers);
     }
   };
 

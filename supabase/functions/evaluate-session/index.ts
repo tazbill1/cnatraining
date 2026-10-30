@@ -261,6 +261,24 @@ serve(async (req) => {
     if (errorResponse) return errorResponse;
 
     const body = await req.json();
+    if (typeof body.sessionId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.sessionId)) {
+      return new Response(JSON.stringify({ error: "Valid session ID required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const service = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: savedSession, error: sessionError } = await service.from("training_sessions")
+      .select("id,user_id,status,scenario_type,started_at,ai_feedback,score,rapport_score,info_gathering_score,needs_identification_score,cna_completion_score")
+      .eq("id", body.sessionId).eq("user_id", user.id).maybeSingle();
+    if (sessionError) throw sessionError;
+    if (!savedSession) return new Response(JSON.stringify({ error: "Session not found" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (savedSession.status === "completed") return new Response(JSON.stringify({
+      overallScore: savedSession.score, rapportScore: savedSession.rapport_score,
+      infoGatheringScore: savedSession.info_gathering_score, needsIdentificationScore: savedSession.needs_identification_score,
+      cnaCompletionScore: savedSession.cna_completion_score, ...savedSession.ai_feedback,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (body.scenario?.id !== savedSession.scenario_type) return new Response(JSON.stringify({ error: "Scenario does not match the session" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const validation = validateRequest(body);
     if (!validation.valid) {
       return new Response(JSON.stringify({ error: validation.error }),
@@ -342,12 +360,26 @@ serve(async (req) => {
       evaluation = null;
     }
 
-    if (!evaluation || !evaluation.categories) {
-      return new Response(JSON.stringify(isPhone ? buildPhoneFallback() : buildCnaFallback()),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const formatted = isPhone ? formatPhoneResponse(evaluation) : formatCnaResponse(evaluation);
+    const formatted = !evaluation || !evaluation.categories
+      ? (isPhone ? buildPhoneFallback() : buildCnaFallback())
+      : (isPhone ? formatPhoneResponse(evaluation) : formatCnaResponse(evaluation));
+    const safeScore = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.min(100, Math.round(value))) : 0;
+    formatted.overallScore = safeScore(formatted.overallScore);
+    formatted.rapportScore = safeScore(formatted.rapportScore);
+    formatted.infoGatheringScore = safeScore(formatted.infoGatheringScore);
+    formatted.needsIdentificationScore = safeScore(formatted.needsIdentificationScore);
+    formatted.cnaCompletionScore = safeScore(formatted.cnaCompletionScore);
+    const feedback = { ...formatted.feedback, categories: formatted.categories, overallTip: formatted.overallTip,
+      personalityType: "personalityType" in formatted ? formatted.personalityType : null,
+      moments: "moments" in formatted ? formatted.moments : [] };
+    const { error: persistError } = await service.from("training_sessions").update({
+      status: "completed", completed_at: new Date().toISOString(),
+      duration_seconds: Math.max(0, Math.min(7200, Math.floor((Date.now() - Date.parse(savedSession.started_at)) / 1000))),
+      score: formatted.overallScore, rapport_score: formatted.rapportScore, info_gathering_score: formatted.infoGatheringScore,
+      needs_identification_score: formatted.needsIdentificationScore, cna_completion_score: formatted.cnaCompletionScore,
+      ai_feedback: feedback, conversation: messages, checklist_state: checklistState,
+    }).eq("id", savedSession.id).eq("user_id", user.id).neq("status", "completed");
+    if (persistError) throw persistError;
     return new Response(JSON.stringify(formatted),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -385,8 +417,7 @@ serve(async (req) => {
     } catch (logErr) {
       console.error("Failed to log error to bug_reports:", logErr);
     }
-    // Best-effort fallback — we don't know scenario category here, default to CNA.
-    return new Response(JSON.stringify(buildCnaFallback()),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "Unable to evaluate and save this session. Please try again." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

@@ -80,32 +80,13 @@ export default function Learn() {
 
         const dbModules = data?.map((r) => r.module_id) || [];
 
-        const stored = localStorage.getItem(`completed_modules_${user.id}`);
-        if (stored) {
-          const localModules: string[] = JSON.parse(stored);
-          const missing = localModules.filter((m) => !dbModules.includes(m));
-          if (missing.length > 0) {
-            const rows = missing.map((module_id) => ({
-              user_id: user.id,
-              module_id,
-              dealership_id: profile?.dealership_id || null,
-            }));
-            await supabase.from("module_completions").upsert(rows, {
-              onConflict: "user_id,module_id",
-            });
-            dbModules.push(...missing);
-          }
-          localStorage.removeItem(`completed_modules_${user.id}`);
-        }
+        // Browser caches are not evidence of passing a server-validated quiz.
+        localStorage.removeItem(`completed_modules_${user.id}`);
 
         setCompletedModules(dbModules);
       } catch (error) {
         logger.error("Error fetching completed modules:", error);
-        try {
-          const stored = localStorage.getItem(`completed_modules_${user.id}`);
-          if (stored) setCompletedModules(JSON.parse(stored));
-        } catch {}
-        toast.error("Could not load progress from server. Showing cached data.");
+        toast.error("Could not load progress from server. Please try again.");
       } finally {
         setIsLoading(false);
       }

@@ -288,6 +288,7 @@ export function useTrainingSession() {
         : [];
       const evalResponse = await supabase.functions.invoke("evaluate-session", {
         body: {
+          sessionId: sessionState.id,
           messages: sessionState.messages,
           scenario: sessionState.scenario,
           checklistState: sessionState.checklistState,
@@ -297,45 +298,8 @@ export function useTrainingSession() {
       });
 
       if (evalResponse.error) throw await aiInvokeError(evalResponse.error, "Failed to save session results");
-      const evaluation = evalResponse.data || {
-        overallScore: Math.round(checklistProgress * 0.7 + 30),
-        rapportScore: 75,
-        infoGatheringScore: 70,
-        needsIdentificationScore: 72,
-        cnaCompletionScore: checklistProgress,
-        categories: null,
-        overallTip: null,
-        feedback: {
-          strengths: ["Good questioning technique", "Built rapport with customer"],
-          improvements: ["Could probe deeper on priorities", "Ask more follow-up questions"],
-          examples: [],
-        },
-      };
-
-      // Save full evaluation (categories, personality, moments) so history replay can show it.
-      const aiFeedbackPayload = {
-        ...(evaluation.feedback || {}),
-        categories: evaluation.categories || null,
-        overallTip: evaluation.overallTip || null,
-        personalityType: evaluation.personalityType || null,
-        moments: evaluation.moments || [],
-      };
-
-      // Update session in database
-      await supabase
-        .from("training_sessions")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
-          duration_seconds: sessionState.elapsedSeconds,
-          score: evaluation.overallScore,
-          rapport_score: evaluation.rapportScore,
-          info_gathering_score: evaluation.infoGatheringScore,
-          needs_identification_score: evaluation.needsIdentificationScore,
-          cna_completion_score: evaluation.cnaCompletionScore,
-          ai_feedback: aiFeedbackPayload,
-        })
-        .eq("id", sessionState.id);
+      const evaluation = evalResponse.data;
+      if (!evaluation) throw new Error("No saved evaluation returned");
 
       setSessionState((prev) => ({
         ...prev,

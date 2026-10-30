@@ -10,6 +10,7 @@ import { PracticeScenario, PracticeScenarioData } from "@/components/learn/Pract
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { completeModule } from "@/lib/moduleCompletion";
 
 interface Section {
   id: string;
@@ -282,16 +283,7 @@ export default function DealershipModuleContent() {
     const moduleKey = `dealership-${dbId}`;
     const score = hasQuiz ? calculateScore() : null;
     try {
-      const { error } = await supabase.from("module_completions").upsert(
-        {
-          user_id: user.id,
-          module_id: moduleKey,
-          dealership_id: profile?.dealership_id || null,
-          quiz_score: score,
-        },
-        { onConflict: "user_id,module_id" }
-      );
-      if (error) throw error;
+      await completeModule(moduleKey, quizAnswers);
       toast.success("Module completed!");
       navigate(destination);
     } catch (err) {

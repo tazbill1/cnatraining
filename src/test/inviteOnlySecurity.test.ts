@@ -29,7 +29,7 @@ describe("AI dealership access", () => {
       let handler: ((req: Request) => Promise<Response>) | undefined;
       const capture = (callback: (req: Request) => Promise<Response>) => { handler = callback; };
       new Script(transpile(source)).runInContext(createContext({
-        exports: {}, serve: capture, Deno: { env: { get: () => "mock" }, serve: capture }, Response, console,
+        exports: {}, serve: capture, Deno: { env: { get: () => "mock" }, serve: capture }, Response, console, corsHeaders: {},
         requireDealership: guard,
         createClient: () => ({ ...client(null, false), auth: { getUser: async () => ({ data: { user: { id: "verified" } }, error: null }) } }),
         fetch: () => { throw new Error("Must not call AI"); },

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SCENARIO_PROMPTS, VALID_SCENARIO_IDS } from "../_shared/scenarioPrompts.ts";
+import { requireDealership } from "../_shared/requireDealership.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,13 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
+
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { profile, isSuperAdmin, errorResponse } = await requireDealership(serviceClient, userId, corsHeaders);
+    if (errorResponse) return errorResponse;
 
     // Parse and validate input
     const body = await req.json();
@@ -103,30 +111,6 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "Invalid custom scenario identifier" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Use service role to fetch the scenario (RLS already ensures user can only use active scenarios from their dealership via the client)
-      const serviceClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
-
-      // Fetch the custom scenario and verify access
-      const { data: profile } = await serviceClient
-        .from("profiles")
-        .select("dealership_id")
-        .eq("user_id", userId)
-        .single();
-
-      // Check if user is a super_admin (can access any dealership's scenarios)
-      const { data: isSuperAdmin } = await serviceClient
-        .rpc("has_role", { _user_id: userId, _role: "super_admin" });
-
-      if (!profile?.dealership_id && !isSuperAdmin) {
-        return new Response(
-          JSON.stringify({ error: "User has no dealership assigned" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 

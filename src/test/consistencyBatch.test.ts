@@ -3,7 +3,9 @@ import { calculateTrainingProgress } from "../lib/trainingProgress";
 import { resolveSessionTitle } from "../lib/sessionTitles";
 import { isValidNewPassword } from "../lib/passwordRules";
 import { initializePasswordRecovery } from "../lib/passwordRecovery";
-import { authStats } from "../lib/authStats";
+import { authStats, learningModuleCount } from "../lib/authStats";
+import { mergeModules } from "../hooks/useDealershipModules";
+import { isCertifiableModule } from "../lib/certificateModules";
 import { scenarios } from "../lib/scenarios";
 import { cnaChecklist } from "../lib/checklist";
 import { trainingModules } from "../lib/modules";
@@ -38,7 +40,14 @@ describe("Unified progress", () => {
 });
 describe("Names and source counts", () => {
   it("resolves the same custom title for every display", () => { expect(resolveSessionTitle("custom-uuid", { "custom-uuid": "Road to the Sale: Warm Walk-In" })).toBe("Road to the Sale: Warm Walk-In"); });
-  it("derives Auth statistics from actual arrays", () => { expect(authStats).toEqual({ scenarios: scenarios.length, checkpoints: cnaChecklist.length, modules: trainingModules.length }); });
+  it("derives Auth statistics from actual arrays", () => { expect(authStats).toEqual({ scenarios: scenarios.length, checkpoints: cnaChecklist.length }); });
+  it("counts Learning Modules like certification progress: 23 custom courses with no built-ins = 23", () => {
+    const modules = Array.from({ length: 23 }, (_, i) => ({ id: `m${i}`, base_module_id: null as string | null }));
+    expect(learningModuleCount([{ enabled_module_ids: [], modules }])).toBe(23);
+    const full = modules.map((m, i) => ({ ...m, base_module_id: i === 0 ? trainingModules[0].id : null })).map(m => ({ ...m, dealership_id: "d", title: m.id, description: null, icon: null, sort_order: 0, is_active: true, estimated_time: null, video_url: null, video_title: null, category: "showroom", sections: [], quiz_questions: [] }));
+    const mixed = modules.map((m, i) => ({ ...m, base_module_id: i === 0 ? trainingModules[0].id : null }));
+    expect(learningModuleCount([{ enabled_module_ids: null, modules: mixed }])).toBe(mergeModules(trainingModules, full as Parameters<typeof mergeModules>[1], null).filter(isCertifiableModule).length);
+  });
 });
 describe("Password recovery", () => {
   it("requires 8 characters for new passwords", () => { expect(isValidNewPassword("1234567")).toBe(false); expect(isValidNewPassword("12345678")).toBe(true); });

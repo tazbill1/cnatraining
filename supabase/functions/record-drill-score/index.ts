@@ -47,7 +47,13 @@ Deno.serve(async (req) => {
     }
     const gameType = productTypes[key];
     const bank: Record<string, { text: string; correct: boolean }[]> = {};
+    let poolSize = 0;
     if (gameType) {
+      let countQuery = admin.from("product_questions").select("id", { count: "exact", head: true }).eq("game_type", gameType).eq("is_active", true);
+      if (!access.isSuperAdmin) countQuery = countQuery.eq("dealership_id", access.profile?.dealership_id);
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
+      poolSize = count ?? 0;
       let query = admin.from("product_questions").select("id,choices,dealership_id").eq("game_type", gameType).eq("is_active", true).in("id", ids);
       // A global admin may play a preview dealership; everyone else is pinned to their profile.
       if (!access.isSuperAdmin) query = query.eq("dealership_id", access.profile?.dealership_id);
@@ -61,9 +67,10 @@ Deno.serve(async (req) => {
       const staticBank = staticDrillKeys[key as keyof typeof staticDrillKeys];
       if (!staticBank) return reply({ error: "Unknown game" }, 400);
       Object.assign(bank, staticBank);
+      poolSize = Object.keys(staticBank).length;
     }
     const maxQuestions = ["quiz", "wrong_claim", "awd_quiz"].includes(gameType) ? 20 : 10;
-    if (ids.length > maxQuestions || new Set(ids).size !== ids.length || ids.some((id) => !bank[id])) return reply({ error: "Invalid game questions" }, 400);
+    if (ids.length !== Math.min(poolSize, maxQuestions) || new Set(ids).size !== ids.length || ids.some((id) => !bank[id])) return reply({ error: "Invalid game questions" }, 400);
     if (body.action === "start") {
       const { data, error } = await admin.from("verified_drill_runs").insert({ user_id: user.id, dealership_id: access.profile?.dealership_id ?? null, drill_key: key, question_ids: ids }).select("id").single();
       if (error) throw error;

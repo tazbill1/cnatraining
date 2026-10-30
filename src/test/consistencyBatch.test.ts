@@ -9,6 +9,14 @@ import { cnaChecklist } from "../lib/checklist";
 import { trainingModules } from "../lib/modules";
 import { parseEvaluation, evaluationSchema } from "../../supabase/functions/_shared/evaluationSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { filterDealershipPopulation } from "../lib/dealershipMetrics";
+
+it("Team and Admin count only assigned dealership users and completed sessions in their current dealership", () => {
+  const users = [{ user_id: "u", dealership_id: "a" }, { user_id: "no-role", dealership_id: "a" }, { user_id: "unassigned", dealership_id: null }];
+  const sessions = [{ user_id: "u", dealership_id: "a", status: "completed" }, { user_id: "u", dealership_id: "a", status: "in_progress" }, { user_id: "u", dealership_id: "old", status: "completed" }, { user_id: "no-role", dealership_id: "a", status: "completed" }];
+  const result = filterDealershipPopulation(users, sessions, [{ user_id: "u" }, { user_id: "unassigned" }]);
+  expect(result.userCount).toBe(1); expect(result.sessionCount).toBe(1);
+});
 
 describe("Unified progress", () => {
   const modules = Array.from({ length: 23 }, (_, i) => ({ id: `dealership-${i}`, title: `Course ${i}`, category: i < 17 ? "showroom" : "phone" }));

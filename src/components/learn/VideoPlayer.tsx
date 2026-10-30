@@ -13,8 +13,8 @@ import {
   Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { trainingVideoPath } from "@/lib/trainingVideoPath";
+import { useQuery } from "@tanstack/react-query";
+import { trainingVideoUrlQuery, trainingVideoPoster } from "@/lib/trainingVideoUrl";
 import { toast } from "sonner";
 
 interface VideoPlayerProps {
@@ -40,31 +40,23 @@ export default function VideoPlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [hasCompleted, setHasCompleted] = useState(false);
   const maxWatchedRef = useRef(0);
-  const [playbackUrl, setPlaybackUrl] = useState<string>();
   const [sourceAttempt, setSourceAttempt] = useState(0);
+  const urlQuery = useQuery(trainingVideoUrlQuery(videoUrl));
+  const playbackUrl = urlQuery.data;
+  const poster = useMemo(() => trainingVideoPoster(videoUrl), [videoUrl]);
 
   useEffect(() => {
-    let active = true;
-    setIsLoading(true);
     setHasError(false);
-    setPlaybackUrl(undefined);
-    const path = trainingVideoPath(videoUrl, import.meta.env.VITE_SUPABASE_URL);
-    if (!path) {
-      setPlaybackUrl(videoUrl);
-      return;
-    }
-    void supabase.storage.from("training-videos").createSignedUrl(path, 900).then(({ data, error }) => {
-      if (!active) return;
-      if (error || !data?.signedUrl) {
-        setIsLoading(false);
-        setHasError(true);
-        toast.error("Unable to access this training video. Please sign in or contact your administrator.");
-        return;
-      }
-      setPlaybackUrl(data.signedUrl);
-    });
-    return () => { active = false; };
+    setIsLoading(true);
   }, [videoUrl, sourceAttempt]);
+
+  useEffect(() => {
+    if (urlQuery.isError) {
+      setIsLoading(false);
+      setHasError(true);
+      toast.error("Unable to access this training video. Please sign in or contact your administrator.");
+    }
+  }, [urlQuery.isError]);
 
   const handleComplete = useCallback(() => {
     if (!hasCompleted && onComplete) {
@@ -168,6 +160,7 @@ export default function VideoPlayer({
               setHasError(false);
               setIsLoading(true);
               setSourceAttempt(attempt => attempt + 1);
+              void urlQuery.refetch();
             }}
           >
             Retry
@@ -202,7 +195,9 @@ export default function VideoPlayer({
               }
             }}
             playsInline
-            preload={isMobile ? "none" : "metadata"}
+            preload="metadata"
+            poster={poster}
+            onLoadedMetadata={() => setIsLoading(false)}
             crossOrigin="anonymous"
             className="h-full w-full object-contain"
             onCanPlay={() => setIsLoading(false)}

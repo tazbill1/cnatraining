@@ -10,6 +10,8 @@ import { PracticeScenario, PracticeScenarioData } from "@/components/learn/Pract
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { prefetchTrainingVideoUrls } from "@/lib/trainingVideoUrl";
 import { completeModule } from "@/lib/moduleCompletion";
 
 interface Section {
@@ -221,6 +223,13 @@ export default function DealershipModuleContent() {
     }
     load();
   }, [dbId, user]);
+
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!module) return;
+    prefetchTrainingVideoUrls(queryClient, [module.video_url, ...module.sections.map((s) => s.video_url)]);
+  }, [module, queryClient]);
+
 
   const hasVideo = !!module?.video_url;
   const sections = module?.sections || [];

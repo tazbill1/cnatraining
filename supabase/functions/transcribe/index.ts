@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireDealership } from "../_shared/requireDealership.ts";
+import { requireAIRateLimit } from "../_shared/aiRateLimit.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
 import { transcribe } from "./gatewayTranscribe.ts";
@@ -43,6 +44,8 @@ serve(async (req) => {
 
     const { errorResponse } = await requireDealership(supabase, user.id, corsHeaders);
     if (errorResponse) return errorResponse;
+    const rateError = await requireAIRateLimit(user.id, "transcribe", corsHeaders);
+    if (rateError) return rateError;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return missingAIKeyResponse(corsHeaders);

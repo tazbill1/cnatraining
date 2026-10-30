@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SCENARIO_PROMPTS, VALID_SCENARIO_IDS } from "../_shared/scenarioPrompts.ts";
 import { requireDealership } from "../_shared/requireDealership.ts";
+import { requireAIRateLimit } from "../_shared/aiRateLimit.ts";
 import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
 
 const corsHeaders = {
@@ -53,6 +54,8 @@ serve(async (req) => {
     );
     const { profile, isSuperAdmin, errorResponse } = await requireDealership(serviceClient, userId, corsHeaders);
     if (errorResponse) return errorResponse;
+    const rateError = await requireAIRateLimit(userId, "training-chat", corsHeaders);
+    if (rateError) return rateError;
 
     // Parse and validate input
     const body = await req.json();

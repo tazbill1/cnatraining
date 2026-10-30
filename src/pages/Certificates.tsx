@@ -9,6 +9,8 @@ import { useDealershipModules, mergeModules } from "@/hooks/useDealershipModules
 import { supabase } from "@/integrations/supabase/client";
 import { trainingModules } from "@/lib/modules";
 import { channelCategories } from "@/lib/categories";
+import { certificateModuleKey, isCertifiableModule } from "@/lib/certificateModules";
+import { toast } from "sonner";
 
 interface CompletionRecord {
   module_id: string;
@@ -28,11 +30,12 @@ export default function Certificates() {
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("module_completions")
-      .select("module_id, completed_at, quiz_score")
+      .from("course_certificates")
+      .select("module_id, issued_at, quiz_score")
       .eq("user_id", user.id)
-      .then(({ data }) => {
-        setCompletions(data || []);
+      .then(({ data, error }) => {
+        if (error) toast.error("Unable to load certificates. Please try again.");
+        setCompletions((data || []).map(record => ({ ...record, completed_at: record.issued_at })));
         setLoading(false);
       });
   }, [user]);
@@ -43,13 +46,11 @@ export default function Certificates() {
     return mergeModules(trainingModules, dealershipModules, enabledIds);
   }, [settings, dealershipModules]);
 
-  const certifiableModules = allModules.filter(
-    (m) => !m.alwaysAccessible && m.id !== "base-statement-video"
-  );
+  const certifiableModules = allModules.filter(isCertifiableModule);
 
   const earned = completions.filter((c) => {
-    const mod = certifiableModules.find((m) => m.id === c.module_id);
-    return mod && (c.quiz_score === null || c.quiz_score >= 80);
+    const mod = certifiableModules.find((m) => certificateModuleKey(m) === c.module_id);
+    return mod && c.quiz_score !== null && c.quiz_score >= 80;
   });
 
 
@@ -60,12 +61,12 @@ export default function Certificates() {
         const catModules = certifiableModules.filter((m) => (m.category || "phone") === cat.id);
         if (catModules.length === 0) return null;
         const completedInCat = catModules.filter((m) =>
-          completions.some((c) => c.module_id === m.id && (c.quiz_score === null || c.quiz_score >= 80))
+          earned.some((c) => c.module_id === certificateModuleKey(m))
         );
         const isComplete = completedInCat.length === catModules.length;
         // Use the latest completion date in the category as the earn date
         const latestDate = completedInCat
-          .map((m) => completions.find((c) => c.module_id === m.id)?.completed_at)
+          .map((m) => earned.find((c) => c.module_id === certificateModuleKey(m))?.completed_at)
           .filter(Boolean)
           .sort()
           .reverse()[0];
@@ -78,7 +79,7 @@ export default function Certificates() {
         };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
-  }, [certifiableModules, completions]);
+  }, [certifiableModules, earned]);
 
   const userName = profile?.full_name || "User";
   const mastered = categoryRollups.filter((r) => r.isComplete);
@@ -179,7 +180,7 @@ export default function Certificates() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {earned.map((c) => {
-                const mod = certifiableModules.find((m) => m.id === c.module_id);
+                const mod = certifiableModules.find((m) => certificateModuleKey(m) === c.module_id);
                 if (!mod) return null;
                 return (
                   <CertificateCard

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireDealership } from "../_shared/requireDealership.ts";
+import { requireAIRateLimit } from "../_shared/aiRateLimit.ts";
 import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
 
 const corsHeaders = {
@@ -189,6 +190,8 @@ serve(async (req) => {
 
     const { errorResponse } = await requireDealership(supabase, user.id, corsHeaders);
     if (errorResponse) return errorResponse;
+    const rateError = await requireAIRateLimit(user.id, "chat", corsHeaders);
+    if (rateError) return rateError;
 
     // Parse and validate input
     const body = await req.json();

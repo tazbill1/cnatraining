@@ -9,6 +9,8 @@ import { CrashReporter } from "@/components/debug/CrashReporter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/layout/LoadingScreen";
 import { BugReportButton } from "@/components/BugReportButton";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import { NameRequiredDialog } from "@/components/auth/NameRequiredDialog";
 import { installGlobalActionLogger } from "@/lib/actionLog";
 import { installGlobalErrorCapture } from "@/lib/errorCapture";
@@ -82,6 +84,7 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route element={<AuthGuard />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/learn" element={<Learn />} />
                   <Route path="/learn/base-statement" element={<BaseStatementContent />} />
@@ -117,9 +120,14 @@ const App = () => (
                   <Route path="/progress" element={<Progress />} />
                   
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/team" element={<Team />} />
-                  <Route path="/admin" element={<Admin />} />
+                  <Route element={<RoleGuard section="team" />}>
+                    <Route path="/team" element={<Team />} />
+                  </Route>
+                  <Route element={<RoleGuard section="admin" />}>
+                    <Route path="/admin" element={<Admin />} />
+                  </Route>
                   <Route path="/certificates" element={<Certificates />} />
+                  </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

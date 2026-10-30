@@ -1,0 +1,4 @@
+DROP POLICY IF EXISTS "Users can insert their own sessions" ON public.training_sessions;
+CREATE POLICY "Users can insert their own sessions" ON public.training_sessions FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid() AND status = 'in_progress' AND (dealership_id = public.get_user_dealership_id(auth.uid()) OR public.has_role(auth.uid(), 'super_admin')));
+DROP POLICY IF EXISTS "Users can update their own sessions" ON public.training_sessions;
+CREATE POLICY "Users can update their own sessions" ON public.training_sessions FOR UPDATE TO authenticated USING (user_id = auth.uid() AND status <> 'completed') WITH CHECK (user_id = auth.uid() AND status IN ('in_progress','abandoned') AND (dealership_id = public.get_user_dealership_id(auth.uid()) OR public.has_role(auth.uid(), 'super_admin')));

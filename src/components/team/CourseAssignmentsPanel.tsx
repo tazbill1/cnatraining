@@ -87,7 +87,7 @@ export function CourseAssignmentsPanel({ dealershipId, members }: { dealershipId
     setCourses(c.data || []);
     setAssignments(a.data || []);
     setTeamCourseIds(new Set((t.data || []).map((r) => r.module_id)));
-    setCompleted(new Set((mc.data || []).map((r) => `${r.user_id}:dealership-${r.module_id}`)));
+    setCompleted(new Set((mc.data || []).map((r) => `${r.user_id}:${r.module_id}`)));
     setGameAssignments(ga.data || []);
     setTeamGameKeys(new Set((gt.data || []).map((r) => r.drill_key)));
     setPlayed(new Set((ds.data || []).map((r) => `${r.user_id}:${r.drill_key}`)));

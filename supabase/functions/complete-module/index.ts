@@ -1,9 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "https://esm.sh/zod@3.25.76";
 import { requireDealership } from "../_shared/requireDealership.ts";
 import { legacyQuizKeys } from "../_shared/staticScoreKeys.ts";
 import { quizPercentage } from "../_shared/scoreValidation.ts";
+
+const corsHeaders = { ...sdkCorsHeaders, "Access-Control-Allow-Headers": `${sdkCorsHeaders["Access-Control-Allow-Headers"]}, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version` };
 
 const Body = z.object({ moduleId: z.string().min(1).max(100), answers: z.record(z.union([z.string().max(100), z.number().int().min(0).max(100)])).default({}) }).strict();
 const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -1,6 +1,6 @@
-import { Phone, Globe, Building2, RotateCcw, LucideIcon } from "lucide-react";
+import { Phone, Globe, Building2, RotateCcw, Landmark, LucideIcon } from "lucide-react";
 
-export type ChannelCategory = "phone" | "internet" | "showroom" | "followup";
+export type ChannelCategory = "phone" | "internet" | "showroom" | "followup" | "fi";
 
 export interface ChannelCategoryInfo {
   id: ChannelCategory;

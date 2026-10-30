@@ -115,7 +115,6 @@ serve(async (req) => {
         "Cache-Control": "no-store",
       },
     });
-
   } catch (error) {
     console.error("Speech generation error:", error);
     console.error("Speech generation error details:", error instanceof Error ? error.message : error);

@@ -56,10 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     let profileFetchedForUser: string | null = null;
+    let profileLoadedForUser: string | null = null;
 
     const handleProfile = (userId: string) => {
       void loadProfile(userId).finally(() => {
-        if (isMounted) setIsLoading(false);
+        if (isMounted && profileFetchedForUser === userId) {
+          profileLoadedForUser = userId;
+          setIsLoading(false);
+        }
       });
     };
 
@@ -99,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (nextSession?.user) {
           if (profileFetchedForUser === nextSession.user.id) {
-            setIsLoading(false);
+            if (profileLoadedForUser === nextSession.user.id) setIsLoading(false);
             return;
           }
           profileFetchedForUser = nextSession.user.id;
@@ -107,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => handleProfile(nextSession.user.id), 0);
         } else {
           profileFetchedForUser = null;
+          profileLoadedForUser = null;
           clearAuthState();
           setError(null);
           setIsLoading(false);

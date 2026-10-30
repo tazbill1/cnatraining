@@ -17,6 +17,7 @@ import ResetPassword from "@/pages/ResetPassword";
 type AuthMode = "signin" | "signup";
 
 export default function Auth() {
+  const { data: learningModules } = useLearningModuleCount();
   const navigate = useNavigate();
   const { user, signIn, signUp, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<AuthMode>("signin");

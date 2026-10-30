@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isValidNewPassword } from "@/lib/passwordRules";
+import { AUTH_EMAIL_REDIRECT } from "@/lib/authLinks";
 
 export async function signInWithPassword(email: string, password: string) {
   const { error, data } = await supabase.auth.signInWithPassword({
@@ -21,7 +22,7 @@ export async function signInWithPassword(email: string, password: string) {
 
 export async function signUpWithEmail(email: string, password: string, fullName: string) {
   if (!isValidNewPassword(password)) return { error: new Error("Password must be at least 8 characters") };
-  const redirectUrl = `${window.location.origin}/`;
+  const redirectUrl = AUTH_EMAIL_REDIRECT;
 
   const { error } = await supabase.auth.signUp({
     email,

@@ -1,4 +1,5 @@
 import { useCertificationProgress } from "@/hooks/useCertificationProgress";
+import { displayUserName } from "@/lib/userDisplay";
 import { certificateModuleKey } from "@/lib/certificateModules";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -67,7 +68,7 @@ export function AchievementsSection() {
               <CertificateCard
                 key={c.module_id}
                 moduleName={mod.title}
-                userName={profile?.full_name || "User"}
+                userName={displayUserName(profile?.full_name, profile?.email)}
                 completionDate={c.completed_at}
                 score={c.quiz_score}
                 compact

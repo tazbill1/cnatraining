@@ -142,11 +142,6 @@ export default function Toolbox() {
                               <h3 className="font-semibold text-foreground">
                                 {tool.name}
                               </h3>
-                              {tool.status === "coming-soon" && (
-                                <Badge variant="secondary" className="text-xs">
-                                  Coming Soon
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">
                               {tool.description}

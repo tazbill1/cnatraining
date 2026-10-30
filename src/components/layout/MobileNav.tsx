@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { displayUserName } from "@/lib/userDisplay";
 import { NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LayoutDashboard, MessageSquare, Settings, Users, LogOut, GraduationCap, Wrench, X, History, Shield, Award, Bug, Trophy, ChevronDown } from "lucide-react";
@@ -147,11 +148,11 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center">
               <span className="text-sm font-semibold text-sidebar-primary">
-                {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                {displayUserName(profile?.full_name, profile?.email).charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{profile?.full_name || "User"}</p>
+              <p className="font-medium truncate">{displayUserName(profile?.full_name, profile?.email)}</p>
               <p className="text-xs text-sidebar-foreground/60 truncate">
                 {activeDealershipName}
               </p>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
+import { AUTH_EMAIL_REDIRECT } from "@/lib/authLinks";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function ForgotPassword() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: AUTH_EMAIL_REDIRECT,
       });
 
       if (error) {

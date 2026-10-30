@@ -1,4 +1,5 @@
 import { useCertificationProgress } from "@/hooks/useCertificationProgress";
+import { displayUserName } from "@/lib/userDisplay";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -111,7 +112,7 @@ export default function Dashboard() {
     return "Good evening";
   };
 
-  const firstName = profile?.full_name?.split(" ")[0] || "there";
+  const firstName = displayUserName(profile?.full_name, profile?.email).split(" ")[0];
   const dealershipName = profile?.dealership_name;
   const hasWelcome = !!(settings?.custom_welcome_message?.trim());
   const hasTagline = !!(settings?.dealership_tagline?.trim());

@@ -1,7 +1,10 @@
 # Roadmap — Showroom courses match the handbook
 
 ## Backend hardening
-- [ ] Custom per-user AI limiter — awaiting confirmation of custom-limiter tradeoff (30/minute, 1,000/day; Super Admin exempt)
+- [ ] Implement confirmed custom per-user AI limiter (30/minute, 1,000/day; Super Admin exempt)
+- [ ] Server-issued passing-course certificates and insert-only qualifying backfill
+- [ ] Router-level signed-in and Team/Admin role guards
+- [ ] Verify rate limits, certificate issuing/readback, and guarded navigation
 - [x] Private training videos with authenticated signed access; logos remain public
 - [x] Friendly AI credit/rate errors and clear missing-key diagnostics
 - [x] Gateway transcription migration with unchanged voice contract and live speech test (200 with accurate spoken transcript)

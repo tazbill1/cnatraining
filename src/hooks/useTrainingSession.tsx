@@ -196,7 +196,8 @@ export function useTrainingSession() {
         try {
           aiContent = await streamOnce();
         } catch (firstErr) {
-          if (firstErr instanceof AIRequestError && firstErr.status === 403) throw firstErr;
+          // Never retry credit exhaustion, denials, or other terminal HTTP errors.
+          if (firstErr instanceof AIRequestError && firstErr.status !== 429 && firstErr.status < 500) throw firstErr;
           logger.warn("Reply failed, retrying once:", firstErr);
           setStreamingText("");
           await new Promise((r) => setTimeout(r, 800));

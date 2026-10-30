@@ -24,6 +24,7 @@ import { getModuleById } from "@/lib/modules";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { completeModule } from "@/lib/moduleCompletion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -122,22 +123,11 @@ export default function ModuleContent() {
     }
   };
 
-  const handleQuizComplete = async (passed: boolean, score: number) => {
+  const handleQuizComplete = async (passed: boolean, score: number, answers: Record<string, string>) => {
     if (passed && user) {
       setStage("saving");
       try {
-        // Save to Supabase
-        const { error } = await supabase.from("module_completions").upsert(
-          {
-            user_id: user.id,
-            module_id: module.id,
-            quiz_score: score,
-            dealership_id: profile?.dealership_id || null,
-          },
-          { onConflict: "user_id,module_id" }
-        );
-
-        if (error) throw error;
+        await completeModule(module.id, answers);
 
         // Also save to localStorage as fallback cache
         const storageKey = `completed_modules_${user.id}`;
@@ -152,16 +142,8 @@ export default function ModuleContent() {
         setStage("complete");
         toast.success("Module completed! Great job!");
       } catch (error) {
-        const storageKey = `completed_modules_${user.id}`;
-        const stored = localStorage.getItem(storageKey);
-        const completed = stored ? JSON.parse(stored) : [];
-        if (!completed.includes(module.id)) {
-          completed.push(module.id);
-          localStorage.setItem(storageKey, JSON.stringify(completed));
-        }
-        localStorage.removeItem(`module_${effectiveModuleId}_current_stage`);
-        setStage("complete");
-        toast.error("Progress saved locally but couldn't sync to server.");
+        setStage("quiz");
+        toast.error(error instanceof Error ? error.message : "Unable to save course completion.");
       }
     }
   };

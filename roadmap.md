@@ -1,5 +1,13 @@
 # Roadmap — Showroom courses match the handbook
 
+## Final branding and polish batch
+- [x] Update owned-domain branding and explicit invite/auth links; retain safe Google callback with dashboard destination
+- [x] Review duplicate roleplay systems: keep both, recommend training-chat
+- [x] Shared display names, exact seven-day activity, scenario labels and coming-soon states
+- [x] Confirm existing Admin deactivate/removal actions; remove placeholder, example test and obsolete bun.lockb; retain npm lock until installer is known
+- [x] 51 tests and preview build passed; desktop/mobile checks with database writes blocked
+- [ ] Cloud Auth default Site URL still points to old domain — requires user changing Auth settings → Advanced to https://automotivesalespro.com/auth; no tool edits this setting safely
+
 ## Consistency and recovery batch
 - [x] One certification-progress definition across all displays (2/23 = 9% verified)
 - [x] Shared dealership user/completed-session counts for Team and Admin (8 users, 3 completed sessions verified before scoring test)

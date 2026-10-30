@@ -1,5 +1,7 @@
 import { Clock } from "lucide-react";
-import { Scenario, getCategoryById } from "@/lib/scenarios";
+import { Scenario } from "@/lib/scenarios";
+import { scenarioLabel } from "@/lib/scenarioLabels";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -17,12 +19,10 @@ export function ScenarioCard({ scenario, onClick, showCategory = false, isCustom
     advanced: "difficulty-advanced",
   }[scenario.difficulty];
 
-  const category = getCategoryById(scenario.category);
-
   return (
-    <button
+    <Button variant="ghost"
       onClick={onClick}
-      className="scenario-card text-left w-full group"
+      className="scenario-card text-left w-full group h-auto whitespace-normal justify-start font-normal"
     >
       <div className="flex items-start gap-4">
         <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -33,14 +33,9 @@ export function ScenarioCard({ scenario, onClick, showCategory = false, isCustom
             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {scenario.name}
             </h3>
-            {isCustom && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                Custom
-              </Badge>
-            )}
-            {showCategory && category && (
+            {(showCategory || isCustom) && (
               <Badge variant="secondary" className="text-xs">
-                {category.name}
+                {scenarioLabel(scenario.category)}
               </Badge>
             )}
           </div>
@@ -63,6 +58,6 @@ export function ScenarioCard({ scenario, onClick, showCategory = false, isCustom
           </div>
         </div>
       </div>
-    </button>
+    </Button>
   );
 }

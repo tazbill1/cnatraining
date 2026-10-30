@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
 import { authStats } from "@/lib/authStats";
 import { isValidNewPassword, MIN_PASSWORD_LENGTH } from "@/lib/passwordRules";
+import { googleCallback, googleDestination, isRecoveryLink } from "@/lib/authLinks";
+import ResetPassword from "@/pages/ResetPassword";
 
 type AuthMode = "signin" | "signup";
 
@@ -20,6 +22,7 @@ export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [recovering, setRecovering] = useState(() => isRecoveryLink(new URL(window.location.href)));
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,8 +32,9 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
+      sessionStorage.setItem("auth_destination", googleDestination(window.location.origin));
       const { error, redirected } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: googleCallback(window.location.origin),
       });
       
       if (redirected) {
@@ -48,10 +52,19 @@ export default function Auth() {
   };
 
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setRecovering(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user && !recovering) {
+      const destination = sessionStorage.getItem("auth_destination");
+      sessionStorage.removeItem("auth_destination");
+      navigate(destination === googleDestination(window.location.origin) ? new URL(destination).pathname : "/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, navigate, recovering]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +115,8 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  if (recovering) return <ResetPassword />;
 
   if (authLoading) {
     return (

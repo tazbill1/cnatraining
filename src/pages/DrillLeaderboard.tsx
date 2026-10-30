@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { displayUserName } from "@/lib/userDisplay";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Trophy, Flame, Download } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -202,7 +203,7 @@ export default function DrillLeaderboard() {
       .forEach((uid) => {
         const p = profiles.get(uid);
         const t = totals.get(uid)!;
-        const name = p?.full_name || p?.email || "Team member";
+        const name = displayUserName(p?.full_name, p?.email);
         const email = p?.email || "";
 
         DRILLS.forEach((d) => {
@@ -378,7 +379,7 @@ export default function DrillLeaderboard() {
                           <div className="w-8 text-center font-bold text-foreground/80">{i + 1}</div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm sm:text-base font-medium text-foreground truncate">
-                              {r.full_name || r.email || "Team member"}
+                              {displayUserName(r.full_name, r.email)}
                               {r.user_id === userId && (
                                 <span className="ml-2 text-xs text-primary font-semibold">You</span>
                               )}

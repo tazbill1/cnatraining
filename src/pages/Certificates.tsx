@@ -1,4 +1,5 @@
 import { useCertificationProgress } from "@/hooks/useCertificationProgress";
+import { displayUserName } from "@/lib/userDisplay";
 import { useEffect, useState, useMemo } from "react";
 import { Award, Trophy } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -51,7 +52,7 @@ export default function Certificates() {
       .filter((r): r is NonNullable<typeof r> => r !== null);
   }, [certifiableModules, earned]);
 
-  const userName = profile?.full_name || "User";
+  const userName = displayUserName(profile?.full_name, profile?.email);
   const mastered = categoryRollups.filter((r) => r.isComplete);
 
   return (

@@ -1,4 +1,7 @@
 import { fetchDealershipMetrics } from "@/lib/dealershipMetrics";
+import { displayUserName } from "@/lib/userDisplay";
+import { getActivityStatus, isActiveInLastWeek } from "@/lib/teamActivity";
+import { AUTH_EMAIL_REDIRECT } from "@/lib/authLinks";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -243,7 +246,7 @@ export default function Team() {
           id: profile.id,
           user_id: profile.user_id,
           dealership_id: profile.dealership_id,
-          full_name: profile.full_name || "Unknown",
+          full_name: displayUserName(profile.full_name, profile.email),
           email: profile.email,
           last_active_at: profile.last_active_at,
           total_sessions: completedSessions.length,
@@ -268,12 +271,7 @@ export default function Team() {
         }));
       setTeamSessions(completedAll);
 
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      
-      const activeThisWeek = userEngagement.filter((u) => 
-        u.last_active_at && new Date(u.last_active_at) > oneWeekAgo
-      ).length;
+      const activeThisWeek = userEngagement.filter((u) => isActiveInLastWeek(u.last_active_at)).length;
 
       const totalSessions = userEngagement.reduce((sum, u) => sum + u.total_sessions, 0);
       const usersWithScores = userEngagement.filter((u) => u.avg_score > 0);
@@ -292,19 +290,6 @@ export default function Team() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getActivityStatus = (lastActive: string | null) => {
-    if (!lastActive) return { label: "Never", variant: "destructive" as const };
-    
-    const lastActiveDate = new Date(lastActive);
-    const now = new Date();
-    const daysDiff = Math.floor((now.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysDiff <= 1) return { label: "Active", variant: "default" as const };
-    if (daysDiff <= 7) return { label: "This week", variant: "secondary" as const };
-    if (daysDiff <= 30) return { label: "This month", variant: "outline" as const };
-    return { label: "Inactive", variant: "destructive" as const };
   };
 
   const getScoreBadge = (score: number) => {
@@ -331,15 +316,8 @@ export default function Team() {
     );
   }
 
-  const activeUsers = users.filter((u) => {
-    const status = getActivityStatus(u.last_active_at);
-    return status.label === "Active" || status.label === "This week";
-  });
-
-  const inactiveUsers = users.filter((u) => {
-    const status = getActivityStatus(u.last_active_at);
-    return status.label === "Inactive" || status.label === "Never";
-  });
+  const activeUsers = users.filter((u) => isActiveInLastWeek(u.last_active_at));
+  const inactiveUsers = users.filter((u) => !isActiveInLastWeek(u.last_active_at));
 
   return (
     <AuthGuard>
@@ -462,7 +440,7 @@ export default function Team() {
                                 size="sm"
                                 className="h-7 px-2 text-xs"
                                 onClick={() => {
-                                  navigator.clipboard.writeText(`${window.location.origin}/auth`);
+                                  navigator.clipboard.writeText(AUTH_EMAIL_REDIRECT);
                                   toast.success(`Signup link copied — share with ${inv.email}`);
                                 }}
                                 title="Copy signup link"
@@ -614,6 +592,7 @@ export default function Team() {
             <TabsContent value="active">
               <UserList 
                 users={activeUsers} 
+                emptyMessage="No activity in the past seven days. A little practice is a great way to get started."
                 getActivityStatus={getActivityStatus} 
                 getScoreBadge={getScoreBadge}
                 isMobile={isMobile}
@@ -637,6 +616,7 @@ export default function Team() {
                 <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
                   <UserList 
                     users={inactiveUsers} 
+                    emptyMessage="Everyone has been active in the past seven days. Nice work, team!"
                     getActivityStatus={getActivityStatus} 
                     getScoreBadge={getScoreBadge}
                     isMobile={isMobile}
@@ -808,6 +788,7 @@ function TeamInsights({ sessions, users }: TeamInsightsProps) {
 }
 
 interface UserListProps {
+  emptyMessage?: string;
   users: UserEngagement[];
   getActivityStatus: (lastActive: string | null) => { label: string; variant: "default" | "secondary" | "destructive" | "outline" };
   getScoreBadge: (score: number) => { color: string };
@@ -824,11 +805,11 @@ function maskEmail(email: string): string {
   return `${maskedUser}@${domain}`;
 }
 
-function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser, onRemoveUser, currentUserId }: UserListProps) {
+function UserList({ users, getActivityStatus, getScoreBadge, isMobile, onSelectUser, onRemoveUser, currentUserId, emptyMessage = "No team members yet. Invite someone to get started." }: UserListProps) {
   if (users.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">
-        No users found
+        {emptyMessage}
       </div>
     );
   }

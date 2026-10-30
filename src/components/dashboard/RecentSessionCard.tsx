@@ -1,7 +1,8 @@
 import { useSessionTitles } from "@/hooks/useSessionTitles";
 import { Calendar, Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { scenarios, getCategoryById } from "@/lib/scenarios";
+import { scenarios } from "@/lib/scenarios";
+import { scenarioLabel } from "@/lib/scenarioLabels";
 import { Badge } from "@/components/ui/badge";
 
 interface RecentSessionCardProps {
@@ -22,7 +23,7 @@ export function RecentSessionCard({
   const getTitle = useSessionTitles();
   const scenario = scenarios.find((s) => s.id === scenarioType);
   const Icon = scenario?.icon || Trophy;
-  const category = scenario ? getCategoryById(scenario.category) : null;
+  const category = scenario ? scenarioLabel(scenario.category) : null;
 
   const getScoreClass = (score: number) => {
     if (score >= 90) return "score-excellent";
@@ -48,7 +49,7 @@ export function RecentSessionCard({
           </p>
           {category && (
             <Badge variant="secondary" className="text-xs shrink-0">
-              {category.name}
+              {category}
             </Badge>
           )}
         </div>

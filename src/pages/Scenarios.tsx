@@ -260,7 +260,8 @@ export default function Scenarios() {
     // Group by module, then sort modules by sort_order
     const byModule = new Map<string, ScenarioWithModule[]>();
     items.forEach((s) => {
-      const key = s.moduleId!;
+      const key = s.moduleId;
+      if (!key) return;
       const arr = byModule.get(key) || [];
       arr.push(s);
       byModule.set(key, arr);

@@ -9,16 +9,19 @@ const corsHeaders = {
 // Input validation constants
 const MAX_TEXT_LENGTH = 1000;
 
-// ElevenLabs voice mapping - maps friendly names to ElevenLabs voice IDs
+const SPEECH_MODEL = "google/gemini-3.1-flash-tts-preview";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/audio/speech";
+
+// Map the app's friendly voice names to Gemini prebuilt voices
 const VOICE_MAP: Record<string, string> = {
-  "alloy": "JBFqnCBsd6RMkjVDRZzb",    // George - versatile male
-  "echo": "N2lVS1w4EtoT3dr4eOWO",      // Callum - deep male
-  "fable": "pFZP5JQG7iQjIQuC4Bku",     // Lily - warm female
-  "onyx": "nPczCjzI2devNBz1zQrb",       // Brian - deep authoritative
-  "nova": "EXAVITQu4vr4xnSDxMaL",      // Sarah - friendly female
-  "shimmer": "XrExE9yKIg1WjnnlVkGX",   // Matilda - warm female
+  "alloy": "Kore",     // firm
+  "echo": "Charon",    // informative male
+  "fable": "Sulafat",  // warm
+  "onyx": "Alnilam",   // firm male
+  "nova": "Aoede",     // breezy female
+  "shimmer": "Leda",   // youthful female
 };
-const DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George
+const DEFAULT_VOICE = "Kore";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -42,7 +45,7 @@ serve(async (req) => {
     );
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
@@ -50,10 +53,10 @@ serve(async (req) => {
       );
     }
 
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_TTS_KEY") || Deno.env.get("ELEVENLABS_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!ELEVENLABS_API_KEY) {
-      console.error("ELEVENLABS_TTS_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       return new Response(
         JSON.stringify({ error: "Service temporarily unavailable" }),
         { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -78,43 +81,37 @@ serve(async (req) => {
       );
     }
 
-    // Map voice name to ElevenLabs voice ID
-    const voiceId = (voice && VOICE_MAP[voice]) ? VOICE_MAP[voice] : DEFAULT_VOICE_ID;
+    const voiceName = (voice && VOICE_MAP[voice]) ? VOICE_MAP[voice] : DEFAULT_VOICE;
 
-    console.log("Generating speech via ElevenLabs for text:", text.substring(0, 50) + "...", "user:", user.id);
+    console.log("Generating speech via gateway TTS for text:", text.substring(0, 50) + "...", "user:", user.id);
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32&optimize_streaming_latency=3`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-          "Content-Type": "application/json",
+    const response = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: SPEECH_MODEL,
+        contents: [{ role: "user", parts: [{ text }] }],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
         },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_turbo_v2_5",
-          voice_settings: {
-            stability: 0.4,
-            similarity_boost: 0.7,
-            style: 0.3,
-            use_speaker_boost: true,
-          },
-        }),
-      }
-    );
+      }),
+    });
 
     if (!response.ok || !response.body) {
       const errorText = await response.text().catch(() => "");
-      console.error("ElevenLabs TTS API error:", response.status, errorText);
+      console.error("Gateway TTS API error:", response.status, errorText);
       throw new Error(`TTS API error: ${response.status}`);
     }
 
-    // Stream audio directly to client for low latency
+    // Complete audio file (WAV, 24kHz 16-bit mono); returned as a single body
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
-        "Content-Type": "audio/mpeg",
+        "Content-Type": "audio/wav",
         "Cache-Control": "no-store",
       },
     });

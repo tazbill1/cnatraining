@@ -392,8 +392,8 @@ export function ContentTab({ dealershipId }: ContentTabProps) {
       setUploading(false);
       return;
     }
-    const { data: urlData } = supabase.storage.from("training-videos").getPublicUrl(path);
-    onUrl(urlData.publicUrl);
+    // Persist a stable reference, never an expiring signed URL.
+    onUrl(`training-videos/${path}`);
     setUploading(false);
     toast.success("Video uploaded");
   };

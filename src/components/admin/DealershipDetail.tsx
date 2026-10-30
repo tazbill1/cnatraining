@@ -1,4 +1,5 @@
 import { fetchDealershipMetrics } from "@/lib/dealershipMetrics";
+import { displayUserName } from "@/lib/userDisplay";
 import { useSessionTitles } from "@/hooks/useSessionTitles";
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -208,6 +209,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
   const [loadingUnassigned, setLoadingUnassigned] = useState(false);
   const [assigning, setAssigning] = useState<string | null>(null);
   const [togglingRole, setTogglingRole] = useState<string | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<ProfileRow | null>(null);
 
   const fetchUnassigned = async () => {
     setLoadingUnassigned(true);
@@ -318,7 +320,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
             <TableBody>
               {users.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+                  <TableCell className="font-medium">{displayUserName(u.full_name, u.email)}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
                     {u.role === "super_admin" ? (
@@ -348,7 +350,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
                     {formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleRemove(u.id)} title="Remove from dealership">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setRemoveTarget(u)} title="Remove from dealership">
                       <X className="w-3.5 h-3.5" />
                     </Button>
                   </TableCell>
@@ -365,6 +367,16 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
       </Card>
 
       {/* Assign User Dialog */}
+      <Dialog open={!!removeTarget} onOpenChange={(open) => { if (!open) setRemoveTarget(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Remove team member?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{displayUserName(removeTarget?.full_name, removeTarget?.email)} will no longer be assigned to this dealership. Their account will not be deleted.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemoveTarget(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { if (removeTarget) { void handleRemove(removeTarget.id); setRemoveTarget(null); } }}>Remove from dealership</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -379,7 +391,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
               {unassignedUsers.map(u => (
                 <div key={u.id} className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent">
                   <div>
-                    <p className="text-sm font-medium">{u.full_name || u.email}</p>
+                    <p className="text-sm font-medium">{displayUserName(u.full_name, u.email)}</p>
                     {u.full_name && <p className="text-xs text-muted-foreground">{u.email}</p>}
                   </div>
                   <Button size="sm" variant="outline" onClick={() => handleAssign(u.id)} disabled={assigning === u.id}>

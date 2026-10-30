@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { displayUserName } from "@/lib/userDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,7 @@ export function CourseAssignmentsPanel({ dealershipId, members }: { dealershipId
   const nameOf = (uid: string) => {
     const m = members.find((x) => x.user_id === uid);
     if (!m) return "Former team member";
-    return m.full_name && m.full_name !== "Unknown" ? m.full_name : m.email || "Team member";
+    return displayUserName(m.full_name, m.email);
   };
 
   const grouped = useMemo<Group[]>(() => {
@@ -308,7 +309,7 @@ export function CourseAssignmentsPanel({ dealershipId, members }: { dealershipId
                         checked={picked.includes(m.user_id)}
                         onCheckedChange={(v) => setPicked((p) => v ? [...p, m.user_id] : p.filter((x) => x !== m.user_id))}
                       />
-                      <span className="truncate">{m.full_name && m.full_name !== "Unknown" ? m.full_name : m.email}</span>
+                      <span className="truncate">{displayUserName(m.full_name, m.email)}</span>
                     </label>
                   ))}
                 </div>

@@ -5,6 +5,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { ComingSoon } from "@/components/ui/coming-soon";
 
 interface Tool {
   id: string;
@@ -104,7 +105,9 @@ export default function Toolbox() {
                   {categoryLabels[category as keyof typeof categoryLabels]}
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2">
-                  {categoryTools.map((tool) => (
+                  {categoryTools.map((tool) => tool.status === "coming-soon" ? (
+                    <ComingSoon key={tool.id} title={tool.name} />
+                  ) : (
                     <Card
                       key={tool.id}
                       className={cn(

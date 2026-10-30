@@ -39,6 +39,7 @@ export default function Admin() {
   const [newSlug, setNewSlug] = useState("");
   const [saving, setSaving] = useState(false);
   const [selectedDealership, setSelectedDealership] = useState<Dealership | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<Dealership | null>(null);
 
   useEffect(() => {
     if (user && isSuperAdmin) {
@@ -243,7 +244,7 @@ export default function Admin() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={(e) => { e.stopPropagation(); toggleActive(d); }}
+                                onClick={(e) => { e.stopPropagation(); if (d.is_active) setDeactivateTarget(d); else void toggleActive(d); }}
                               >
                                 {d.is_active ? "Deactivate" : "Activate"}
                               </Button>
@@ -271,6 +272,18 @@ export default function Admin() {
         </div>
 
         {/* Add Dealership Modal */}
+        <Dialog open={!!deactivateTarget} onOpenChange={(open) => { if (!open) setDeactivateTarget(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Deactivate {deactivateTarget?.name}?</DialogTitle>
+              <DialogDescription>This changes the dealership's status to inactive. No accounts or training records will be deleted.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeactivateTarget(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => { if (deactivateTarget) { void toggleActive(deactivateTarget); setDeactivateTarget(null); } }}>Deactivate</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
           <DialogContent>
             <DialogHeader>

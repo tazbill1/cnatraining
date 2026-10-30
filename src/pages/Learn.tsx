@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ComingSoon } from "@/components/ui/coming-soon";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { BookOpen, Search, X, Eye, ArrowLeft, ChevronRight } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -293,7 +294,7 @@ export default function Learn() {
           {/* Category Gallery (shown when no category selected and no search) */}
           {!activeCategory && !search && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {channelCategories.map((cat) => {
+              {channelCategories.filter((cat) => (categoryStats[cat.id]?.total ?? 0) > 0).map((cat) => {
                 const stats = categoryStats[cat.id] || { total: 0, completed: 0 };
                 const Icon = cat.icon;
                 const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -456,6 +457,8 @@ export default function Learn() {
                   </div>
                 ))}
               </div>
+            ) : categoryModules.length === 0 ? (
+              <ComingSoon title={activeCategoryInfo?.name ?? "Training"} />
             ) : filteredModules.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground mb-2">No modules found</p>

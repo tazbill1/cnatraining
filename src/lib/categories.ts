@@ -1,6 +1,6 @@
-import { Phone, Globe, Building2, RotateCcw, LucideIcon } from "lucide-react";
+import { Phone, Globe, Building2, RotateCcw, Landmark, LucideIcon } from "lucide-react";
 
-export type ChannelCategory = "phone" | "internet" | "showroom" | "followup";
+export type ChannelCategory = "phone" | "internet" | "showroom" | "followup" | "fi";
 
 export interface ChannelCategoryInfo {
   id: ChannelCategory;
@@ -59,6 +59,17 @@ export const channelCategories: ChannelCategoryInfo[] = [
     accent: "border-purple-500/30 hover:border-purple-500/60",
     iconBg: "bg-purple-500/10",
     iconColor: "text-purple-600 dark:text-purple-400",
+  },
+  {
+    id: "fi",
+    slug: "fi",
+    name: "F&I and After Sales",
+    shortName: "F&I",
+    description: "Finance & insurance hand-off, product menus, delivery paperwork and the after-sale relationship.",
+    icon: Landmark,
+    accent: "border-rose-500/30 hover:border-rose-500/60",
+    iconBg: "bg-rose-500/10",
+    iconColor: "text-rose-600 dark:text-rose-400",
   },
 ];
 

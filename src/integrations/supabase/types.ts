@@ -1463,6 +1463,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      public_learning_catalog: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "salesperson" | "manager" | "super_admin"

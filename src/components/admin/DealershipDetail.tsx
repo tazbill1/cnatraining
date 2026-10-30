@@ -1,3 +1,5 @@
+import { fetchDealershipMetrics } from "@/lib/dealershipMetrics";
+import { useSessionTitles } from "@/hooks/useSessionTitles";
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,15 +76,12 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [usersRes, sessionsRes, invitesRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("id, user_id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
-      supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
-      supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
-      supabase.from("user_roles").select("user_id, role"),
+    const [metrics, invitesRes] = await Promise.all([
+      fetchDealershipMetrics(dealershipId),
+      supabase.from("invitations").select("id,email,status,created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
     ]);
-    
-    const roles = rolesRes.data || [];
-    const enrichedUsers = (usersRes.data || []).map(u => {
+    const roles = metrics.roles;
+    const enrichedUsers = metrics.profiles.map(u => {
       // Find the highest role for this user
       const userRoles = roles.filter(r => r.user_id === u.user_id);
       const isManager = userRoles.some(r => r.role === "manager");
@@ -91,7 +90,7 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
     });
     
     setUsers(enrichedUsers);
-    setSessions(sessionsRes.data || []);
+    setSessions(metrics.sessions);
     setInvitations(invitesRes.data || []);
     setLoading(false);
   }, [dealershipId]);
@@ -203,6 +202,7 @@ function SettingsGuard({ dealershipId, settings, onInitialized, children }: { de
 
 /* ─── Overview Tab (existing content) ─── */
 function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: { users: ProfileRow[]; sessions: SessionRow[]; invitations: InvitationRow[]; dealershipId: string; onRefresh: () => void }) {
+  const getSessionTitle = useSessionTitles();
   const [assignOpen, setAssignOpen] = useState(false);
   const [unassignedUsers, setUnassignedUsers] = useState<ProfileRow[]>([]);
   const [loadingUnassigned, setLoadingUnassigned] = useState(false);
@@ -410,7 +410,7 @@ function OverviewTab({ users, sessions, invitations, dealershipId, onRefresh }: 
             <TableBody>
               {sessions.slice(0, 20).map((s) => (
                 <TableRow key={s.id}>
-                  <TableCell className="font-medium capitalize">{s.scenario_type.replace(/-/g, " ")}</TableCell>
+                  <TableCell className="font-medium">{getSessionTitle(s.scenario_type)}</TableCell>
                   <TableCell>{s.score != null ? `${s.score}%` : "—"}</TableCell>
                   <TableCell>
                     <Badge variant={s.status === "completed" ? "default" : "secondary"}>

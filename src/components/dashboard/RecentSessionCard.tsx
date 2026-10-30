@@ -1,3 +1,4 @@
+import { useSessionTitles } from "@/hooks/useSessionTitles";
 import { Calendar, Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { scenarios, getCategoryById } from "@/lib/scenarios";
@@ -18,6 +19,7 @@ export function RecentSessionCard({
   score,
   durationSeconds,
 }: RecentSessionCardProps) {
+  const getTitle = useSessionTitles();
   const scenario = scenarios.find((s) => s.id === scenarioType);
   const Icon = scenario?.icon || Trophy;
   const category = scenario ? getCategoryById(scenario.category) : null;
@@ -42,7 +44,7 @@ export function RecentSessionCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <p className="font-medium text-foreground truncate">
-            {scenarioName || scenario?.name || (scenarioType.startsWith("custom-") ? "Custom roleplay" : scenarioType.replace(/-/g, " "))}
+            {getTitle(scenarioType)}
           </p>
           {category && (
             <Badge variant="secondary" className="text-xs shrink-0">

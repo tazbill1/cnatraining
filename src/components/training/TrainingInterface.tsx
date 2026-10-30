@@ -64,6 +64,7 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
     isTyping,
     streamingText,
     isGrading,
+    scoringError,
     startSession,
     sendMessage,
     endSession,
@@ -240,6 +241,15 @@ export function TrainingInterface({ scenario, onComplete }: TrainingInterfacePro
         </p>
       </div>
     );
+  }
+
+  if (scoringError) {
+    return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <AlertCircle className="h-10 w-10 text-destructive" />
+      <h2 className="text-xl font-semibold">Scoring failed</h2>
+      <p className="text-muted-foreground max-w-md">{scoringError}</p>
+      <Button onClick={handleEndSession}><RotateCcw className="w-4 h-4 mr-2" />Scoring failed — Retry</Button>
+    </div>;
   }
 
   if (isLoading || !sessionState.scenario) {

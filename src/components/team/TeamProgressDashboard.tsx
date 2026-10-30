@@ -1,3 +1,4 @@
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -20,49 +21,7 @@ interface TeamProgressDashboardProps {
 }
 
 export function TeamProgressDashboard({ userIds }: TeamProgressDashboardProps) {
-  const [loading, setLoading] = useState(true);
-  const [modules, setModules] = useState<ModuleProgress[]>([]);
-
-  useEffect(() => {
-    if (userIds.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchModuleProgress = async () => {
-      const { data } = await supabase
-        .from("module_completions")
-        .select("module_id, user_id, quiz_score")
-        .in("user_id", userIds);
-
-      const completions = data || [];
-      const byModule = new Map<string, { users: Set<string>; scores: number[] }>();
-
-      for (const c of completions) {
-        if (!byModule.has(c.module_id)) {
-          byModule.set(c.module_id, { users: new Set(), scores: [] });
-        }
-        const entry = byModule.get(c.module_id)!;
-        entry.users.add(c.user_id);
-        if (c.quiz_score != null) entry.scores.push(c.quiz_score);
-      }
-
-      const moduleList: ModuleProgress[] = Array.from(byModule.entries())
-        .map(([moduleId, { users, scores }]) => ({
-          moduleId,
-          moduleName: moduleId.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-          completedCount: users.size,
-          totalUsers: userIds.length,
-          avgQuizScore: scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
-        }))
-        .sort((a, b) => b.completedCount - a.completedCount);
-
-      setModules(moduleList);
-      setLoading(false);
-    };
-
-    fetchModuleProgress();
-  }, [userIds]);
+  const { loading, modules, completed: totalCompletions, percent: avgCompletion } = useCertificationProgress(userIds, "completions");
 
   if (loading) {
     return (
@@ -71,11 +30,6 @@ export function TeamProgressDashboard({ userIds }: TeamProgressDashboardProps) {
       </div>
     );
   }
-
-  const totalCompletions = modules.reduce((s, m) => s + m.completedCount, 0);
-  const avgCompletion = modules.length > 0
-    ? Math.round(modules.reduce((s, m) => s + (m.completedCount / m.totalUsers) * 100, 0) / modules.length)
-    : 0;
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600";

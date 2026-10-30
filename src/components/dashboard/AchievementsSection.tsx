@@ -1,3 +1,5 @@
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
+import { certificateModuleKey } from "@/lib/certificateModules";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Award, ChevronRight } from "lucide-react";
@@ -16,33 +18,7 @@ interface CompletionRecord {
 export function AchievementsSection() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const [completions, setCompletions] = useState<CompletionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("module_completions")
-      .select("module_id, completed_at, quiz_score")
-      .eq("user_id", user.id)
-      .then(({ data }) => {
-        setCompletions(data || []);
-        setLoading(false);
-      });
-  }, [user]);
-
-  // Only show modules with quizzes that scored 80%+
-  const certifiableModules = trainingModules.filter(
-    (m) => !m.alwaysAccessible && m.id !== "base-statement-video"
-  );
-  const earned = completions.filter((c) => {
-    const mod = certifiableModules.find((m) => m.id === c.module_id);
-    return mod && (c.quiz_score === null || c.quiz_score >= 80);
-  });
-
-  const totalCertifiable = certifiableModules.length;
-  const earnedCount = earned.length;
-  const progressPercent = totalCertifiable > 0 ? Math.round((earnedCount / totalCertifiable) * 100) : 0;
+  const { earned, certifiableModules, loading, completed: earnedCount, total: totalCertifiable, percent: progressPercent } = useCertificationProgress();
 
   if (loading) return null;
 
@@ -85,7 +61,7 @@ export function AchievementsSection() {
       {earnedCount > 0 ? (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
           {earned.map((c) => {
-            const mod = certifiableModules.find((m) => m.id === c.module_id);
+            const mod = certifiableModules.find((m) => certificateModuleKey(m) === c.module_id);
             if (!mod) return null;
             return (
               <CertificateCard

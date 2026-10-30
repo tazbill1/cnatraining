@@ -1,3 +1,4 @@
+import { fetchDealershipMetrics } from "@/lib/dealershipMetrics";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -85,7 +86,7 @@ export default function Team() {
 
   useEffect(() => {
     checkManagerRole();
-  }, [user]);
+  }, [user, scopeDealershipId]);
 
   const checkManagerRole = async () => {
     if (!user) return;
@@ -226,18 +227,7 @@ export default function Team() {
 
   const fetchEngagementData = async () => {
     try {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("last_active_at", { ascending: false });
-
-      if (profilesError) throw profilesError;
-
-      const { data: sessions, error: sessionsError } = await supabase
-        .from("training_sessions")
-        .select("*");
-
-      if (sessionsError) throw sessionsError;
+      const { profiles, sessions } = await fetchDealershipMetrics(scopeDealershipId);
 
       const userEngagement: UserEngagement[] = (profiles || []).map((profile) => {
         const userSessions = (sessions || []).filter((s) => s.user_id === profile.user_id);

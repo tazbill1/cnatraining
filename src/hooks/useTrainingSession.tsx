@@ -45,6 +45,7 @@ export function useTrainingSession() {
   const [isTyping, setIsTyping] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [isGrading, setIsGrading] = useState(false);
+  const [scoringError, setScoringError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Timer logic
@@ -72,6 +73,7 @@ export function useTrainingSession() {
       if (!user) return;
 
       setIsLoading(true);
+      setScoringError(null);
       try {
         // Create session in database
         const { data, error } = await supabase
@@ -277,6 +279,7 @@ export function useTrainingSession() {
     }
 
     setIsGrading(true);
+    setScoringError(null);
     try {
       // Calculate scores based on scenario type
       const checklistProgress = sessionState.scenario
@@ -321,7 +324,9 @@ export function useTrainingSession() {
       };
     } catch (error) {
       logger.error("Error ending session:", error);
-      toast.error(error instanceof AIRequestError ? error.message : "Failed to save session results");
+      const message = error instanceof AIRequestError ? error.message : "Scoring failed. Your conversation is saved; please retry.";
+      setScoringError(message);
+      toast.error(message);
       return null;
     } finally {
       setIsGrading(false);
@@ -340,6 +345,7 @@ export function useTrainingSession() {
     isTyping,
     streamingText,
     isGrading,
+    scoringError,
     startSession,
     sendMessage,
     endSession,

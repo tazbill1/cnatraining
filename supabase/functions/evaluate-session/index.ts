@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { evaluationSchema, parseEvaluation } from "../_shared/evaluationSchema.ts";
 import { requireDealership } from "../_shared/requireDealership.ts";
 import { requireAIRateLimit } from "../_shared/aiRateLimit.ts";
 import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
@@ -107,69 +108,6 @@ function validateRequest(body: Record<string, unknown>) {
   return { valid: true, validatedDuration };
 }
 
-function buildCnaFallback() {
-  const fallbackCategory = (label: string) => ({
-    score: 65,
-    label,
-    strengths: ["Completed the session"],
-    improvements: ["Practice more to improve"],
-    tip: "Focus on being conversational and natural",
-  });
-
-  return {
-    overallScore: 65,
-    categories: {
-      rapport: fallbackCategory("Rapport Building"),
-      infoGathering: fallbackCategory("Information Gathering"),
-      needsIdentification: fallbackCategory("Needs Identification"),
-      cnaCompletion: { ...fallbackCategory("CNA Completion"), score: 50 },
-    },
-    overallTip: "Keep practicing — consistency is key to improvement.",
-    rapportScore: 65,
-    infoGatheringScore: 65,
-    needsIdentificationScore: 65,
-    cnaCompletionScore: 50,
-    feedback: {
-      strengths: ["Completed the session"],
-      improvements: ["Practice more scenarios"],
-      coachingTips: ["Focus on open-ended questions"],
-      examples: [],
-    },
-  };
-}
-
-function buildPhoneFallback() {
-  const cat = (label: string) => ({
-    score: 65,
-    label,
-    strengths: ["Completed the call"],
-    improvements: ["Practice the framework more"],
-    tip: "Run the four-part framework on every call.",
-  });
-  return {
-    overallScore: 65,
-    categories: {
-      name: cat("Name"),
-      information: cat("Information"),
-      engaging: cat("Engaging"),
-      cta: cat("Call to Action"),
-    },
-    personalityType: null,
-    moments: [],
-    overallTip: "Keep reps short and always close for a specific either/or appointment time.",
-    rapportScore: 65,
-    infoGatheringScore: 65,
-    needsIdentificationScore: 65,
-    cnaCompletionScore: 65,
-    feedback: {
-      strengths: ["Completed the call"],
-      improvements: ["Practice the framework more"],
-      coachingTips: ["Always end with an either/or appointment ask."],
-      examples: [],
-    },
-  };
-}
-
 function formatCnaResponse(evaluation: Record<string, unknown>) {
   const cats = evaluation.categories as Record<string, Record<string, unknown>> | undefined;
   const rapport = cats?.rapport as Record<string, unknown> | undefined;
@@ -185,13 +123,13 @@ function formatCnaResponse(evaluation: Record<string, unknown>) {
   }
 
   return {
-    overallScore: evaluation.overallScore || 65,
+    overallScore: evaluation.overallScore ?? 0,
     categories: evaluation.categories || {},
     overallTip: evaluation.overallTip || "",
-    rapportScore: (rapport?.score as number) || 65,
-    infoGatheringScore: (info?.score as number) || 65,
-    needsIdentificationScore: (needs?.score as number) || 65,
-    cnaCompletionScore: (cna?.score as number) || 50,
+    rapportScore: (rapport?.score as number) ?? 0,
+    infoGatheringScore: (info?.score as number) ?? 0,
+    needsIdentificationScore: (needs?.score as number) ?? 0,
+    cnaCompletionScore: (cna?.score as number) ?? 0,
     feedback: {
       strengths: allStrengths.length > 0 ? allStrengths : ["Completed the session"],
       improvements: allImprovements.length > 0 ? allImprovements : ["Practice more"],
@@ -216,16 +154,16 @@ function formatPhoneResponse(evaluation: Record<string, unknown>) {
   }
 
   return {
-    overallScore: evaluation.overallScore || 65,
+    overallScore: evaluation.overallScore ?? 0,
     categories: evaluation.categories || {},
     personalityType: evaluation.personalityType || null,
     moments: Array.isArray(evaluation.moments) ? evaluation.moments : [],
     overallTip: evaluation.overallTip || "",
     // Map phone categories into legacy score columns so the DB columns stay populated.
-    rapportScore: (engaging?.score as number) || 65,
-    infoGatheringScore: (information?.score as number) || 65,
-    needsIdentificationScore: (name?.score as number) || 65,
-    cnaCompletionScore: (cta?.score as number) || 65,
+    rapportScore: (engaging?.score as number) ?? 0,
+    infoGatheringScore: (information?.score as number) ?? 0,
+    needsIdentificationScore: (name?.score as number) ?? 0,
+    cnaCompletionScore: (cta?.score as number) ?? 0,
     feedback: {
       strengths: allStrengths.length > 0 ? allStrengths : ["Completed the call"],
       improvements: allImprovements.length > 0 ? allImprovements : ["Practice more calls"],
@@ -293,7 +231,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) return missingAIKeyResponse(corsHeaders);
 
-    const isPhone = scenario?.category === "phone";
+    const isPhone = scenario?.category === "phone" || scenario?.category === "inbound-call";
 
     // For phone scoring, also tag the salesperson turn index so the AI can reference it in `moments`.
     let salespersonTurnCounter = 0;
@@ -335,6 +273,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         max_tokens: 2000,
+        response_format: { type: "json_schema", json_schema: { name: "session_evaluation", strict: true, schema: evaluationSchema(isPhone) } },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userTask },
@@ -345,20 +284,19 @@ serve(async (req) => {
     if (!response.ok) return gatewayErrorResponse(response, corsHeaders);
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "{}";
-    console.log("Evaluation received successfully");
-
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    let evaluation;
-    try {
-      evaluation = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    } catch {
-      evaluation = null;
+    const choice = data.choices?.[0];
+    if (choice?.message?.refusal) {
+      return new Response(JSON.stringify({ error: "The AI declined to score this conversation." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    const formatted = !evaluation || !evaluation.categories
-      ? (isPhone ? buildPhoneFallback() : buildCnaFallback())
-      : (isPhone ? formatPhoneResponse(evaluation) : formatCnaResponse(evaluation));
+    let evaluation: Record<string, unknown>;
+    try {
+      if (choice?.finish_reason !== "stop" || typeof choice?.message?.content !== "string") throw new Error("Incomplete scoring response");
+      evaluation = parseEvaluation(choice.message.content, isPhone);
+    } catch (error) {
+      console.error("Structured scoring failed", error);
+      return new Response(JSON.stringify({ error: "Scoring failed. Your conversation is saved; please retry." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const formatted = isPhone ? formatPhoneResponse(evaluation) : formatCnaResponse(evaluation);
     const safeScore = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.min(100, Math.round(value))) : 0;
     formatted.overallScore = safeScore(formatted.overallScore);
     formatted.rapportScore = safeScore(formatted.rapportScore);

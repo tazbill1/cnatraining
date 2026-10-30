@@ -1,3 +1,4 @@
+import { useSessionTitles } from "@/hooks/useSessionTitles";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -18,12 +19,7 @@ import { ArrowLeft, Clock, Calendar, Check, X, MessageSquare, Search, Download }
 import { downloadCsv } from "@/lib/csvExport";
 import { scenarios } from "@/lib/scenarios";
 
-function getScenarioName(scenarioType: string): string {
-  const found = scenarios.find(s => s.id === scenarioType);
-  if (found) return found.name;
-  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
-  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-}
+
 import { cnaChecklist, categoryLabels, ChecklistItem } from "@/lib/checklist";
 import { phoneChecklist } from "@/lib/phoneChecklist";
 import { cn } from "@/lib/utils";
@@ -46,6 +42,7 @@ interface SessionDetail {
 }
 
 export default function SessionHistory() {
+  const getScenarioName = useSessionTitles();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { sessionId } = useParams();
@@ -137,7 +134,7 @@ export default function SessionHistory() {
     }
 
     return result;
-  }, [sessions, searchQuery, scoreFilter, sortBy]);
+  }, [sessions, searchQuery, scoreFilter, sortBy, getScenarioName]);
 
   if (selectedSession) {
     const session = selectedSession;
@@ -297,7 +294,7 @@ export default function SessionHistory() {
               <div className="card-premium p-6">
                 <h2 className="font-semibold text-foreground mb-2">Checklist Coverage</h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                  {completedCount} / {checklist.length} items covered
+                  Checklist: {completedCount} of {checklist.length} steps covered
                 </p>
                 <div className="space-y-2 max-h-[600px] overflow-auto">
                   {checklist.map((item) => {
@@ -454,7 +451,7 @@ export default function SessionHistory() {
                           {session.duration_seconds ? formatDuration(session.duration_seconds) : "—"}
                         </span>
                         <Badge variant="outline" className="text-[10px]">
-                          {completedItems}/{checklist.length} items
+                          Checklist: {completedItems} of {checklist.length} steps covered
                         </Badge>
                       </div>
                     </div>

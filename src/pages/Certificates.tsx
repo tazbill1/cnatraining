@@ -1,3 +1,4 @@
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
 import { useEffect, useState, useMemo } from "react";
 import { Award, Trophy } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -20,39 +21,8 @@ interface CompletionRecord {
 
 export default function Certificates() {
   const { user, profile } = useAuth();
-  const { settings } = useDealershipSettings();
-  const { dealershipModules } = useDealershipModules();
-  const [completions, setCompletions] = useState<CompletionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const { settings, certifiableModules, earned, loading } = useCertificationProgress();
   const certificatesDisabled = settings?.certificates_enabled === false;
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("course_certificates")
-      .select("module_id, issued_at, quiz_score")
-      .eq("user_id", user.id)
-      .then(({ data, error }) => {
-        if (error) toast.error("Unable to load certificates. Please try again.");
-        setCompletions((data || []).map(record => ({ ...record, completed_at: record.issued_at })));
-        setLoading(false);
-      });
-  }, [user]);
-
-  // Merge default and dealership modules the same way Learn does
-  const allModules = useMemo(() => {
-    const enabledIds = settings ? settings.enabled_module_ids : null;
-    return mergeModules(trainingModules, dealershipModules, enabledIds);
-  }, [settings, dealershipModules]);
-
-  const certifiableModules = allModules.filter(isCertifiableModule);
-
-  const earned = completions.filter((c) => {
-    const mod = certifiableModules.find((m) => certificateModuleKey(m) === c.module_id);
-    return mod && c.quiz_score !== null && c.quiz_score >= 80;
-  });
-
 
   // Category-level rollups: category is "mastered" when every module in it is complete
   const categoryRollups = useMemo(() => {

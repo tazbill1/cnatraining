@@ -1,3 +1,4 @@
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -32,59 +33,14 @@ export function CategoryBreakdown({
   description = "Completion by skill category",
   className,
 }: CategoryBreakdownProps) {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<CategoryStat[]>([]);
-
-  useEffect(() => {
-    if (userIds.length === 0) {
-      setStats([]);
-      setLoading(false);
-      return;
-    }
-
-    const run = async () => {
-      setLoading(true);
-      try {
-        const [{ data: moduleRows }, { data: completionRows }] = await Promise.all([
-          supabase.from("dealership_modules").select("id, category, is_active").eq("is_active", true),
-          supabase.from("module_completions").select("module_id, user_id, quiz_score").in("user_id", userIds),
-        ]);
-
-        const modules = moduleRows || [];
-        const completions = completionRows || [];
-
-        const categoryOf = new Map<string, string>();
-        modules.forEach((m) => {
-          const cat = isValidChannelCategory(m.category) ? m.category : "phone";
-          categoryOf.set(m.id, cat);
-        });
-
-        const next: CategoryStat[] = channelCategories.map((c) => {
-          const catModuleIds = modules.filter((m) => (categoryOf.get(m.id) || "phone") === c.id).map((m) => m.id);
-          const catModuleSet = new Set(catModuleIds);
-          const relevant = completions.filter((r) => catModuleSet.has(r.module_id));
-          const uniqueSlots = new Set(relevant.map((r) => `${r.user_id}::${r.module_id}`));
-          const scores = relevant.map((r) => r.quiz_score).filter((s): s is number => s != null);
-          return {
-            id: c.id,
-            name: c.name,
-            totalModules: catModuleIds.length,
-            completedSlots: uniqueSlots.size,
-            totalSlots: catModuleIds.length * userIds.length,
-            avgQuizScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
-          };
-        });
-
-        setStats(next);
-      } catch (error) {
-        logger.error("Error loading category breakdown", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    run();
-  }, [userIds.join(",")]);
+  const { loading, modules } = useCertificationProgress(userIds, "completions");
+  const stats: CategoryStat[] = channelCategories.map(category => {
+    const selected = modules.filter(m => (m.category || "phone") === category.id);
+    const completedSlots = selected.reduce((sum, m) => sum + m.completedCount, 0);
+    return { id: category.id, name: category.name, totalModules: selected.length, completedSlots,
+      totalSlots: selected.length * new Set(userIds).size,
+      avgQuizScore: completedSlots ? Math.round(selected.reduce((sum, m) => sum + m.avgQuizScore * m.completedCount, 0) / completedSlots) : 0 };
+  });
 
   const scoreColor = (score: number) => {
     if (score >= 90) return "text-green-600";
@@ -114,7 +70,8 @@ export function CategoryBreakdown({
         ) : (
           <>
             {withModules.map((s) => {
-              const info = channelCategories.find((c) => c.id === s.id)!;
+              const info = channelCategories.find((c) => c.id === s.id);
+              if (!info) return null;
               const Icon = info.icon;
               const pct = s.totalSlots > 0 ? Math.round((s.completedSlots / s.totalSlots) * 100) : 0;
               return (

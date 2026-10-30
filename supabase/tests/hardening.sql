@@ -1,5 +1,6 @@
 -- Regression checks run in a transaction and leave no test data behind.
 BEGIN;
+SET LOCAL ROLE service_role;
 DO $$
 DECLARE u uuid := gen_random_uuid(); d uuid := gen_random_uuid(); result jsonb; admin_id uuid; before_count integer; c_id text := 'test-' || gen_random_uuid()::text;
 BEGIN

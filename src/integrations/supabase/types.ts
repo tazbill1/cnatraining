@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           created_at: string
@@ -145,6 +166,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      course_certificates: {
+        Row: {
+          dealership_id: string | null
+          id: string
+          issued_at: string
+          module_id: string
+          quiz_score: number
+          user_id: string
+        }
+        Insert: {
+          dealership_id?: string | null
+          id?: string
+          issued_at: string
+          module_id: string
+          quiz_score: number
+          user_id: string
+        }
+        Update: {
+          dealership_id?: string | null
+          id?: string
+          issued_at?: string
+          module_id?: string
+          quiz_score?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       course_team_assignments: {
         Row: {
@@ -1382,6 +1430,10 @@ export type Database = {
     }
     Functions: {
       close_abandoned_training_sessions: { Args: never; Returns: number }
+      consume_ai_request: {
+        Args: { _function_name: string; _user_id: string }
+        Returns: Json
+      }
       get_user_dealership_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

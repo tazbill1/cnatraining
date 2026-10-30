@@ -13,6 +13,9 @@ import {
   Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { trainingVideoPath } from "@/lib/trainingVideoPath";
+import { toast } from "sonner";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -37,6 +40,31 @@ export default function VideoPlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [hasCompleted, setHasCompleted] = useState(false);
   const maxWatchedRef = useRef(0);
+  const [playbackUrl, setPlaybackUrl] = useState<string>();
+  const [sourceAttempt, setSourceAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setIsLoading(true);
+    setHasError(false);
+    setPlaybackUrl(undefined);
+    const path = trainingVideoPath(videoUrl, import.meta.env.VITE_SUPABASE_URL);
+    if (!path) {
+      setPlaybackUrl(videoUrl);
+      return;
+    }
+    void supabase.storage.from("training-videos").createSignedUrl(path, 900).then(({ data, error }) => {
+      if (!active) return;
+      if (error || !data?.signedUrl) {
+        setIsLoading(false);
+        setHasError(true);
+        toast.error("Unable to access this training video. Please sign in or contact your administrator.");
+        return;
+      }
+      setPlaybackUrl(data.signedUrl);
+    });
+    return () => { active = false; };
+  }, [videoUrl, sourceAttempt]);
 
   const handleComplete = useCallback(() => {
     if (!hasCompleted && onComplete) {
@@ -139,6 +167,7 @@ export default function VideoPlayer({
             onClick={() => {
               setHasError(false);
               setIsLoading(true);
+              setSourceAttempt(attempt => attempt + 1);
             }}
           >
             Retry
@@ -161,9 +190,9 @@ export default function VideoPlayer({
           {isLoading && (
             <Skeleton className="absolute inset-0 z-10 rounded-none" />
           )}
-          <video
+          {playbackUrl && <video
             ref={videoRef}
-            src={videoUrl}
+            src={playbackUrl}
             controls
             controlsList="nodownload noplaybackrate"
             disablePictureInPicture
@@ -188,7 +217,7 @@ export default function VideoPlayer({
             onTimeUpdate={handleTimeUpdate}
             onSeeking={handleSeeking}
 
-          />
+          />}
         </AspectRatio>
 
         {/* Custom controls bar */}

@@ -534,7 +534,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     } catch (error) {
       console.error("TTS error:", error);
       setIsSpeaking(false);
-      if (error instanceof AIRequestError && error.status === 403) {
+      if (error instanceof AIRequestError) {
         toast.error(error.message);
         return;
       }

@@ -535,7 +535,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
         await audio.play();
       } catch (error) {
-        if (error instanceof AIRequestError && error.status === 403) {
+        if (error instanceof AIRequestError) {
           setIsSpeaking(false);
           toast.error(error.message);
           return;

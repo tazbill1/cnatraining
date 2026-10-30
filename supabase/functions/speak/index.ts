@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireDealership } from "../_shared/requireDealership.ts";
+import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,13 +60,7 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
-      return new Response(
-        JSON.stringify({ error: "Service temporarily unavailable" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (!LOVABLE_API_KEY) return missingAIKeyResponse(corsHeaders);
 
     const body = await req.json();
     const { text, voice } = body;
@@ -105,11 +100,7 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok || !response.body) {
-      const errorText = await response.text().catch(() => "");
-      console.error("Gateway TTS API error:", response.status, errorText);
-      throw new Error(`TTS API error: ${response.status}`);
-    }
+    if (!response.ok) return gatewayErrorResponse(response, corsHeaders);
 
     // Complete audio file (WAV, 24kHz 16-bit mono); returned as a single body
     return new Response(response.body, {

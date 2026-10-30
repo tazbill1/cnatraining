@@ -25,11 +25,11 @@ function client(dealership: string | null, superAdmin: boolean, failure = false)
 describe("AI dealership access", () => {
   it("rejects an unassigned non-admin with 403 before parsing input in all five functions", async () => {
     for (const name of ["training-chat", "chat", "speak", "transcribe", "evaluate-session"]) {
-      const source = readFileSync(`supabase/functions/${name}/index.ts`, "utf8").replace(/^import .*;\r?\n/gm, "");
+      const source = readFileSync(`supabase/functions/${name}/index.ts`, "utf8").replace(/^import .*;\r?\n/gm, "").replace(/cors_1\.corsHeaders/g, "corsHeaders");
       let handler: ((req: Request) => Promise<Response>) | undefined;
       const capture = (callback: (req: Request) => Promise<Response>) => { handler = callback; };
       new Script(transpile(source)).runInContext(createContext({
-        exports: {}, serve: capture, Deno: { env: { get: () => "mock" }, serve: capture }, Response, console,
+        exports: {}, serve: capture, Deno: { env: { get: () => "mock" }, serve: capture }, Response, console, corsHeaders: {},
         requireDealership: guard,
         createClient: () => ({ ...client(null, false), auth: { getUser: async () => ({ data: { user: { id: "verified" } }, error: null }) } }),
         fetch: () => { throw new Error("Must not call AI"); },

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireDealership } from "../_shared/requireDealership.ts";
+import { gatewayErrorResponse, missingAIKeyResponse } from "../_shared/aiGatewayErrors.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -287,7 +288,7 @@ serve(async (req) => {
 
     const { messages, scenario, checklistState, effectiveChecklistIds } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) return missingAIKeyResponse(corsHeaders);
 
     const isPhone = scenario?.category === "phone";
 
@@ -338,15 +339,7 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Lovable AI error:", response.status, errorText);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      throw new Error(`Lovable AI error: ${response.status}`);
-    }
+    if (!response.ok) return gatewayErrorResponse(response, corsHeaders);
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "{}";

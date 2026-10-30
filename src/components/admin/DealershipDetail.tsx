@@ -118,7 +118,7 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="training">Training Config</TabsTrigger>

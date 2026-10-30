@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
-import { authStats } from "@/lib/authStats";
+import { authStats, useLearningModuleCount } from "@/lib/authStats";
 import { isValidNewPassword, MIN_PASSWORD_LENGTH } from "@/lib/passwordRules";
 import { googleCallback, googleDestination, isRecoveryLink } from "@/lib/authLinks";
 import ResetPassword from "@/pages/ResetPassword";
@@ -327,7 +327,7 @@ export default function Auth() {
                 <p className="text-sm text-primary-foreground/70">Powered Coaching</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">{authStats.modules}</p>
+                <p className="text-3xl font-bold">{learningModules ?? "…"}</p>
                 <p className="text-sm text-primary-foreground/70">Learning Modules</p>
               </div>
             </div>

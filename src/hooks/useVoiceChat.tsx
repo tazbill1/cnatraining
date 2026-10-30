@@ -508,49 +508,9 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
           throw new Error(`TTS request failed: ${response.status}`);
         }
 
-        // Start playback while audio is still downloading when the browser supports it.
-        let audioUrl: string;
-        const canStream =
-          typeof window.MediaSource !== "undefined" &&
-          MediaSource.isTypeSupported("audio/mpeg") &&
-          !!response.body;
-        if (canStream && response.body) {
-          const mediaSource = new MediaSource();
-          audioUrl = URL.createObjectURL(mediaSource);
-          const body = response.body;
-          mediaSource.addEventListener("sourceopen", () => {
-            const sb = mediaSource.addSourceBuffer("audio/mpeg");
-            const reader = body.getReader();
-            const queue: BufferSource[] = [];
-            let finished = false;
-            const pump = () => {
-              if (sb.updating) return;
-              const next = queue.shift();
-              if (next) {
-                sb.appendBuffer(next);
-              } else if (finished && mediaSource.readyState === "open") {
-                try { mediaSource.endOfStream(); } catch { /* already ended */ }
-              }
-            };
-            sb.addEventListener("updateend", pump);
-            void (async () => {
-              try {
-                for (;;) {
-                  const { done, value } = await reader.read();
-                  if (done) break;
-                  if (value) queue.push(new Uint8Array(value));
-                  pump();
-                }
-              } finally {
-                finished = true;
-                pump();
-              }
-            })();
-          }, { once: true });
-        } else {
-          const audioBlob = await response.blob();
-          audioUrl = URL.createObjectURL(audioBlob);
-        }
+        // The speak function returns a complete audio file; play it as a blob.
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
 
@@ -574,7 +534,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
         await audio.play();
       } catch (error) {
-        console.error("ElevenLabs speech error, falling back to browser TTS:", error);
+        console.error("Speech error, falling back to browser TTS:", error);
         // Fallback to browser speechSynthesis
         try {
           window.speechSynthesis.cancel();

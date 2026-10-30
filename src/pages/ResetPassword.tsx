@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
+import { initializePasswordRecovery } from "@/lib/passwordRecovery";
+import { isValidNewPassword, MIN_PASSWORD_LENGTH } from "@/lib/passwordRules";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checkingRecovery, setCheckingRecovery] = useState(true);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -25,13 +28,13 @@ export default function ResetPassword() {
       }
     );
 
-    // Check if already in recovery from URL hash
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get("type") === "recovery") {
-      setIsRecovery(true);
-    }
+    let active = true;
+    void initializePasswordRecovery(supabase.auth, new URL(window.location.href))
+      .then(valid => { if (active) { setIsRecovery(valid); if (valid) window.history.replaceState(null, "", window.location.pathname); } })
+      .catch(() => { if (active) setIsRecovery(false); })
+      .finally(() => { if (active) setCheckingRecovery(false); });
 
-    return () => subscription.unsubscribe();
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,8 +45,8 @@ export default function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (!isValidNewPassword(password)) {
+      toast.error("Password must be at least 8 characters");
       return;
     }
 
@@ -64,6 +67,7 @@ export default function ResetPassword() {
     }
   };
 
+  if (checkingRecovery) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
   if (!isRecovery && !isSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-8">
@@ -119,7 +123,7 @@ export default function ResetPassword() {
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10"
                       required
-                      minLength={6}
+                      minLength={MIN_PASSWORD_LENGTH}
                     />
                   </div>
                 </div>
@@ -136,7 +140,7 @@ export default function ResetPassword() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="pl-10"
                       required
-                      minLength={6}
+                      minLength={MIN_PASSWORD_LENGTH}
                     />
                   </div>
                 </div>

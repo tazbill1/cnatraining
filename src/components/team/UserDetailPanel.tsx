@@ -9,6 +9,8 @@ import { ArrowLeft, Loader2, TrendingUp, Clock, Target, BookOpen } from "lucide-
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow, format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useSessionTitles } from "@/hooks/useSessionTitles";
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
 
 interface UserDetailPanelProps {
   userId: string;
@@ -38,6 +40,8 @@ interface ModuleCompletion {
 }
 
 export function UserDetailPanel({ userId, userName, onBack }: UserDetailPanelProps) {
+  const getSessionTitle = useSessionTitles();
+  const { modules } = useCertificationProgress([userId], "completions");
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<SessionDetail[]>([]);
   const [completions, setCompletions] = useState<ModuleCompletion[]>([]);
@@ -203,7 +207,7 @@ export function UserDetailPanel({ userId, userName, onBack }: UserDetailPanelPro
               <TableBody>
                 {sessions.map(s => (
                   <TableRow key={s.id}>
-                    <TableCell className="font-medium capitalize">{s.scenario_type.replace(/-/g, " ")}</TableCell>
+                    <TableCell className="font-medium">{getSessionTitle(s.scenario_type)}</TableCell>
                     <TableCell>
                       {s.score != null ? (
                         <span className={cn("font-semibold", getScoreColor(s.score))}>{s.score}%</span>

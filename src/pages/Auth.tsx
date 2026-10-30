@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import werkandmeLogo from "@/assets/werkandme-logo.png";
+import { authStats } from "@/lib/authStats";
+import { isValidNewPassword, MIN_PASSWORD_LENGTH } from "@/lib/passwordRules";
 
 type AuthMode = "signin" | "signup";
 
@@ -62,6 +64,10 @@ export default function Auth() {
           toast.error(error.message || "Invalid email or password");
         }
       } else {
+        if (!isValidNewPassword(formData.password)) {
+          toast.error("Password must be at least 8 characters");
+          return;
+        }
         if (!formData.fullName.trim()) {
           toast.error("Please enter your full name");
           setIsLoading(false);
@@ -191,7 +197,7 @@ export default function Auth() {
                     }
                     className="pl-10"
                     required
-                    minLength={6}
+                    minLength={mode === "signup" ? MIN_PASSWORD_LENGTH : undefined}
                   />
                 </div>
               </div>
@@ -294,11 +300,11 @@ export default function Auth() {
             </p>
             <div className="grid grid-cols-2 gap-6 text-left">
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">14</p>
+                <p className="text-3xl font-bold">{authStats.scenarios}</p>
                 <p className="text-sm text-primary-foreground/70">Training Scenarios</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">23</p>
+                <p className="text-3xl font-bold">{authStats.checkpoints}</p>
                 <p className="text-sm text-primary-foreground/70">CNA Checkpoints</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
@@ -306,7 +312,7 @@ export default function Auth() {
                 <p className="text-sm text-primary-foreground/70">Powered Coaching</p>
               </div>
               <div className="bg-primary-foreground/10 rounded-xl p-4">
-                <p className="text-3xl font-bold">3</p>
+                <p className="text-3xl font-bold">{authStats.modules}</p>
                 <p className="text-sm text-primary-foreground/70">Learning Modules</p>
               </div>
             </div>

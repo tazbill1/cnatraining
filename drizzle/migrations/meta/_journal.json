@@ -29,6 +29,13 @@
       "when": 1791929406323,
       "tag": "0003_game_assignments",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793373606606,
+      "tag": "0004_require_invitation_for_signup",
+      "breakpoints": true
     }
   ]
 }

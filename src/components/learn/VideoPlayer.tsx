@@ -13,8 +13,8 @@ import {
   Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import { trainingVideoPath } from "@/lib/trainingVideoPath";
+import { useQuery } from "@tanstack/react-query";
+import { trainingVideoUrlQuery, trainingVideoPoster } from "@/lib/trainingVideoUrl";
 import { toast } from "sonner";
 
 interface VideoPlayerProps {
@@ -160,6 +160,7 @@ export default function VideoPlayer({
               setHasError(false);
               setIsLoading(true);
               setSourceAttempt(attempt => attempt + 1);
+              void urlQuery.refetch();
             }}
           >
             Retry
@@ -194,7 +195,9 @@ export default function VideoPlayer({
               }
             }}
             playsInline
-            preload={isMobile ? "none" : "metadata"}
+            preload="metadata"
+            poster={poster}
+            onLoadedMetadata={() => setIsLoading(false)}
             crossOrigin="anonymous"
             className="h-full w-full object-contain"
             onCanPlay={() => setIsLoading(false)}

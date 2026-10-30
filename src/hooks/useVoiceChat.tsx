@@ -534,7 +534,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
         await audio.play();
       } catch (error) {
-        console.error("ElevenLabs speech error, falling back to browser TTS:", error);
+        console.error("Speech error, falling back to browser TTS:", error);
         // Fallback to browser speechSynthesis
         try {
           window.speechSynthesis.cancel();

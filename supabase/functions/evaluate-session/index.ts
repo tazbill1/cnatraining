@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireDealership } from "../_shared/requireDealership.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -255,6 +256,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Invalid token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    const { errorResponse } = await requireDealership(supabase, user.id, corsHeaders);
+    if (errorResponse) return errorResponse;
 
     const body = await req.json();
     const validation = validateRequest(body);

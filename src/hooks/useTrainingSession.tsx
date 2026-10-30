@@ -10,6 +10,7 @@ import { analyzeTradeChecklistFromConversation } from "@/lib/tradeChecklist";
 import { calculateEffectiveProgress, getEffectiveChecklist } from "@/lib/effectiveChecklist";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { AIRequestError, aiResponseError, aiInvokeError } from "@/lib/aiErrors";
 
 interface Message {
   id: string;
@@ -157,7 +158,8 @@ export function useTrainingSession() {
             },
             body: JSON.stringify(payload),
           });
-          if (!res.ok || !res.body) throw new Error(`training-chat ${res.status}`);
+          if (!res.ok) throw await aiResponseError(res, "The customer didn't respond. Your message is back in the box — tap send to try again.");
+          if (!res.body) throw new Error(`training-chat ${res.status}`);
           const reader = res.body.getReader();
           const decoder = new TextDecoder();
           let buffer = "";
@@ -194,6 +196,7 @@ export function useTrainingSession() {
         try {
           aiContent = await streamOnce();
         } catch (firstErr) {
+          if (firstErr instanceof AIRequestError && firstErr.status === 403) throw firstErr;
           logger.warn("Reply failed, retrying once:", firstErr);
           setStreamingText("");
           await new Promise((r) => setTimeout(r, 800));
@@ -256,7 +259,7 @@ export function useTrainingSession() {
       } catch (error) {
         logger.error("Error sending message:", error);
         setStreamingText("");
-        toast.error("The customer didn't respond. Your message is back in the box — tap send to try again.");
+        toast.error(error instanceof AIRequestError ? error.message : "The customer didn't respond. Your message is back in the box — tap send to try again.");
         options?.onError?.(content);
       } finally {
         setIsTyping(false);
@@ -293,6 +296,7 @@ export function useTrainingSession() {
         },
       });
 
+      if (evalResponse.error) throw await aiInvokeError(evalResponse.error, "Failed to save session results");
       const evaluation = evalResponse.data || {
         overallScore: Math.round(checklistProgress * 0.7 + 30),
         rapportScore: 75,
@@ -352,7 +356,7 @@ export function useTrainingSession() {
       };
     } catch (error) {
       logger.error("Error ending session:", error);
-        toast.error("Failed to save session results");
+      toast.error(error instanceof AIRequestError ? error.message : "Failed to save session results");
       return null;
     } finally {
       setIsGrading(false);

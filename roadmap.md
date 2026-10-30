@@ -1,5 +1,10 @@
 # Roadmap — Showroom courses match the handbook
 
+## Invitation-only security
+- [x] Enforce invitations for every new signup, including Google
+- [x] Guard all five AI functions and display dealership-access errors
+- [x] Test signup and AI access protections (six regression tests; live uninvited signup rollback and existing Super Admin access verified)
+
 - [x] Reorder showroom courses to the desk card ("Road to the Sale") order
 - [x] Rebuild "The Sales Process: The Big Picture" as the intro course
 - [x] Cleaner, wider lesson layout

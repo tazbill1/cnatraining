@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
+import { AIRequestError, aiResponseError } from "@/lib/aiErrors";
 
 interface UseVoiceChatOptions {
   onTranscription?: (text: string) => void;
@@ -505,7 +506,7 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
         );
 
         if (!response.ok) {
-          throw new Error(`TTS request failed: ${response.status}`);
+          throw await aiResponseError(response, `TTS request failed: ${response.status}`);
         }
 
         // The speak function returns a complete audio file; play it as a blob.
@@ -534,6 +535,11 @@ export function useVoiceChat(options: UseVoiceChatOptions = {}) {
 
         await audio.play();
       } catch (error) {
+        if (error instanceof AIRequestError && error.status === 403) {
+          setIsSpeaking(false);
+          toast.error(error.message);
+          return;
+        }
         console.error("Speech error, falling back to browser TTS:", error);
         // Fallback to browser speechSynthesis
         try {

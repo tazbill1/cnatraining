@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
+import { AIRequestError, aiResponseError, aiInvokeError } from "@/lib/aiErrors";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -239,7 +240,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       });
 
       if (error) {
-        throw error;
+        throw await aiInvokeError(error, "Failed to get response. Please try again.");
       }
 
       const assistantMessage: Message = {
@@ -255,7 +256,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     } catch (error) {
       logger.error("Chat error:", error);
       setVoiceStatus("idle");
-      toast.error("Failed to get response. Please try again.");
+      toast.error(error instanceof AIRequestError ? error.message : "Failed to get response. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -463,7 +464,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       });
 
       if (error) {
-        throw error;
+        throw await aiInvokeError(error, "Failed to get response. Please try again.");
       }
 
       const assistantMessage: Message = {
@@ -477,7 +478,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       await speakText(data.message, data.voice);
     } catch (error) {
       console.error("Chat error:", error);
-      toast.error("Failed to get response. Please try again.");
+      toast.error(error instanceof AIRequestError ? error.message : "Failed to get response. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -509,7 +510,7 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
       );
 
       if (!response.ok) {
-        throw new Error("TTS failed");
+        throw await aiResponseError(response, "Failed to generate speech. Please try again.");
       }
 
       const audioBlob = await response.blob();
@@ -533,6 +534,10 @@ export function VoiceChat({ persona, onMessagesChange }: VoiceChatProps) {
     } catch (error) {
       console.error("TTS error:", error);
       setIsSpeaking(false);
+      if (error instanceof AIRequestError && error.status === 403) {
+        toast.error(error.message);
+        return;
+      }
       
       // Still auto-restart in hands-free mode even if TTS fails
       if (handsFreeModeEnabled && !isProcessing) {

@@ -1311,6 +1311,39 @@ export type Database = {
         }
         Relationships: []
       }
+      verified_drill_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          dealership_id: string | null
+          drill_key: string
+          id: string
+          question_ids: Json
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          drill_key: string
+          id?: string
+          question_ids: Json
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          dealership_id?: string | null
+          drill_key?: string
+          id?: string
+          question_ids?: Json
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       walk_in_logs: {
         Row: {
           dealership_id: string | null
@@ -1356,6 +1389,27 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      persist_verified_drill_result: {
+        Args: { _run_id: string; _score: number; _user_id: string }
+        Returns: {
+          best_streak: number
+          created_at: string
+          dealership_id: string | null
+          drill_key: string
+          first_streak: number | null
+          id: string
+          last_streak: number
+          plays: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "drill_scores"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {

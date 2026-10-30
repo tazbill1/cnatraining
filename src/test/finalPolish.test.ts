@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 import { displayUserName } from "@/lib/userDisplay";
 import { isActiveInLastWeek } from "@/lib/teamActivity";
 import { AUTH_EMAIL_REDIRECT, googleDestination, googleCallback, isRecoveryLink } from "@/lib/authLinks";
+import { authEmailRedirect } from "../../supabase/functions/_shared/authEmailRedirect";
 describe("final polish rules", () => {
+  it("preserves verification tokens while normalizing email returns", () => {
+    const input = "https://verify.example.test/verify?token=sample&type=recovery&redirect_to=https%3A%2F%2Fold.example.test";
+    const result = new URL(authEmailRedirect(input, true));
+    expect(result.origin).toBe("https://verify.example.test");
+    expect(result.searchParams.get("token")).toBe("sample");
+    expect(result.searchParams.get("redirect_to")).toBe("https://automotivesalespro.com/auth?type=recovery");
+    expect(new URL(authEmailRedirect(input)).searchParams.get("redirect_to")).toBe("https://automotivesalespro.com/auth");
+  });
   it("uses email prefix for Unknown users", () => expect(displayUserName("Unknown", "derek@example.com")).toBe("derek"));
   it("uses Invited user without a name or email", () => expect(displayUserName(null, null)).toBe("Invited user"));
   it("keeps a real name", () => expect(displayUserName("Derek Mulvey", "derek@example.com")).toBe("Derek Mulvey"));

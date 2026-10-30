@@ -36,9 +36,11 @@ Deno.serve(async (req) => {
     } else {
       const bank = legacyQuizKeys[moduleId as keyof typeof legacyQuizKeys];
       if (!bank) return reply({ error: "Unknown course" }, 400);
-      const { data: settings, error } = await admin.from("dealership_settings").select("enabled_module_ids").eq("dealership_id", dealershipId).maybeSingle();
-      if (error) throw error;
-      if (!access.isSuperAdmin && settings?.enabled_module_ids && !settings.enabled_module_ids.includes(moduleId)) return reply({ error: "Course not available" }, 403);
+      if (!access.isSuperAdmin && dealershipId) {
+        const { data: settings, error } = await admin.from("dealership_settings").select("enabled_module_ids").eq("dealership_id", dealershipId).maybeSingle();
+        if (error) throw error;
+        if (settings?.enabled_module_ids && !settings.enabled_module_ids.includes(moduleId)) return reply({ error: "Course not available" }, 403);
+      }
       questions = Object.entries(bank).map(([id, choices]) => ({ id, choices }));
     }
     let score: number | null;

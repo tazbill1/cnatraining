@@ -1,3 +1,4 @@
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +27,7 @@ interface SessionData {
 }
 
 export default function Dashboard() {
+  const certification = useCertificationProgress();
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const { settings } = useDealershipSettings();
@@ -36,7 +38,6 @@ export default function Dashboard() {
     totalSessions: 0,
     averageScore: 0,
     totalHours: 0,
-    certificationProgress: 0,
     improvement: null as number | null,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -76,7 +77,7 @@ export default function Dashboard() {
         const totalMinutes = allSessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60;
         const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
 
-        const certProgress = Math.min(100, Math.round((totalSessions / 10) * 50 + (averageScore >= 80 ? 50 : averageScore * 0.5)));
+
 
         let improvement: number | null = null;
         if (totalSessions >= 4) {
@@ -91,7 +92,6 @@ export default function Dashboard() {
           totalSessions,
           averageScore,
           totalHours,
-          certificationProgress: certProgress,
           improvement,
         });
       } catch (error) {
@@ -196,21 +196,21 @@ export default function Dashboard() {
                   <h2 className="font-semibold text-foreground">Certification Progress</h2>
                 </div>
                 <div className="flex flex-col items-center">
-                  <ProgressRing progress={stats.certificationProgress} />
+                  <ProgressRing progress={certification.percent} />
                   <div className="mt-6 text-center">
                     <p className="text-sm text-muted-foreground mb-4">
-                      {stats.certificationProgress >= 100
+                      {certification.percent >= 100
                         ? "🎉 You're certification ready!"
-                        : `${100 - stats.certificationProgress}% more to go`}
+                        : `${100 - certification.percent}% more to go`}
                     </p>
                     <div className="flex items-center justify-center gap-2">
                       <span
                         className={`w-3 h-3 rounded-full ${
-                          stats.certificationProgress >= 100 ? "bg-success" : "bg-warning"
+                          certification.percent >= 100 ? "bg-success" : "bg-warning"
                         }`}
                       />
                       <span className="text-sm font-medium">
-                        {stats.certificationProgress >= 100 ? "Ready" : "In Progress"}
+                        {certification.percent >= 100 ? "Ready" : "In Progress"}
                       </span>
                     </div>
                   </div>

@@ -1,3 +1,5 @@
+import { useSessionTitles } from "@/hooks/useSessionTitles";
+import { useCertificationProgress } from "@/hooks/useCertificationProgress";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -8,12 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Target, Clock, Calendar, TrendingUp, Download } from "lucide-react";
 import { scenarios } from "@/lib/scenarios";
 
-function getScenarioName(scenarioType: string): string {
-  const found = scenarios.find(s => s.id === scenarioType);
-  if (found) return found.name;
-  if (scenarioType.startsWith("custom-")) return "Custom Scenario";
-  return scenarioType.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-}
+
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -42,13 +39,14 @@ interface SessionData {
 }
 
 export default function ProgressPage() {
+  const getScenarioName = useSessionTitles();
+  const certification = useCertificationProgress();
   const { user } = useAuth();
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [stats, setStats] = useState({
     totalSessions: 0,
     averageScore: 0,
     totalHours: 0,
-    certificationProgress: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -76,13 +74,12 @@ export default function ProgressPage() {
           : 0;
         const totalMinutes = sessionsData.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60;
         const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
-        const certProgress = Math.min(100, Math.round((totalSessions / 10) * 50 + (averageScore >= 80 ? 50 : averageScore * 0.5)));
+
 
         setStats({
           totalSessions,
           averageScore,
           totalHours,
-          certificationProgress: certProgress,
         });
       } catch (error) {
         logger.error("Error fetching progress data:", error);
@@ -187,7 +184,7 @@ export default function ProgressPage() {
             <StatCard
               icon={<TrendingUp className="w-5 h-5 text-primary" />}
               label="Certification"
-              value={`${stats.certificationProgress}%`}
+              value={`${certification.percent}%`}
             />
           </div>
 

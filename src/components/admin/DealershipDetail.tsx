@@ -1,3 +1,5 @@
+import { fetchDealershipMetrics } from "@/lib/dealershipMetrics";
+import { useSessionTitles } from "@/hooks/useSessionTitles";
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,15 +76,12 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [usersRes, sessionsRes, invitesRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("id, user_id, full_name, email, last_active_at, created_at").eq("dealership_id", dealershipId),
-      supabase.from("training_sessions").select("id, scenario_type, score, status, started_at, user_id").eq("dealership_id", dealershipId).order("started_at", { ascending: false }).limit(50),
-      supabase.from("invitations").select("id, email, status, created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
-      supabase.from("user_roles").select("user_id, role"),
+    const [metrics, invitesRes] = await Promise.all([
+      fetchDealershipMetrics(dealershipId),
+      supabase.from("invitations").select("id,email,status,created_at").eq("dealership_id", dealershipId).order("created_at", { ascending: false }),
     ]);
-    
-    const roles = rolesRes.data || [];
-    const enrichedUsers = (usersRes.data || []).map(u => {
+    const roles = metrics.roles;
+    const enrichedUsers = metrics.profiles.map(u => {
       // Find the highest role for this user
       const userRoles = roles.filter(r => r.user_id === u.user_id);
       const isManager = userRoles.some(r => r.role === "manager");
@@ -91,7 +90,7 @@ export function DealershipDetail({ dealershipId, dealershipName, onBack }: Deale
     });
     
     setUsers(enrichedUsers);
-    setSessions(sessionsRes.data || []);
+    setSessions(metrics.sessions);
     setInvitations(invitesRes.data || []);
     setLoading(false);
   }, [dealershipId]);

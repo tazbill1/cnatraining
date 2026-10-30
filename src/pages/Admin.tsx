@@ -1,3 +1,4 @@
+import { fetchDealershipMetrics } from "@/lib/dealershipMetrics";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -56,14 +57,7 @@ export default function Admin() {
 
       if (error) throw error;
 
-      // Get user counts per dealership
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("dealership_id");
-
-      const { data: sessions } = await supabase
-        .from("training_sessions")
-        .select("dealership_id");
+      const { profiles, sessions } = await fetchDealershipMetrics(null);
 
       const enriched = (data || []).map((d) => ({
         ...d,

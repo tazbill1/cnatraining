@@ -1,45 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
+import { aiInvokeError } from "@/lib/aiErrors";
+import { toast } from "sonner";
 
-export async function saveDrillScore(drillKey: string, lastStreak: number) {
+export async function startDrillRun(drillKey: string, questionIds: string[]) {
+  const { data, error } = await supabase.functions.invoke("record-drill-score", { body: { action: "start", drillKey, questionIds } });
+  if (error) throw await aiInvokeError(error, "Unable to start a scored game round.");
+  return data.runId as string;
+}
+
+export async function saveDrillScore(runId: string, answers: { questionId: string; choice: string | null }[]) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("dealership_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const { data: existing } = await supabase
-      .from("drill_scores")
-      .select("id, best_streak, plays, first_streak")
-      .eq("user_id", user.id)
-      .eq("drill_key", drillKey)
-      .maybeSingle();
-
-    if (existing) {
-      await supabase.from("drill_scores").update({
-        best_streak: Math.max(existing.best_streak, lastStreak),
-        last_streak: lastStreak,
-        // Contest score: locked to the very first attempt, never overwritten.
-        first_streak: existing.first_streak ?? lastStreak,
-        plays: (existing.plays || 0) + 1,
-        dealership_id: profile?.dealership_id ?? null,
-      }).eq("id", existing.id);
-    } else {
-      await supabase.from("drill_scores").insert({
-        user_id: user.id,
-        dealership_id: profile?.dealership_id ?? null,
-        drill_key: drillKey,
-        best_streak: lastStreak,
-        last_streak: lastStreak,
-        first_streak: lastStreak,
-        plays: 1,
-      });
-    }
-
+    const { error } = await supabase.functions.invoke("record-drill-score", { body: { action: "finish", runId, answers } });
+    if (error) throw await aiInvokeError(error, "Unable to save game result.");
   } catch (e) {
     console.warn("saveDrillScore failed", e);
+    toast.error(e instanceof Error ? e.message : "Unable to save game result.");
   }
 }

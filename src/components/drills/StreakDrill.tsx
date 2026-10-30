@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Flame, Trophy, CheckCircle2, XCircle, RotateCcw, Heart, Volume2, VolumeX, Timer, type LucideIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { saveDrillScore } from "@/lib/drillScores";
+import { saveDrillScore, startDrillRun } from "@/lib/drillScores";
+import { toast } from "sonner";
 import { drillSfx, isSoundOn, setSoundOn } from "@/lib/drillSounds";
 import { computeBadges } from "@/lib/drillBadges";
 import { logDrillAttempt } from "@/lib/drillAttempts";
@@ -97,9 +98,17 @@ export function StreakDrill({
   const [finished, setFinished] = useState(false);
   const [lives, setLives] = useState(startingLives);
   const [soundOn, setSoundOnState] = useState(true);
+  const runRef = useRef<Promise<string> | null>(null);
+  const answersRef = useRef<{ questionId: string; choice: string | null }[]>([]);
+  const submittedRef = useRef(false);
 
   const buildRound = () => {
     const picked = pickRotatedRound(pool, questionsPerRound, bestStreakKey);
+    answersRef.current = [];
+    submittedRef.current = false;
+    const run = startDrillRun(bestStreakKey, picked.map((q) => q.id));
+    runRef.current = run;
+    void run.catch((error) => toast.error(error instanceof Error ? error.message : "Unable to start scored round."));
     return picked.map((q) => ({ ...q, shuffledChoices: shuffle(q.choices) }));
   };
 
@@ -126,7 +135,11 @@ export function StreakDrill({
 
   const finishRound = (finalStreak: number, finalRoundBest: number) => {
     setFinished(true);
-    saveDrillScore(bestStreakKey, Math.max(finalRoundBest, finalStreak));
+    if (!submittedRef.current && runRef.current) {
+      submittedRef.current = true;
+      const answers = [...answersRef.current];
+      void runRef.current.then((id) => saveDrillScore(id, answers)).catch(() => {});
+    }
     drillSfx.finish();
   };
 
@@ -163,6 +176,7 @@ export function StreakDrill({
     if (selected !== null || timedOut || finished) return;
     setSelected(choiceIdx);
     const isCorrect = current.shuffledChoices[choiceIdx].correct;
+    answersRef.current.push({ questionId: current.id, choice: current.shuffledChoices[choiceIdx].text });
     recordAttempt(current, isCorrect);
     if (isCorrect) {
       const newStreak = streak + 1;
@@ -189,6 +203,7 @@ export function StreakDrill({
     if (!secondsPerQuestion || finished || !current || selected !== null || timedOut) return;
     if (timeLeft <= 0) {
       setTimedOut(true);
+      answersRef.current.push({ questionId: current.id, choice: null });
       recordAttempt(current, false);
       registerMiss();
       return;

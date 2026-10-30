@@ -1,5 +1,12 @@
 # Roadmap — Showroom courses match the handbook
 
+## Final branding and polish batch
+- [ ] Update owned-domain branding and invite/auth links; retain safe Google callback with dashboard destination
+- [ ] Review duplicate roleplay systems and document low-risk decision
+- [ ] Shared display names, activity logic, scenario labels and coming-soon states
+- [ ] Confirm user deactivation and remove only proven unused artifacts
+- [ ] Run tests and verify preview without writing database records
+
 ## Consistency and recovery batch
 - [x] One certification-progress definition across all displays (2/23 = 9% verified)
 - [x] Shared dealership user/completed-session counts for Team and Admin (8 users, 3 completed sessions verified before scoring test)

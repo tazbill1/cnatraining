@@ -190,7 +190,7 @@ export default function VideoPlayer({
           {isLoading && (
             <Skeleton className="absolute inset-0 z-10 rounded-none" />
           )}
-          <video
+          {playbackUrl && <video
             ref={videoRef}
             src={playbackUrl}
             controls
@@ -217,7 +217,7 @@ export default function VideoPlayer({
             onTimeUpdate={handleTimeUpdate}
             onSeeking={handleSeeking}
 
-          />
+          />}
         </AspectRatio>
 
         {/* Custom controls bar */}

@@ -85,6 +85,13 @@
       "when": 1793384351949,
       "tag": "0011_add_fi_aftersales_category",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793805929173,
+      "tag": "0012_fix_consume_ai_request_now_variable",
+      "breakpoints": true
     }
   ]
 }
